@@ -23,7 +23,6 @@
         <Content Include="db\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="RaidRecord.csproj.user" />
     </ItemGroup>
 
     <PropertyGroup>
