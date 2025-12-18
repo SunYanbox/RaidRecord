@@ -35,7 +35,7 @@ public class ModConfig(ModHelper modHelper,
     {
         var pathToMod = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
         // logger.Info($"pathToMod: {pathToMod}");
-        Configs = modHelper.GetJsonDataFromFile<ModConfigData>(pathToMod, "config.json");
+        Configs = modHelper.GetJsonDataFromFile<ModConfigData>(pathToMod, "db\\config.json");
         var logPath = Path.Combine(pathToMod, Configs.LogPath);
         try
         {
