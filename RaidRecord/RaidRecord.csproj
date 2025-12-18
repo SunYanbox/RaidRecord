@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>RaidRecord</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Version>0.6.0</Version>
+        <!-- The two lines below will set the output path for the binaries -->
+        <OutputPath>bin\$(Configuration)$(ProjectName)\$(AssemblyName)\</OutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="SPTarkov.Common" Version="4.0.8" />
+        <PackageReference Include="SPTarkov.DI" Version="4.0.8" />
+        <PackageReference Include="SPTarkov.Server.Core" Version="4.0.8" />
+        <PackageReference Include="SPTarkov.Server.Web" Version="4.0.8" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <Content Include="db\**\*.*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <ZipToolPath>"D:\Program Files\7-Zip\7z.exe"</ZipToolPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <BeforeZipPath>$(OutputPath)SPT\user\mods\$(AssemblyName)\</BeforeZipPath>
+    </PropertyGroup>
+    
+    <!--  项目构建后, 把输出目录下的RaidRecord.dll和db文件夹全部复制到
+      "输出目录\SPT\user\mods\$(AssemblyName)"文件夹下
+      然后分别压缩SPT文件夹为"$(AssemblyName)-$(Version).zip"和"$(AssemblyName)-$(Version).7z"
+      -->
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent"> 
+        <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(BeforeZipPath)" />
+        <ItemGroup>
+            <Content Include="$(OutputPath)db\**\*.*">
+                <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+                <DestinationFolder>$(BeforeZipPath)db</DestinationFolder>
+            </Content>
+        </ItemGroup>
+        <Copy SourceFiles="@(Content)" DestinationFolder="$(BeforeZipPath)db" Condition="'%(Extension)' != ''" />
+        <Exec WorkingDirectory="$(OutputPath)" Command="$(ZipToolPath) a -tzip -mx=9 $(AssemblyName)-$(Version).zip SPT\" />
+        <Exec WorkingDirectory="$(OutputPath)" Command="$(ZipToolPath) a -tzip -mx=9 $(AssemblyName)-$(Version).7z SPT\" />
+    </Target>
+
+</Project>
