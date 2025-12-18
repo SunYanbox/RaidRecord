@@ -26,7 +26,7 @@ public record ModMetadata : AbstractModMetadata
     public override Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
     public override string? Url { get; init; }
     public override bool? IsBundleMod { get; init; }
-    public override string? License { get; init; } = "CC-BY-SA";
+    public override string? License { get; init; } = "BSD 3-Clause License";
 }
 
 [Injectable]
