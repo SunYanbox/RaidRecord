@@ -2,12 +2,7 @@ namespace RaidRecord.Core.ChatBot.Commands;
 
 public class ParaInfoBuilder
 {
-    private ParaInfo _paraInfo;
-
-    public ParaInfoBuilder()
-    {
-        _paraInfo = new ParaInfo();
-    }
+    private ParaInfo _paraInfo = new();
 
     /// <summary>
     /// 添加参数
@@ -25,7 +20,7 @@ public class ParaInfoBuilder
 
     public ParaInfoBuilder SetOptional(string[] parameters)
     {
-        foreach (var para in parameters)
+        foreach (string para in parameters)
         {
             _paraInfo.Optional.Add(para);
         }
@@ -37,7 +32,7 @@ public class ParaInfoBuilder
     /// </summary>
     public ParaInfo Build()
     {
-        var info = _paraInfo;
+        ParaInfo info = _paraInfo;
         _paraInfo = new ParaInfo();
         return info;
     }

@@ -6,7 +6,7 @@ using SPTarkov.Server.Core.Utils;
 
 namespace RaidRecord.Core.Models;
 
-record InjectableClasses
+internal record InjectableClasses
 {
     public JsonUtil? JsonUtil { get; set; }
     public RecordCacheManager? RecordCacheManager { get; set; }
@@ -14,14 +14,14 @@ record InjectableClasses
     public ProfileHelper? ProfileHelper { get; set; }
     public ItemHelper? ItemHelper { get; set; }
     public ModConfig? ModConfig { get; set; }
-    
+
     public bool IsValid()
     {
-        return JsonUtil != null 
-               && RecordCacheManager != null 
-               && LocalizationManager != null 
-               && ProfileHelper != null 
-               && ItemHelper != null 
+        return JsonUtil != null
+               && RecordCacheManager != null
+               && LocalizationManager != null
+               && ProfileHelper != null
+               && ItemHelper != null
                && ModConfig != null;
     }
 }

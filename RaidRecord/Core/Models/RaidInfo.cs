@@ -8,7 +8,6 @@ using SPTarkov.Server.Core.Models.Eft.Match;
 
 namespace RaidRecord.Core.Models;
 
-
 public record RaidInfo
 {
     // 对局ID
@@ -18,7 +17,7 @@ public record RaidInfo
     [JsonPropertyName("playerId")]
     public string PlayerId { get; set; } = string.Empty;
     // 对局创建时间
-    [JsonPropertyName("createTime")] public long CreateTime { get; set; } = 0;
+    [JsonPropertyName("createTime")] public long CreateTime { get; set; }
     // 存档状态
     [JsonPropertyName("state")] public string State { get; set; } = string.Empty;
     // 玩家阵营(PMC, SCAV)
@@ -36,19 +35,19 @@ public record RaidInfo
     // 对局结束后变化的物品
     [JsonPropertyName("changed")] public List<MongoId> Changed { get; set; } = [];
     // 入场价值
-    [JsonPropertyName("preRaidValue")] public long PreRaidValue { get; set; } = 0;
+    [JsonPropertyName("preRaidValue")] public long PreRaidValue { get; set; }
     // 装备价值
-    [JsonPropertyName("equipmentValue")] public long EquipmentValue { get; set; } = 0;
+    [JsonPropertyName("equipmentValue")] public long EquipmentValue { get; set; }
     // 安全箱价值
-    [JsonPropertyName("securedValue")] public long SecuredValue { get; set; } = 0;
+    [JsonPropertyName("securedValue")] public long SecuredValue { get; set; }
     // 毛收益
-    [JsonPropertyName("grossProfit")] public long GrossProfit { get; set; } = 0;
+    [JsonPropertyName("grossProfit")] public long GrossProfit { get; set; }
     // 战损
-    [JsonPropertyName("combatLosses")] public long CombatLosses { get; set; } = 0;
+    [JsonPropertyName("combatLosses")] public long CombatLosses { get; set; }
     // 战局结果状态(包括详细击杀数据
-    [JsonPropertyName("eftStats")] public EftStats? EftStats { get; set; } = null;
+    [JsonPropertyName("eftStats")] public EftStats? EftStats { get; set; }
     // 突袭实际结果
-    [JsonPropertyName("results")] public RaidResultData? Results { get; set; } = null;
+    [JsonPropertyName("results")] public RaidResultData? Results { get; set; }
 
     /**
      * 根据ID变换信息, 更新IRaidInfo
@@ -58,31 +57,31 @@ public record RaidInfo
      */
     public void UpdateByReplaceIDs(Dictionary<MongoId, MongoId> replaceInfo)
     {
-        foreach (var map in new[] {this.ItemsTakeIn, this.ItemsTakeOut})
+        foreach (Dictionary<MongoId, Item> map in new[] { ItemsTakeIn, ItemsTakeOut })
         {
-            foreach (var oldId in map.Keys)
+            foreach (MongoId oldId in map.Keys)
             {
-                if (replaceInfo.TryGetValue(new MongoId(oldId), out var newId))
+                if (!replaceInfo.TryGetValue(new MongoId(oldId), out MongoId newId)) continue;
+                if (newId == oldId) continue;
+                Item itemInstance = map[oldId];
+                if (!map.Remove(oldId))
                 {
-                    if (newId == oldId) continue;
-                    var itemInstance = map[oldId];
-                    if (!map.Remove(oldId))
-                    {
-                        Console.WriteLine($"[RaidRecord] 警告 从字典删除{oldId}的过程中出错");
-                    }
-                    itemInstance.Id = newId;
-                    map[newId] = itemInstance;
+                    Console.WriteLine($"[RaidRecord] 警告 从字典删除{oldId}的过程中出错");
                 }
+                itemInstance.Id = newId;
+                map[newId] = itemInstance;
             }
         }
-        
-        List<MongoId>[] lists = [this.Addition, this.Remove, this.Changed];
-        foreach (var list in lists) {
-            for (var i = 0; i < list.Count; i++)
+
+        List<MongoId>[] lists = [Addition, Remove, Changed];
+        foreach (List<MongoId> list in lists)
+        {
+            for (int i = 0; i < list.Count; i++)
             {
                 MongoId oldId = list[i];
-                var newId = replaceInfo[oldId];
-                if (newId != null && oldId != newId) {
+                MongoId newId = replaceInfo[oldId];
+                if (newId != null! && oldId != newId)
+                {
                     list[i] = newId;
                 }
             }
@@ -92,17 +91,17 @@ public record RaidInfo
     // 根据开局请求初始化数据
     public void HandleRaidStart(StartLocalRaidResponseData data, MongoId sessionId, ItemHelper itemHelper, ProfileHelper profileHelper)
     {
-        var judge = VerifyStartLocalRaidResponseData(data);
+        string? judge = VerifyStartLocalRaidResponseData(data);
         if (judge != null)
         {
             Console.WriteLine($"[RaidRecord] 使用RaidInfo.HandleRaidStart过程中参数错误: {judge}");
             return;
         }
-        ServerId = data.ServerId;
+        ServerId = data.ServerId ?? throw new Exception("data.ServerId为null; 这可能是SPT更改了服务端传递的参数; 在没有其他服务端模组影响的条件下, 该报错理论上很难发生!!!");
         State = "未归档";
         Side = ServerId.Contains("Pmc") ? "Pmc" : "Savage";
-        var pmcProfile = profileHelper.GetPmcProfile(sessionId);
-        PlayerId = pmcProfile.Id;
+        PmcData? pmcProfile = profileHelper.GetPmcProfile(sessionId);
+        PlayerId = pmcProfile?.Id ?? throw new Exception("profileHelper.GetPmcProfile(sessionId).Id为null; 这可能是session已失效, 存档文件损坏或者存档数据库被意外修改!!!");
         CreateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
         ItemsTakeIn = ItemUtil.GetInventoryInfo(pmcProfile, itemHelper);
         // Console.WriteLine($"获取到的物品:");
@@ -110,10 +109,10 @@ public record RaidInfo
         // {
         //     Console.WriteLine($"\t{item}");
         // }
-        
-        var itemsTakeIn = ItemsTakeIn.Values.ToArray();
+
+        Item[] itemsTakeIn = ItemsTakeIn.Values.ToArray();
         PreRaidValue = ItemUtil.GetItemsValueAll(itemsTakeIn, itemHelper);
-        EquipmentValue = ItemUtil.GetItemsValueWithBaseClasses(itemsTakeIn, _equipments, itemHelper);
+        EquipmentValue = ItemUtil.GetItemsValueWithBaseClasses(itemsTakeIn, Equipments, itemHelper);
         SecuredValue = ItemUtil.GetItemsValueAll(ItemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn), itemHelper);
         // Console.WriteLine($"itemsTakeIn.Length: {itemsTakeIn.Length}\n\tPreRaidValue: {PreRaidValue}\n\tEquipmentValue: {EquipmentValue}\n\tSecuredValue: {SecuredValue}");
     }
@@ -122,39 +121,36 @@ public record RaidInfo
     public void HandleRaidEnd(EndLocalRaidRequestData data, MongoId sessionId, ItemHelper itemHelper,
         ProfileHelper profileHelper)
     {
-        var pmcProfile = profileHelper.GetPmcProfile(sessionId);
-        if (PlayerId != pmcProfile.Id)
+        PmcData? pmcProfile = profileHelper.GetPmcProfile(sessionId);
+        if (PlayerId != pmcProfile?.Id)
         {
-            Console.WriteLine($"[RaidRecord] 错误: 尝试修改不属于{pmcProfile.Id}的对局数据");
+            Console.WriteLine($"[RaidRecord] 错误: 尝试修改不属于{pmcProfile?.Id}的对局数据");
             return;
         }
         ItemsTakeOut = ItemUtil.GetInventoryInfo(pmcProfile, itemHelper);
         HandleRaidEndInventoryAndValue(pmcProfile, itemHelper);
-        
-        if (data == null) throw new Exception($"HandleRaidEnd的参数data意外为null");
 
-        if (data.Results != null)
+        if (data == null) throw new Exception("HandleRaidEnd的参数data意外为null");
+
+        if (data.Results == null) return;
+        Results = new RaidResultData
         {
-            Results = new RaidResultData();
-            Results.Result = data.Results.Result;
-            Results.KillerId = data.Results.KillerId;
-            Results.KillerAid = data.Results.KillerAid;
-            Results.ExitName = data.Results.ExitName;
-            Results.PlayTime = Convert.ToInt64(data.Results.PlayTime);
-        }
+            Result = data.Results.Result,
+            KillerId = data.Results.KillerId,
+            KillerAid = data.Results.KillerAid,
+            ExitName = data.Results.ExitName,
+            PlayTime = Convert.ToInt64(data.Results.PlayTime)
+        };
     }
-    
+
     private string? VerifyStartLocalRaidResponseData(StartLocalRaidResponseData data)
     {
-        if (data == null) return "StartLocalRaidResponseData为null";
-        if (data.ServerId == null) return "参数ServerId意外为null";
-
-        return null;
+        return data.ServerId == null ? "参数ServerId意外为null" : null;
     }
-    
-    /*
-     * 根据对局结束的数据(变化量, 结果)归档到本RaidInfo
-     */
+
+    /// <summary>
+    /// 根据对局结束的数据(变化量, 结果)归档到本RaidInfo
+    /// </summary>
     private void HandleRaidEndInventoryAndValue(PmcData pmcData, ItemHelper itemHelper)
     {
         Addition.Clear();
@@ -162,7 +158,7 @@ public record RaidInfo
         Changed.Clear();
         if (pmcData.Stats == null || pmcData.Stats.Eft == null)
         {
-            Console.WriteLine($"[RaidInfo] 错误尝试获取对局结束数据时, 获取到的数据全部为null");
+            Console.WriteLine("[RaidInfo] 错误尝试获取对局结束数据时, 获取到的数据全部为null");
             return;
         }
         State = State == "推测对局" ? "推测对局" : "已归档";
@@ -170,7 +166,7 @@ public record RaidInfo
         // var resultStats = Utils.Copy(pmcData.Stats.Eft);
         EftStats = pmcData.Stats.Eft with
         {
-            SessionCounters=null,
+            SessionCounters = null,
             OverallCounters = null,
             DroppedItems = null,
             DamageHistory = null
@@ -182,9 +178,9 @@ public record RaidInfo
             return;
         }
         // 记录获取/变化的物资
-        foreach (var (itemId, item) in ItemsTakeIn)
+        foreach ((MongoId itemId, Item item) in ItemsTakeIn)
         {
-            if (ItemsTakeOut.TryGetValue(itemId, out var newItem))
+            if (ItemsTakeOut.TryGetValue(itemId, out Item? newItem))
             {
                 if (Math.Abs(itemHelper.GetItemQualityModifier(item) - itemHelper.GetItemQualityModifier(newItem)) < 1e-6) continue;
                 Changed.Add(itemId);
@@ -194,20 +190,20 @@ public record RaidInfo
                 Remove.Add(itemId);
             }
         }
-        foreach (var (itemId, _) in ItemsTakeOut)
+        foreach ((MongoId itemId, Item _) in ItemsTakeOut)
         {
             if (!ItemsTakeIn.ContainsKey(itemId)) Addition.Add(itemId);
         }
         // 收益, 战损记录
         GrossProfit = ItemUtil.CalculateInventoryValue(ItemsTakeOut, Addition.ToArray(), itemHelper);
         CombatLosses = ItemUtil.CalculateInventoryValue(ItemsTakeIn, Remove.ToArray(), itemHelper);
-        foreach (var (itemId, oldItem) in DataUtil.GetSubDict(ItemsTakeIn, Changed))
+        foreach ((MongoId itemId, Item oldItem) in DataUtil.GetSubDict(ItemsTakeIn, Changed))
         {
-            var oldValue = ItemUtil.GetItemValue(oldItem, itemHelper);
-            if (ItemsTakeOut.TryGetValue(itemId, out var newItem))
+            long oldValue = ItemUtil.GetItemValue(oldItem, itemHelper);
+            if (ItemsTakeOut.TryGetValue(itemId, out Item? newItem))
             {
-                var newValue = ItemUtil.GetItemValue(newItem, itemHelper);
-                if (newValue >  oldValue) GrossProfit += newValue -  oldValue;
+                long newValue = ItemUtil.GetItemValue(newItem, itemHelper);
+                if (newValue > oldValue) GrossProfit += newValue - oldValue;
                 else CombatLosses += oldValue - newValue;
             }
             else
@@ -216,10 +212,10 @@ public record RaidInfo
             }
         }
     }
-    
+
     // 被视为战备的基类(枪械, 胸挂, 背包, 护甲, 头盔等)
     [JsonIgnore]
-    private static MongoId[] _equipments =
+    private static readonly MongoId[] Equipments =
     [
         BaseClasses.WEAPON,
         // BaseClasses.UBGL,
@@ -267,4 +263,3 @@ public record RaidInfo
         BaseClasses.TACTICAL_COMBO
     ];
 }
-

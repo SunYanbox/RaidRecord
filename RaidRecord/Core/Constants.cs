@@ -10,7 +10,7 @@ public static class Constants
     public const double ArchiveCheckJudgeError = 1e-6;
     public const int SendLimit = 491;
 
-    public static readonly Dictionary<string, string> MapNames = new Dictionary<string, string>
+    public static readonly Dictionary<string, string> MapNames = new()
     {
         ["factory4_day"] = "工厂(白天)",
         ["factory4_night"] = "工厂(夜晚)",
@@ -24,8 +24,8 @@ public static class Constants
         ["tarkovstreets"] = "街区",
         ["sandbox"] = "中心区"
     };
-    
-    public static readonly Dictionary<ExitStatus, string> ResultNames = new Dictionary<ExitStatus, string>
+
+    public static readonly Dictionary<ExitStatus, string> ResultNames = new()
     {
         [ExitStatus.SURVIVED] = "幸存",
         [ExitStatus.KILLED] = "行动中阵亡",
@@ -34,8 +34,8 @@ public static class Constants
         [ExitStatus.RUNNER] = "匆匆逃离",
         [ExitStatus.TRANSIT] = "过渡"
     };
-    
-    public static readonly Dictionary<string, string> ArmorZone = new Dictionary<string, string>
+
+    public static readonly Dictionary<string, string> ArmorZone = new()
     {
         // QuestCondition/Elimination/Kill/BodyPart/
         { "Chest", "胸腔" },
@@ -45,7 +45,7 @@ public static class Constants
         { "RightArm", "右臂" },
         { "RightLeg", "右腿" },
         // { "Stomach", "胃部" },
-        
+
         // Collider Type 
         { "Back", "胸部, 背部" },
         { "BackHead", "头部, 脖颈" },
@@ -83,7 +83,7 @@ public static class Constants
     };
 
     // Scav角色本地化
-    public static readonly Dictionary<string, string> RoleNames = new Dictionary<string, string>
+    public static readonly Dictionary<string, string> RoleNames = new()
     {
         { "ArenaFighterEvent", "寻血猎犬" },
         { "Boss", "Boss" },

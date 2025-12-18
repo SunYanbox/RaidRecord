@@ -16,13 +16,12 @@ public static class ItemUtil
         // 刀, 安全箱(安全箱不能用parentId, 因为那个是所有容器的基类), 口袋可能很贵, 会影响入场价值
         if (item.SlotId is "SecuredContainer" or "Scabbard" or "Dogtag") return 0;
         // 父类是口袋的所有口袋
-        HashSet<string> parentIds = [
-            "557596e64bdc2dc2118b4571", // 口袋基类
+        HashSet<string> parentIds =
+        [
+            "557596e64bdc2dc2118b4571" // 口袋基类
         ];
-        if (parentIds.Contains(item?.ParentId ?? "")) return 0;
+        if (parentIds.Contains(item.ParentId ?? "")) return 0;
 
-        if (item == null) return 0; 
-        
         double? price = itemHelper.GetItemPrice(item.Template);
         if (price == null)
         {
@@ -48,17 +47,17 @@ public static class ItemUtil
         }
         return value;
     }
-    
+
     /// <summary>
     /// 计算库存inventory中所有id处于filter中物品价格
     /// </summary>
-    public static long CalculateInventoryValue(Dictionary<MongoId, Item> inventory, MongoId[] filter,  ItemHelper itemHelper)
+    public static long CalculateInventoryValue(Dictionary<MongoId, Item> inventory, MongoId[] filter, ItemHelper itemHelper)
     {
         return GetItemsValueAll(
             inventory.Values.Where(x => filter.Contains(x.Id)).ToArray(),
             itemHelper);
     }
-    
+
     /// <summary>
     /// 计算具有提供的任何基类的所有物品价值
     /// </summary>
@@ -68,7 +67,7 @@ public static class ItemUtil
     /// <returns>物品价值</returns>
     public static long GetItemsValueWithBaseClasses(Item[] items, IEnumerable<MongoId> baseClasses, ItemHelper itemHelper)
     {
-        var filteredItems = items.Where(x => itemHelper.IsOfBaseclasses(x.Template, baseClasses)).ToArray();
+        Item[] filteredItems = items.Where(x => itemHelper.IsOfBaseclasses(x.Template, baseClasses)).ToArray();
         return Convert.ToInt64(GetItemsValueAll(filteredItems, itemHelper));
     }
 
@@ -82,17 +81,17 @@ public static class ItemUtil
     {
         List<Item> containerItems = [];
         var pushTag = new HashSet<string>();
-    
-        foreach (var item in items)
+
+        foreach (Item item in items)
         {
-            var currentItem = item;
-        
+            Item currentItem = item;
+
             // 递归向上查找父级
             while (currentItem.ParentId != null)
             {
-                var parent = Array.Find(items, x => x.Id == currentItem.ParentId);
+                Item? parent = Array.Find(items, x => x.Id == currentItem.ParentId);
                 // var parent = items.FirstOrDefault(i => i != null && i.Id == currentItem.ParentId, null);
-            
+
                 // 如果找不到父级，跳出循环
                 if (parent == null) break;
 
@@ -105,16 +104,16 @@ public static class ItemUtil
                     }
                     break;
                 }
-            
+
                 currentItem = parent;
             }
         }
-    
+
         return containerItems.ToArray();
     }
-    
-    
-    
+
+
+
     /// <summary>
     /// 根据进入/离开突袭前后的仓库, 返回所有物品
     /// </summary>
@@ -122,8 +121,8 @@ public static class ItemUtil
     {
         var result = new Dictionary<MongoId, Item>();
         if (pmcData.Inventory == null || pmcData.Inventory.Equipment == null || pmcData.Inventory.Items == null) return result;
-        var inventory = pmcData.Inventory;
-        
+        BotBaseInventory? inventory = pmcData.Inventory;
+
         // 物品信息在仓库内是正确的, 但是使用JSON序列化和反序列化后不正确了
         // Console.WriteLine(
         //         $"When GetInventoryInfo \n\tpmcData.Inventory: {inventory}"
@@ -134,7 +133,7 @@ public static class ItemUtil
         // {
         //     Console.WriteLine($"\t {string.Join(", ", idtplparent)}");
         // }
-        
+
         // 获取玩家进入/离开突袭时的所有物品
         List<Item> aroundRaidItems = itemHelper.FindAndReturnChildrenByAssort(inventory.Equipment.Value, inventory.Items);
         string copyError = "";
@@ -143,7 +142,6 @@ public static class ItemUtil
         {
             try
             {
-                // result[item.Id] = DataUtil.Copy<Item>(item);
                 result[item.Id] = item with {};
                 if (item.Template != result[item.Id].Template) throw new Exception($"record类型使用with复制构造改变了Template的MongoId!!!: {item.Template} -> {result[item.Id].Template}");
             }

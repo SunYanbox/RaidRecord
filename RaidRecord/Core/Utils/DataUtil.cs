@@ -10,32 +10,32 @@ public static class DataUtil
     public static void UpdateCommandDesc(Command command)
     {
         string desc = $"> {command.Key}";
-    
+
         if (command.ParaInfo == null || command.ParaInfo.Paras.Count <= 0)
         {
             command.Desc += desc;
             return;
         }
-    
-        foreach (var para in command.ParaInfo.Paras)
+
+        foreach (string para in command.ParaInfo.Paras)
         {
             bool isOptional = command.ParaInfo.Optional.Contains(para);
-            string type = command.ParaInfo.Types.ContainsKey(para) ? command.ParaInfo.Types[para] : "undefined";
+            string type = command.ParaInfo.Types.GetValueOrDefault(para, "undefined");
             string centerString = $"{para}: {type}";
             desc += " " + (isOptional ? $"[{centerString}]" : centerString);
         }
-    
+
         if (command.ParaInfo.Descs.Count > 0)
         {
-            foreach (var para in command.ParaInfo.Paras)
+            foreach (string para in command.ParaInfo.Paras)
             {
-                if (command.ParaInfo.Descs.ContainsKey(para))
+                if (command.ParaInfo.Descs.TryGetValue(para, out string? infoDesc))
                 {
-                    desc += $"\n\t> {para}: {command.ParaInfo.Descs[para]}";
+                    desc += $"\n\t> {para}: {infoDesc}";
                 }
             }
         }
-    
+
         command.Desc += desc;
     }
 
@@ -46,8 +46,8 @@ public static class DataUtil
      * @returns
      */
     public static Dictionary<TKey, TValue> GetSubDict<TKey, TValue>(
-        Dictionary<TKey, TValue> dict,
-        IEnumerable<TKey> keys) 
+            Dictionary<TKey, TValue> dict,
+            IEnumerable<TKey> keys)
         // 限制泛型类型参数 TKey 必须是非空类型
         where TKey : notnull
     {
@@ -68,7 +68,7 @@ public static class DataUtil
         return copy;
     }
 
-    
+
 
     public static T Copy<T>(T source)
     {
@@ -76,8 +76,8 @@ public static class DataUtil
         var copy = JsonSerializer.Deserialize<T>(json);
         return copy ?? throw new Exception($"复制数据出错");
     }
-    
-    
+
+
 
 
 }

@@ -13,15 +13,15 @@ namespace RaidRecord.Core.Systems;
 
 [Injectable(InjectionType = InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 3)]
 public class RecordCacheManager(
-    ISptLogger<RecordCacheManager>  logger,
-    LocalizationManager  localManager,
+    ISptLogger<RecordCacheManager> logger,
+    LocalizationManager localManager,
     JsonUtil jsonUtil,
     ModConfig modConfig,
     ModHelper modHelper
-    ): IOnLoad
+): IOnLoad
 {
-    private string? _RecordDbPath;
-    private Dictionary<MongoId, List<RaidDataWrapper>> raidRecordCache = new Dictionary<MongoId, List<RaidDataWrapper>>();
+    private string? _recordDbPath;
+    private readonly Dictionary<MongoId, List<RaidDataWrapper>> _raidRecordCache = new();
 
     public void Info(string message)
     {
@@ -33,16 +33,16 @@ public class RecordCacheManager(
         modConfig.Log("Error", message);
         logger.Error($"[RaidRecord] {message}");
     }
-     
+
     public Task OnLoad()
     {
-        
-        string localsDir = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
-        _RecordDbPath = Path.Combine(localsDir, "db\\records");
 
-        if (!Directory.Exists(_RecordDbPath)) Directory.CreateDirectory(_RecordDbPath);
-        
-        foreach (string file in Directory.GetFiles(_RecordDbPath))
+        string localsDir = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
+        _recordDbPath = Path.Combine(localsDir, "db\\records");
+
+        if (!Directory.Exists(_recordDbPath)) Directory.CreateDirectory(_recordDbPath);
+
+        foreach (string file in Directory.GetFiles(_recordDbPath))
         {
             string fileName = Path.GetFileName(file);
             if (!fileName.EndsWith(".json")) continue;
@@ -50,15 +50,15 @@ public class RecordCacheManager(
             {
                 var data = jsonUtil.DeserializeFromFile<List<RaidDataWrapper>>(file);
                 if (data == null) throw new Exception($"反序列化文件{file}时获取不到数据");
-                raidRecordCache.Add(new MongoId(fileName.Replace(".json", "")), data);
+                _raidRecordCache.Add(new MongoId(fileName.Replace(".json", "")), data);
             }
             catch (Exception e)
             {
                 modConfig.LogError(e, "RaidRecordManager.OnLoad.foreach.try-catch", file);
                 // 备份原文件为 .err，带序号避免重复
-                string originalFilePath = Path.Combine(_RecordDbPath, fileName);
+                string originalFilePath = Path.Combine(_recordDbPath, fileName);
                 string backupBaseName = Path.GetFileNameWithoutExtension(fileName) + ".json.err";
-                string backupDir = _RecordDbPath; // 备份在同一目录下，也可指定其他路径
+                string backupDir = _recordDbPath; // 备份在同一目录下，也可指定其他路径
                 string backupPath = Path.Combine(backupDir, backupBaseName);
 
                 int counter = 0;
@@ -71,70 +71,78 @@ public class RecordCacheManager(
                 try
                 {
                     File.Copy(originalFilePath, backupPath);
-                    Info(string.Format("序列化记录时出现问题: {0}, 已备份损坏文件至: {1}", e.Message, backupPath));
+                    Info($"序列化记录时出现问题: {e.Message}, 已备份损坏文件至: {backupPath}");
                     // Console.WriteLine($"[RaidRecord] DEBUG: {e.StackTrace}");
                 }
                 catch (Exception copyEx)
                 {
                     modConfig.LogError(e, "RaidRecordManager.OnLoad.foreach.try-catch.try-catch", file);
-                    Error(string.Format("备份文件过程中发生错误: {0}", copyEx.Message));
+                    Error($"备份文件过程中发生错误: {copyEx.Message}");
                 }
                 //
                 // Console.WriteLine($"[RaidRecord] 记录文件{fileName}的Json格式错误");
-                
-                raidRecordCache.Add(new MongoId(fileName.Replace(".json", "")), []);
+
+                _raidRecordCache.Add(new MongoId(fileName.Replace(".json", "")), []);
             }
-            
+
         }
         return Task.CompletedTask;
     }
 
     public void SaveRecord(MongoId playerId)
     {
-        if (!raidRecordCache.ContainsKey(playerId))
+        if (!_raidRecordCache.ContainsKey(playerId))
         {
             Create(playerId);
         }
-        
-        string jsonString = jsonUtil.Serialize(raidRecordCache[playerId]) ?? "[]";
-        
-        if (_RecordDbPath == null)
+
+        string jsonString = jsonUtil.Serialize(_raidRecordCache[playerId]) ?? "[]";
+
+        if (_recordDbPath == null)
         {
             Error("保存记录数据库时数据库文件路径意外不存在, 请确保`db\\records`文件夹路径存在");
             return;
         }
-        File.WriteAllTextAsync(Path.Combine(_RecordDbPath, $"{playerId}.json"), jsonString);
+        File.WriteAllTextAsync(Path.Combine(_recordDbPath, $"{playerId}.json"), jsonString);
     }
 
     public List<RaidDataWrapper> GetRecord(MongoId playerId)
     {
-        if (!raidRecordCache.ContainsKey(playerId))
+        if (!_raidRecordCache.ContainsKey(playerId))
         {
-            if (_RecordDbPath == null)
+            if (_recordDbPath == null)
             {
                 Error("记录数据库文件路径未正确获取, 请确保`db\\records`文件夹路径存在");
                 return [];
             }
 
-            if (Path.Exists(Path.Combine(_RecordDbPath, $"{playerId}.json")))
+            if (Path.Exists(Path.Combine(_recordDbPath, $"{playerId}.json")))
             {
-                raidRecordCache.Add(playerId, jsonUtil.DeserializeFromFile<List<RaidDataWrapper>>(Path.Combine(_RecordDbPath, $"{playerId.ToString()}.json")));
+                var raidDataWrappers = jsonUtil.DeserializeFromFile<List<RaidDataWrapper>>(Path.Combine(_recordDbPath, $"{playerId.ToString()}.json"));
+                if (raidDataWrappers == null)
+                {
+                    logger.Warning($"RecordCacheManager.GetRecord > 玩家{playerId}的记录文件{playerId}.json反序列化失败");
+                }
+                else
+                {
+                    _raidRecordCache.Add(playerId, raidDataWrappers);
+                }
             }
             else
             {
-                raidRecordCache.Add(playerId, new List<RaidDataWrapper>());
+                _raidRecordCache.Add(playerId, []);
             }
         }
-        List<RaidDataWrapper> records = raidRecordCache[playerId];
+        List<RaidDataWrapper> records = _raidRecordCache[playerId];
         // Console.WriteLine($"DEBUG RecordCacheManager.GetRecord > 玩家{playerId}的记录有{records.Count}条");
         return records;
     }
 
     public void Create(MongoId playerId)
     {
-        if (!raidRecordCache.ContainsKey(playerId))
+        if (!_raidRecordCache.ContainsKey(playerId))
         {
-            raidRecordCache.Add(playerId, []);
+            _raidRecordCache.Add(playerId, []);
         }
         SaveRecord(playerId);
     }
@@ -171,21 +179,21 @@ public class RecordCacheManager(
 
     public void Delete(MongoId playerId)
     {
-        if (raidRecordCache.Remove(playerId))
+        if (_raidRecordCache.Remove(playerId))
             SaveRecord(playerId);
     }
 
     public void ZipAll(ItemHelper itemHelper)
     {
-        foreach (MongoId playerId in raidRecordCache.Keys)
+        foreach (MongoId playerId in _raidRecordCache.Keys)
         {
             ZipAll(itemHelper, playerId);
         }
     }
-    
+
     public void ZipAll(ItemHelper itemHelper, MongoId playerId)
     {
-        foreach (RaidDataWrapper raidDataWrapper in raidRecordCache.GetValueOrDefault(playerId, []))
+        foreach (RaidDataWrapper raidDataWrapper in _raidRecordCache.GetValueOrDefault(playerId, []))
         {
             raidDataWrapper.Zip(itemHelper);
         }

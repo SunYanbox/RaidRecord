@@ -14,16 +14,16 @@ public record RaidArchive
     // 玩家ID
     [JsonPropertyName("playerId")] public string PlayerId { get; set; } = string.Empty;
     // 对局创建时间
-    [JsonPropertyName("createTime")] public long CreateTime { get; set; } = 0;
+    [JsonPropertyName("createTime")] public long CreateTime { get; set; }
     // 存档状态
     [JsonPropertyName("state")] public string State { get; set; } = string.Empty;
     // 玩家阵营(PMC, SCAV)
     [JsonPropertyName("side")] public string Side { get; set; } = string.Empty;
     // 带入物品
-    [JsonPropertyName("itemsTakeIn")] public Dictionary<MongoId, double> ItemsTakeIn { get; set; } = new Dictionary<MongoId, double>();
+    [JsonPropertyName("itemsTakeIn")] public Dictionary<MongoId, double> ItemsTakeIn { get; set; } = new();
     // 带出物品
     [JsonPropertyName("itemsTakeOut")]
-    public Dictionary<MongoId, double> ItemsTakeOut { get; set; } = new Dictionary<MongoId, double>();
+    public Dictionary<MongoId, double> ItemsTakeOut { get; set; } = new();
     // // 对局结束后带出的物品
     // [JsonPropertyName("addition")] public readonly Dictionary<MongoId, double> Addition = new Dictionary<MongoId, double> {};
     // // 对局结束后移除的物品
@@ -31,25 +31,25 @@ public record RaidArchive
     // // 对局结束后变化的物品
     // [JsonPropertyName("changed")] public readonly Dictionary<MongoId, double> Changed = new Dictionary<MongoId, double> {};
     // 入场价值
-    [JsonPropertyName("preRaidValue")] public long PreRaidValue { get; set; } = 0;
+    [JsonPropertyName("preRaidValue")] public long PreRaidValue { get; set; }
     // 装备价值
-    [JsonPropertyName("equipmentValue")] public long EquipmentValue { get; set; } = 0;
+    [JsonPropertyName("equipmentValue")] public long EquipmentValue { get; set; }
     // 安全箱价值
-    [JsonPropertyName("securedValue")] public long SecuredValue { get; set; } = 0;
+    [JsonPropertyName("securedValue")] public long SecuredValue { get; set; }
     // 毛收益
-    [JsonPropertyName("grossProfit")] public long GrossProfit { get; set; } = 0;
+    [JsonPropertyName("grossProfit")] public long GrossProfit { get; set; }
     // 战损
-    [JsonPropertyName("combatLosses")] public long CombatLosses { get; set; } = 0;
+    [JsonPropertyName("combatLosses")] public long CombatLosses { get; set; }
     // 战局结果状态(包括详细击杀数据
-    [JsonPropertyName("eftStats")] public EftStats? EftStats { get; set; } = null;
+    [JsonPropertyName("eftStats")] public EftStats? EftStats { get; set; }
     // 突袭实际结果
-    [JsonPropertyName("results")] public RaidResultData? Results { get; set; } = null;
+    [JsonPropertyName("results")] public RaidResultData? Results { get; set; }
 
     // 压缩战斗记录信息
     public void Zip(RaidInfo raidInfo, ItemHelper itemHelper)
     {
-        ServerId  = raidInfo.ServerId;
-        PlayerId  = raidInfo.PlayerId;
+        ServerId = raidInfo.ServerId;
+        PlayerId = raidInfo.PlayerId;
         CreateTime = raidInfo.CreateTime;
         State = raidInfo.State;
         Side = raidInfo.Side;
@@ -57,7 +57,7 @@ public record RaidArchive
         {
             State = "中途退出";
         }
-        
+
         // Console.WriteLine("RaidInfo.ItemsTakeIn");
         // foreach (var (_, item) in raidInfo.ItemsTakeIn)
         // {
@@ -68,28 +68,28 @@ public record RaidArchive
         // {
         //     Console.WriteLine($"\t{item.Template} {item.SlotId}");
         // }
-        
+
         ItemsTakeIn = new Dictionary<MongoId, double>();
         ItemsTakeOut = new Dictionary<MongoId, double>();
-        foreach (var (_, item) in raidInfo.ItemsTakeIn)
+        foreach ((MongoId _, Item item) in raidInfo.ItemsTakeIn)
         {
             // 过滤掉无效物品
             if (!itemHelper.IsValidItem(item.Template)) continue;
-            if (!ItemsTakeIn.ContainsKey(item.Template)) ItemsTakeIn.Add(item.Template, 0);
-            var count = item.Upd?.StackObjectsCount ?? 1;
+            ItemsTakeIn.TryAdd(item.Template, 0);
+            double count = item.Upd?.StackObjectsCount ?? 1;
             // if (count > 1) Console.WriteLine($"\t物品{item.Template.ToString()}堆叠{count}个");
             ItemsTakeIn[item.Template] += itemHelper.GetItemQualityModifier(item) * count;
         }
-        foreach (var (_, item) in raidInfo.ItemsTakeOut)
+        foreach ((MongoId _, Item item) in raidInfo.ItemsTakeOut)
         {
             // 过滤掉无效物品
             if (!itemHelper.IsValidItem(item.Template)) continue;
-            if (!ItemsTakeOut.ContainsKey(item.Template)) ItemsTakeOut.Add(item.Template, 0);
-            var count = item.Upd?.StackObjectsCount ?? 1;
+            ItemsTakeOut.TryAdd(item.Template, 0);
+            double count = item.Upd?.StackObjectsCount ?? 1;
             // if (count > 1) Console.WriteLine($"\t物品{item.Template.ToString()}堆叠{count}个");
             ItemsTakeOut[item.Template] += itemHelper.GetItemQualityModifier(item) * count;
         }
-        
+
         // Console.WriteLine("RaidArchive.ItemsTakeIn");
         // foreach (var (tpl, modify) in ItemsTakeIn)
         // {
@@ -100,7 +100,7 @@ public record RaidArchive
         // {
         //     Console.WriteLine($"\t{tpl}x{modify}");
         // }
-        
+
         // 其他属性
         PreRaidValue = raidInfo.PreRaidValue;
         EquipmentValue = raidInfo.EquipmentValue;
