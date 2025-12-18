@@ -20,7 +20,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <Content Include="db\**\*.*">
+        <Content Include="db\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
@@ -39,13 +39,9 @@
       -->
     <Target Name="PostBuild" AfterTargets="PostBuildEvent"> 
         <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(BeforeZipPath)" />
-        <ItemGroup>
-            <Content Include="$(OutputPath)db\**\*.*">
-                <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-                <DestinationFolder>$(BeforeZipPath)db</DestinationFolder>
-            </Content>
-        </ItemGroup>
-        <Copy SourceFiles="@(Content)" DestinationFolder="$(BeforeZipPath)db" Condition="'%(Extension)' != ''" />
+        <Copy SourceFiles="@(Content)"
+              DestinationFiles="@(Content->'$(BeforeZipPath)%(RelativeDir)%(Filename)%(Extension)')"
+              Condition="'%(Extension)' != ''" />
         <Exec WorkingDirectory="$(OutputPath)" Command="$(ZipToolPath) a -tzip -mx=9 $(AssemblyName)-$(Version).zip SPT\" />
         <Exec WorkingDirectory="$(OutputPath)" Command="$(ZipToolPath) a -tzip -mx=9 $(AssemblyName)-$(Version).7z SPT\" />
     </Target>
