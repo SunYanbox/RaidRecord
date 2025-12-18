@@ -1,27 +1,13 @@
 using System.Text.Json.Serialization;
+using RaidRecord.Core.Utils;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.Match;
-using SPTarkov.Server.Core.Models.Enums;
 
-namespace RaidRecord.Models;
+namespace RaidRecord.Core.Models;
 
-public record RaidResultData 
-{
-    // 结果字符串
-    [JsonPropertyName("result")]
-    public ExitStatus? Result { get;  set; } = null;
-    // 击杀玩家的ID
-    [JsonPropertyName("killerId")] public string? KillerId { get; set; } = null;
-    // 击杀玩家的名称
-    [JsonPropertyName("killerAid")] public string? KillerAid { get; set; } = null;
-    // 撤离点名称
-    [JsonPropertyName("exitName")] public string? ExitName { get; set; } = null;
-    // 本局游玩时间
-    [JsonPropertyName("playTime")] public long PlayTime { get; set; } = 0;
-}
 
 public record RaidInfo
 {
@@ -118,7 +104,7 @@ public record RaidInfo
         var pmcProfile = profileHelper.GetPmcProfile(sessionId);
         PlayerId = pmcProfile.Id;
         CreateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
-        ItemsTakeIn = Utils.GetInventoryInfo(pmcProfile, itemHelper);
+        ItemsTakeIn = ItemUtil.GetInventoryInfo(pmcProfile, itemHelper);
         // Console.WriteLine($"获取到的物品:");
         // foreach (var item in ItemsTakeIn.Values)
         // {
@@ -126,9 +112,9 @@ public record RaidInfo
         // }
         
         var itemsTakeIn = ItemsTakeIn.Values.ToArray();
-        PreRaidValue = Utils.GetItemsValueAll(itemsTakeIn, itemHelper);
-        EquipmentValue = Utils.GetItemsValueWithBaseClasses(itemsTakeIn, _equipments, itemHelper);
-        SecuredValue = Utils.GetItemsValueAll(Utils.GetAllItemsInContainer("SecuredContainer", itemsTakeIn), itemHelper);
+        PreRaidValue = ItemUtil.GetItemsValueAll(itemsTakeIn, itemHelper);
+        EquipmentValue = ItemUtil.GetItemsValueWithBaseClasses(itemsTakeIn, _equipments, itemHelper);
+        SecuredValue = ItemUtil.GetItemsValueAll(ItemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn), itemHelper);
         // Console.WriteLine($"itemsTakeIn.Length: {itemsTakeIn.Length}\n\tPreRaidValue: {PreRaidValue}\n\tEquipmentValue: {EquipmentValue}\n\tSecuredValue: {SecuredValue}");
     }
 
@@ -142,7 +128,7 @@ public record RaidInfo
             Console.WriteLine($"[RaidRecord] 错误: 尝试修改不属于{pmcProfile.Id}的对局数据");
             return;
         }
-        ItemsTakeOut = Utils.GetInventoryInfo(pmcProfile, itemHelper);
+        ItemsTakeOut = ItemUtil.GetInventoryInfo(pmcProfile, itemHelper);
         HandleRaidEndInventoryAndValue(pmcProfile, itemHelper);
         
         if (data == null) throw new Exception($"HandleRaidEnd的参数data意外为null");
@@ -213,14 +199,14 @@ public record RaidInfo
             if (!ItemsTakeIn.ContainsKey(itemId)) Addition.Add(itemId);
         }
         // 收益, 战损记录
-        GrossProfit = Utils.CalculateInventoryValue(ItemsTakeOut, Addition.ToArray(), itemHelper);
-        CombatLosses = Utils.CalculateInventoryValue(ItemsTakeIn, Remove.ToArray(), itemHelper);
-        foreach (var (itemId, oldItem) in Utils.GetSubDict(ItemsTakeIn, Changed))
+        GrossProfit = ItemUtil.CalculateInventoryValue(ItemsTakeOut, Addition.ToArray(), itemHelper);
+        CombatLosses = ItemUtil.CalculateInventoryValue(ItemsTakeIn, Remove.ToArray(), itemHelper);
+        foreach (var (itemId, oldItem) in DataUtil.GetSubDict(ItemsTakeIn, Changed))
         {
-            var oldValue = Utils.GetItemValue(oldItem, itemHelper);
+            var oldValue = ItemUtil.GetItemValue(oldItem, itemHelper);
             if (ItemsTakeOut.TryGetValue(itemId, out var newItem))
             {
-                var newValue = Utils.GetItemValue(newItem, itemHelper);
+                var newValue = ItemUtil.GetItemValue(newItem, itemHelper);
                 if (newValue >  oldValue) GrossProfit += newValue -  oldValue;
                 else CombatLosses += oldValue - newValue;
             }

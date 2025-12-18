@@ -1,6 +1,4 @@
 {
   "local": "ch",
-  "clearData": false,
-  "clearCaches": false,
   "logPath": "log.log"
 }

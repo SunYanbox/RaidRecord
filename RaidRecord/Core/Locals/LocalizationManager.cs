@@ -1,5 +1,5 @@
 using System.Reflection;
-using System.Text.Json.Serialization;
+using RaidRecord.Core.Configs;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
@@ -7,17 +7,13 @@ using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
 using Path = System.IO.Path;
+// ReSharper disable ClassNeverInstantiated.Global
 
-namespace RaidRecord.Models;
+namespace RaidRecord.Core.Locals;
 
-// 主本地化数据类
-public class LocalizationData
-{
-    [JsonPropertyName("translations")]
-    public Dictionary<string, string> Translations { get; set; } = new Dictionary<string, string>();
-}
-
-// 第一时间初始化本地数据
+/// <summary>
+/// 第一时间初始化本地数据
+/// </summary>
 [Injectable(InjectionType = InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 3)]
 public class LocalizationManager(
     ISptLogger<LocalizationManager> logger, 
@@ -25,8 +21,9 @@ public class LocalizationManager(
     ModConfig  modConfig,
     DatabaseServer databaseServer): IOnLoad
 {
-    public readonly Dictionary<string, Dictionary<string, string>> ExitNames = new Dictionary<string, Dictionary<string, string>>();
-    private Dictionary<string, LocalizationData> _allLocalizations = new Dictionary<string, LocalizationData>();
+    public readonly Dictionary<string, string> MapNames = new();
+    public readonly Dictionary<string, Dictionary<string, string>> ExitNames = new();
+    private Dictionary<string, LocalizationData> _allLocalizations = new();
     private string _currentLanguage = "ch"; // 默认语言
 
     public Task OnLoad()
@@ -48,16 +45,14 @@ public class LocalizationManager(
                     _allLocalizations[fileName] = modHelper.GetJsonDataFromFile<LocalizationData>(localsDir, $"{fileName}.json");
                 }
             }
-
             
-            
-            logger.Info($"[RaidRecord] {GetText("68e5af1cbe25230394726423")
-                .Replace("<AvailableLanguages>", string.Join(", ", AvailableLanguages))}");
+            logger.Info(
+                $"[RaidRecord] {GetTextFormat("models.local.LM.onload.info0", string.Join(", ", AvailableLanguages))}");
         }
         else
         {
-            logger.Error($"[RaidRecord] {GetText("68e5af1cbe25230394726424")
-                .Replace("<localsDir>", localsDir)}");
+            logger.Error($"[RaidRecord] 本地化数据库不存在: {localsDir}");
+            logger.Error($"[RaidRecord] Localisation database does not exist: {localsDir}");
         }
 
         CurrentLanguage = modConfig.Configs.Local;
@@ -74,8 +69,8 @@ public class LocalizationManager(
             "woods", 
             "bigmap", 
             // "develop",
-            "factory4day", // factory4_day
-            "factory4night", // factory4_night
+            "factory4_day", // factory4_day
+            "factory4_night", // factory4_night
             // "hideout",
             "interchange",
             "laboratory",
@@ -93,11 +88,18 @@ public class LocalizationManager(
         ];
         var localesMap = locales.Global[CurrentLanguage].Value;
         var errorMsg = "";
+
+        // 获取地图的本地化表示
+        foreach (var mapName in mapNames)
+        {
+            MapNames[mapName.Replace("_", "")] = localesMap?.TryGetValue(mapName, out var name) ?? false ? name : mapName;
+        }
+        
         foreach (var mapName in mapNames)
         {
             ExitNames.Add(mapName, new Dictionary<string, string>());
             
-            if (!locations.GetDictionary().ContainsKey(mapName))
+            if (!locations.GetDictionary().ContainsKey(mapName.Replace("_", "")))
             {
                 // Console.WriteLine($"警告: 没有键为{mapName}的数据, ");
                 // var options1 = new JsonSerializerOptions
@@ -108,20 +110,20 @@ public class LocalizationManager(
                 // Console.WriteLine("当前有的键: " + JsonSerializer.Serialize(Locations.GetDictionary().Keys.ToArray(), options1));
                 continue;
             }
-            var map = locations.GetDictionary()[mapName]; // Locations.GetMappedKey(mapName)
+            var map = locations.GetDictionary()[mapName.Replace("_", "")]; // Locations.GetMappedKey(mapName)
             foreach (var exit in map.AllExtracts)
             {
                 // Console.WriteLine($"map: {mapName}\n exit: {exit}\n data: " + JsonSerializer.Serialize(ExitNames));
                 if (exit.Name == null) continue;
                 if (!localesMap.ContainsKey(exit.Name))
                 {
-                    errorMsg += GetText("68e5af1cbe25230394726425").Replace("<exit.Name>", exit.Name) + "\n";
+                    errorMsg += GetTextFormat("models.local.LM.init.warn0", exit.Name) + "\n";
                     continue;
                 }
 
                 if (ExitNames[mapName].ContainsKey(exit.Name))
                 {
-                    errorMsg += GetText("68e5af1cbe25230394726426").Replace("<exit.Name>", exit.Name).Replace("<mapName>", mapName) + "\n";
+                    errorMsg += GetTextFormat("models.local.LM.init.warn1", exit.Name, mapName) + "\n";
                     continue;
                 }
                 ExitNames[mapName].Add(exit.Name, localesMap[exit.Name]);
@@ -136,7 +138,7 @@ public class LocalizationManager(
         // Console.WriteLine(JsonSerializer.Serialize(ExitNames, options));
         // Console.WriteLine("[RaidRecord] " + errorMsg);
         modConfig.Log("Info", errorMsg);
-        Console.WriteLine($"[RaidRecord] {GetText("68e5af1dbe25230394726427")}");
+        Console.WriteLine($"[RaidRecord] {GetTextFormat("models.local.LM.init.info0")}");
     }
     
     public string CurrentLanguage 
@@ -162,11 +164,25 @@ public class LocalizationManager(
         return result ?? fallback;
     }
 
+    public string GetTextFormat(string msgId, params object?[] args)
+    {
+        return string.Format(GetText(msgId), args);
+    }
+
+    public string GetMapName(string map)
+    {
+        return MapNames.TryGetValue(map.Replace("_", "").ToLower(), out var mapExits) ? mapExits: map;
+    }
+    
     public string GetExitName(string map, string key)
     {
         return ExitNames.TryGetValue(map.Replace("_", "").ToLower(), out var mapExits) ? (mapExits.TryGetValue(key, out var name) ? name : key) : key;
     }
     
+    public string GetArmorZoneName(string key) => _allLocalizations[CurrentLanguage].ArmorZone.GetValueOrDefault(key, key);
+
+    public string GetRoleName(string key) => _allLocalizations[CurrentLanguage].RoleNames.GetValueOrDefault(key, key);
+
     // 只读属性, 查看支持的语言
     public List<string> AvailableLanguages => _allLocalizations.Keys.ToList<string>();
 }

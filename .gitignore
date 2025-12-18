@@ -11,3 +11,4 @@ riderModule.iml
 # 完全忽略所有IDE配置
 .idea/*
 *.user
+*.DotSettings*

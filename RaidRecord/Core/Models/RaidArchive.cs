@@ -2,8 +2,10 @@ using System.Text.Json.Serialization;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace RaidRecord.Models;
+namespace RaidRecord.Core.Models;
 
 public record RaidArchive
 {
@@ -75,7 +77,7 @@ public record RaidArchive
             if (!itemHelper.IsValidItem(item.Template)) continue;
             if (!ItemsTakeIn.ContainsKey(item.Template)) ItemsTakeIn.Add(item.Template, 0);
             var count = item.Upd?.StackObjectsCount ?? 1;
-            if (count > 1) Console.WriteLine($"\t物品{item.Template.ToString()}堆叠{count}个");
+            // if (count > 1) Console.WriteLine($"\t物品{item.Template.ToString()}堆叠{count}个");
             ItemsTakeIn[item.Template] += itemHelper.GetItemQualityModifier(item) * count;
         }
         foreach (var (_, item) in raidInfo.ItemsTakeOut)
@@ -84,7 +86,7 @@ public record RaidArchive
             if (!itemHelper.IsValidItem(item.Template)) continue;
             if (!ItemsTakeOut.ContainsKey(item.Template)) ItemsTakeOut.Add(item.Template, 0);
             var count = item.Upd?.StackObjectsCount ?? 1;
-            if (count > 1) Console.WriteLine($"\t物品{item.Template.ToString()}堆叠{count}个");
+            // if (count > 1) Console.WriteLine($"\t物品{item.Template.ToString()}堆叠{count}个");
             ItemsTakeOut[item.Template] += itemHelper.GetItemQualityModifier(item) * count;
         }
         

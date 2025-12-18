@@ -1,4 +1,9 @@
-using RaidRecord.Models;
+using RaidRecord.Core.ChatBot.Commands;
+using RaidRecord.Core.Configs;
+using RaidRecord.Core.Locals;
+using RaidRecord.Core.Models;
+using RaidRecord.Core.Systems;
+using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
@@ -13,197 +18,9 @@ using SPTarkov.Server.Core.Models.Spt.Dialog;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Services;
 
-namespace RaidRecord;
+namespace RaidRecord.Core.ChatBot;
 
-// 常量配置
-public static class Constants
-{
-    public const double ArchiveCheckJudgeError = 1e-6;
-    public const int SendLimit = 491;
-
-    public static readonly Dictionary<string, string> MapNames = new Dictionary<string, string>
-    {
-        ["factory4_day"] = "工厂(白天)",
-        ["factory4_night"] = "工厂(夜晚)",
-        ["bigmap"] = "海关",
-        ["woods"] = "森林",
-        ["shoreline"] = "海岸线",
-        ["interchange"] = "立交桥",
-        ["rezervbase"] = "储备站",
-        ["laboratory"] = "实验室",
-        ["lighthouse"] = "灯塔",
-        ["tarkovstreets"] = "街区",
-        ["sandbox"] = "中心区"
-    };
-    
-    public static readonly Dictionary<ExitStatus, string> ResultNames = new Dictionary<ExitStatus, string>
-    {
-        [ExitStatus.SURVIVED] = "幸存",
-        [ExitStatus.KILLED] = "行动中阵亡",
-        [ExitStatus.LEFT] = "离开行动",
-        [ExitStatus.MISSINGINACTION] = "行动中失踪",
-        [ExitStatus.RUNNER] = "匆匆逃离",
-        [ExitStatus.TRANSIT] = "过渡"
-    };
-    
-    public static readonly Dictionary<string, string> ArmorZone = new Dictionary<string, string>
-    {
-        // QuestCondition/Elimination/Kill/BodyPart/
-        { "Chest", "胸腔" },
-        { "Head", "头部" },
-        { "LeftArm", "左臂" },
-        { "LeftLeg", "左腿" },
-        { "RightArm", "右臂" },
-        { "RightLeg", "右腿" },
-        // { "Stomach", "胃部" },
-        
-        // Collider Type 
-        { "Back", "胸部, 背部" },
-        { "BackHead", "头部, 脖颈" },
-        { "Ears", "头部, 耳部" },
-        { "Eyes", "头部, 眼部" },
-        { "Groin", "胃部, 股沟" },
-        { "HeadCommon", "头部, 脸部" },
-        { "Jaw", "头部, 下颚" },
-        { "LeftCalf", "左腿, 小腿" },
-        { "LeftForearm", "左臂, 前臂" },
-        { "LeftSide", "左下身" },
-        { "LeftSideChestDown", "胃部, 左侧" },
-        { "LeftSideChestUp", "胸部, 左腋下" },
-        { "LeftThigh", "左腿, 大腿" },
-        { "LeftUpperArm", "左臂, 手臂" },
-        { "LowerBack", "胃部, 下背部" },
-        { "NeckBack", "胸部, 脖子" },
-        { "NeckFront", "胸部, 喉部" },
-        { "ParietalHead", "头部, 头顶" },
-        { "Pelvis", "胃部, 股沟" },
-        { "PelvisBack", "胃部, 臀部" },
-        { "Ribcage", "胸腔" },
-        { "RibcageLow", "胃部" },
-        { "RibcageUp", "胸部" },
-        { "RightCalf", "右腿, 小腿" },
-        { "RightForearm", "右臂, 前臂" },
-        { "RightSide", "右下身" },
-        { "RightSideChestDown", "胃部, 右侧" },
-        { "RightSideChestUp", "胸部, 右腋下" },
-        { "RightThigh", "右腿, 大腿" },
-        { "RightUpperArm", "右臂, 手臂" },
-        { "SpineDown", "胃部, 下背部" },
-        { "SpineTop", "胸腔, 上背部" },
-        { "Stomach", "胃部" }
-    };
-
-    // Scav角色本地化
-    public static readonly Dictionary<string, string> RoleNames = new Dictionary<string, string>
-    {
-        { "ArenaFighterEvent", "寻血猎犬" },
-        { "Boss", "Boss" },
-        { "ExUsec", "游荡者" },
-        { "Follower", "保镖" },
-        { "Marksman", "狙击手" },
-        { "PmcBot", "掠夺者" },
-        { "Sectant", "???" },
-        { "infectedAssault", "感染者" },
-        { "infectedCivil", "感染者" },
-        { "infectedLaborant", "感染者" },
-        { "infectedPmc", "感染者" },
-        { "infectedTagilla", "感染者" },
-        // 更本地化一点
-        { "pmcBot", "人机" },
-        { "pmcBEAR", "BearPMC" },
-        { "pmcUSER", "UserPMC" }
-    };
-}
-
-// 命令参数 | 参与命令调用的参数
-public class Parametrics
-{
-    public string SessionId { get; set; }
-    public RaidRecordManagerChat? ManagerChat { get; set; }
-    public Dictionary<string, string> Paras { get; set; }
-
-    public Parametrics(string sessionId, RaidRecordManagerChat managerChat)
-    {
-        SessionId = sessionId;
-        ManagerChat = managerChat;
-        Paras = new Dictionary<string, string>();
-    }
-}
-
-// 回调函数类型
-public delegate string CommandCallback(Parametrics parametrics);
-
-// 参数信息 | 仅用于help获取命令信息
-public class ParaInfo
-{
-    public List<string> Paras { get; set; }
-    public Dictionary<string, string> Types { get; set; }
-    public Dictionary<string, string> Descs { get; set; }
-    public HashSet<string> Optional { get; set; }
-
-    public ParaInfo()
-    {
-        Paras = new List<string>();
-        Types = new Dictionary<string, string>();
-        Descs = new Dictionary<string, string>();
-        Optional = new HashSet<string>();
-    }
-}
-
-public class Command
-{
-    public string? Key { get; set; }
-    public string? Desc { get; set; }
-    public ParaInfo? ParaInfo { get; set; }
-    public Parametrics? Paras { get; set; }
-    public CommandCallback? Callback { get; set; }
-}
-
-public class ParaInfoBuilder
-{
-    private ParaInfo _paraInfo;
-
-    public ParaInfoBuilder()
-    {
-        _paraInfo = new ParaInfo();
-    }
-
-    /// <summary>
-    /// 添加参数
-    /// </summary>
-    /// <param name="name">参数名</param>
-    /// <param name="type">参数类型</param>
-    /// <param name="desc">参数描述</param>
-    public ParaInfoBuilder AddParam(string name, string type, string desc)
-    {
-        _paraInfo.Paras.Add(name);
-        _paraInfo.Types[name] = type;
-        _paraInfo.Descs[name] = desc;
-        return this;
-    }
-
-    public ParaInfoBuilder SetOptional(string[] parameters)
-    {
-        foreach (var para in parameters)
-        {
-            _paraInfo.Optional.Add(para);
-        }
-        return this;
-    }
-
-    /// <summary>
-    /// 构建参数信息, 返回构建好的实例后重置自身的数据
-    /// </summary>
-    public ParaInfo Build()
-    {
-        var info = _paraInfo;
-        _paraInfo = new ParaInfo();
-        return info;
-    }
-}
-
-
-[Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 3)]
+[Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 4)]
 public class RaidRecordManagerChat(
     MailSendService mailSendService,
     ISptLogger<RaidRecordManagerChat> logger,
@@ -212,11 +29,17 @@ public class RaidRecordManagerChat(
     LocalizationManager localizationManager,
     DatabaseService databaseService,
     ItemHelper itemHelper,
+    ModConfig modConfig,
     RecordCacheManager recordCacheManager) : IDialogueChatBot, IOnLoad
 {
     private Dictionary<string, Command> _commands = new Dictionary<string, Command>();
     protected ParaInfoBuilder ParaInfoBuilder = new ParaInfoBuilder();
 
+    private string GetLocalText(string msgId, params object?[] args)
+    {
+        return localizationManager.GetTextFormat(msgId, args);
+    }
+    
     public Task OnLoad()
     {
         InitCommands();
@@ -231,7 +54,7 @@ public class RaidRecordManagerChat(
             Aid = 8100860,
             Info = new UserDialogDetails
             {
-                Nickname = "对局战绩管理",
+                Nickname = GetLocalText("RC MC.ChatBot.NickName"),
                 Side = "Usec",
                 Level = 69,
                 MemberCategory = MemberCategory.Sherpa,
@@ -249,8 +72,9 @@ public class RaidRecordManagerChat(
             // this.error(e.name);
             // this.error(e.message);
             // this.error(e.stack);
-            logger.Error($"[RaidRecord]<Chat> 用户{sessionId}输入的指令处理失败: {e.Message}");
-            SendMessage(sessionId, $"指令处理失败: {e.Message}\n请检查你输入的指令: '{request.Text}'");
+            logger.Error($"[RaidRecord]<Chat> {GetLocalText("RC MC.Chat.HM.error0", sessionId, e.Message)}");
+            modConfig?.LogError(e, "RaidRecordManagerChat.HandleMessage", GetLocalText("RC MC.Chat.HM.error0", sessionId, e.Message));
+            SendMessage(sessionId, GetLocalText("RC MC.Chat.HM.error1", request.Text, e.Message));
         }
         return ValueTask.FromResult(request.DialogId);
     }
@@ -264,7 +88,7 @@ public class RaidRecordManagerChat(
             new Command
             {
                 Key = "help",
-                Desc = "获取所有命令的帮助信息, 使用方式: \n",
+                Desc = GetLocalText("Command.Help.Desc"),
                 ParaInfo = new ParaInfo(),
                 Paras = null,
                 Callback = GetHelpCommand()
@@ -272,10 +96,10 @@ public class RaidRecordManagerChat(
             new Command
             {
                 Key = "list",
-                Desc = "获取自身所有符合条件的对局历史记录, 使用方式: \n",
+                Desc = GetLocalText("Command.List.Desc"),
                 ParaInfo = ParaInfoBuilder
-                    .AddParam("limit", "int", "每一页历史记录数量限制")
-                    .AddParam("page", "int", "要查看的页码")
+                    .AddParam("limit", "int", GetLocalText("Command.Para.Limit.Desc"))
+                    .AddParam("page", "int", GetLocalText("Command.Para.Page.Desc"))
                     .SetOptional(["limit", "page"])
                     .Build(),
                 Paras = null,
@@ -284,10 +108,10 @@ public class RaidRecordManagerChat(
             new Command
             {
                 Key = "info",
-                Desc = "使用序号或serverId获取详细对局记录(至少需要一个参数), 使用方式: \n",
+                Desc = GetLocalText("Command.Info.Desc"),
                 ParaInfo = ParaInfoBuilder
-                    .AddParam("serverId", "string", "对局ID")
-                    .AddParam("index", "int", "对局索引")
+                    .AddParam("serverId", "string", GetLocalText("Command.Para.ServerId.Desc"))
+                    .AddParam("index", "int", GetLocalText("Command.Para.Index.Desc"))
                     .SetOptional(["serverId", "index"])
                     .Build(),
                 Paras = null,
@@ -296,10 +120,10 @@ public class RaidRecordManagerChat(
             new Command
             {
                 Key = "items",
-                Desc = "使用序号或serverId获取指定对局记录(至少需要一个参数)详细物品信息, 使用方式: \n",
+                Desc = GetLocalText("Command.Items.Desc"),
                 ParaInfo = ParaInfoBuilder
-                    .AddParam("serverId", "string", "对局ID")
-                    .AddParam("index", "int", "对局索引")
+                    .AddParam("serverId", "string", GetLocalText("Command.Para.ServerId.Desc"))
+                    .AddParam("index", "int", GetLocalText("Command.Para.Index.Desc"))
                     .SetOptional(["serverId", "index"])
                     .Build(),
                 Paras = null,
@@ -308,31 +132,31 @@ public class RaidRecordManagerChat(
             new Command
             {
                 Key = "cls",
-                Desc = "清除聊天对话框历史记录, 使用方式: \n",
+                Desc = GetLocalText("Command.Cls.Desc"),
                 ParaInfo = new ParaInfo(),
                 Paras = null,
                 Callback = GetClsCommand()
             }
         ];
         foreach (var command in commands) {
-            Utils.UpdateCommandDesc(command);
+            DataUtil.UpdateCommandDesc(command);
             if (command.Key == null) continue;
             _commands[command.Key] = command;
         }
-        logger.Info($"[RaidRecord] 对局战绩管理命令({string.Join(", ", _commands.Keys.ToArray())})已注册");
+        logger.Info($"[RaidRecord] {GetLocalText("RC MC.Chat.initCmd.info0", string.Join(", ", _commands.Keys.ToArray()))}");
     }
 
     private string HandleCommand(string command, string sessionId)
     {
-        string[] data = Utils.SplitCommand(command.ToLower());
+        string[] data = StringUtil.SplitCommand(command.ToLower());
         if (data.Length <= 0) {
-            return "未输入任何命令";
+            return GetLocalText("RC MC.Chat.handleCmd.error0");
         }
 
         // logger.Info($"全部命令: {string.Join(", ", _commands.Keys.ToArray())}, 输入的指令: \"{command}\", 检测出的指令: {data[0]}");
         if (!_commands.ContainsKey(data[0]))
         {
-            return $"未知的命令: {data[0]}, 可用的命令包括: {string.Join(",", _commands.Keys.ToArray())}";
+            return GetLocalText("RC MC.Chat.handleCmd.error1", data[0], string.Join(",", _commands.Keys.ToArray()));
         }
         Command iCmd = _commands[data[0]];
         iCmd.Paras = new Parametrics(sessionId, this);
@@ -378,7 +202,7 @@ public class RaidRecordManagerChat(
 
     public async void SendAllMessage(string sessionId, string message)
     {
-        string[] messages = Utils.SplitStringByNewlines(message);
+        string[] messages = StringUtil.SplitStringByNewlines(message);
         if (messages.Length == 0) { return; }
         if (messages.Length == 1)
         {
@@ -405,27 +229,28 @@ public class RaidRecordManagerChat(
     {
         if (string.IsNullOrEmpty(parametrics.SessionId)) 
         { 
-            return "未输入session参数"; 
+            return GetLocalText("RC MC.Chat.verify.error0"); 
         }
 
         try
         {
             string playerId = profileHelper.GetPmcProfile(parametrics.SessionId).Id;
-            if (string.IsNullOrEmpty(playerId)) throw new Exception($"playerId为null或为空");
+            if (string.IsNullOrEmpty(playerId)) throw new Exception(GetLocalText("RC MC.Chat.verify.error1"));
         }
         catch (Exception e)
         {
-            return $"用户未注册或者session已失效: {e.Message}"; 
+            modConfig.LogError(e, "RaidRecordManagerChat.VerifyIParametrics", GetLocalText("RC MC.Chat.verify.error2", e.Message));
+            return GetLocalText("RC MC.Chat.verify.error2", e.Message); 
         }
         
         if (parametrics.ManagerChat == null) 
         { 
-            return "实例未正确初始化: 缺少managerChat属性"; 
+            return GetLocalText("RC MC.Chat.verify.error3"); 
         }
         
         if (parametrics.Paras == null) 
         { 
-            return "实例未正确初始化: 缺少paras属性"; 
+            return GetLocalText("RC MC.Chat.verify.error4"); 
         }
         
         return null;
@@ -462,8 +287,7 @@ public class RaidRecordManagerChat(
         var month = date.Month;
         var day = date.Day;
         var time = date.ToShortTimeString();
-        
-        return $"{year}年{month}月{day}日 {time}";
+        return GetLocalText("RC MC.Chat.Format.Time", year, month, day, time);
     }
     
     protected string GetArchiveDetails(RaidArchive archive)
@@ -474,37 +298,37 @@ public class RaidRecordManagerChat(
         var playerData = profileHelper.GetProfileByPmcId(playerId);
         // 本次对局元数据
         var _timeString = DateFormatterFull(archive.CreateTime);
-        string mapName = serverId.Substring(0, serverId.IndexOf('.')).ToLower();
+        string mapName = serverId[..serverId.IndexOf('.')].ToLower();
         
-        msg += string.Format("{0} 对局ID: {1} 玩家信息: {2}(Level={3}, id={4})", 
+        msg += GetLocalText("RC MC.Chat.GAD.info0", 
             _timeString, serverId, playerData.Info.Nickname, playerData.Info.Level, playerData.Id);
 
-        msg += string.Format("\n地图: {0} 生存时间: {1}", 
-            Constants.MapNames[mapName], Utils.TimeString(archive?.Results?.PlayTime ?? 0));
+        msg += GetLocalText("RC MC.Chat.GAD.info1", 
+            localizationManager.GetMapName(mapName), StringUtil.TimeString(archive?.Results?.PlayTime ?? 0));
 
-        msg += string.Format("\n入局战备: {0}rub, 安全箱物资价值: {1}rub, 总带入价值: {2}rub", 
+        msg += GetLocalText("RC MC.Chat.GAD.info2", 
             (int)(archive.EquipmentValue), (int)(archive.SecuredValue), (int)(archive.PreRaidValue));
 
-        msg += string.Format("\n带出价值: {0}rub, 战损{1}rub, 净利润{2}rub", 
+        msg += GetLocalText("RC MC.Chat.GAD.info3", 
             (int)(archive?.GrossProfit ?? 0), 
             (int)(archive?.CombatLosses ?? 0), 
             (int)(archive?.GrossProfit - archive?.CombatLosses ?? 0));
 
-        string result = "未知结果";
+        string result = GetLocalText("RC MC.Chat.GAD.unknowResult");
 
         if (archive?.Results?.Result != null)
         {
             ExitStatus nonNullResult = archive.Results.Result.Value;
             if (Constants.ResultNames.TryGetValue(nonNullResult, out string resultName))
             {
-                result = resultName;
+                result = localizationManager.GetText(resultName, resultName);
             }
         }
         
-        msg += string.Format("\n对局结果: {0} 撤离点: {1} 游戏风格: {2}", 
+        msg += GetLocalText("RC MC.Chat.GAD.info4", 
             result,
-            localizationManager.GetExitName(mapName, archive?.Results?.ExitName ?? "无撤离点"),
-            archive?.EftStats?.SurvivorClass ?? "未知");
+            localizationManager.GetExitName(mapName, archive?.Results?.ExitName ?? GetLocalText("RC MC.Chat.GAD.nullExitPosition")),
+            archive?.EftStats?.SurvivorClass ?? GetLocalText("RC MC.Chat.GAD.unknow"));
         
         var victims = archive?.EftStats?.Victims?.ToList() ?? new List<Victim>();
         var _locals = databaseService.GetTables().Locales.Global[localizationManager.CurrentLanguage];
@@ -512,18 +336,21 @@ public class RaidRecordManagerChat(
         
         if (victims.Count > 0)
         {
-            msg += "\n本局击杀:";
+            msg += GetLocalText("RC MC.Chat.GAD.killed");
             foreach (var victim in victims)
             {
-                msg += string.Format("\n {0} 使用{1}命中{2}淘汰距离{3}m远的{4}(等级:{5} 阵营:{6} 角色:{7})",
+                msg += GetLocalText("RC MC.Chat.GAD.info5",
                     victim.Time,
-                    locals.TryGetValue(victim.Weapon, out var value1) ? value1 : (victim.Weapon ?? "未知武器"),
-                    Constants.ArmorZone.TryGetValue(victim.BodyPart, out var value2) ? value2 : victim.BodyPart,
+                    locals.TryGetValue(victim.Weapon, out var value1)
+                        ? value1
+                        : (victim.Weapon ?? GetLocalText("RC MC.Chat.GAD.unknowWeapon")),
+                    localizationManager.GetArmorZoneName(victim.BodyPart ?? ""),
                     (int)(victim.Distance ?? 0),
                     victim.Name,
                     victim.Level,
                     victim.Side,
-                    Constants.RoleNames.TryGetValue(victim.Role,  out var value3) ? value3 : victim.Role);
+                    localizationManager.GetRoleName(victim.Role ?? ""));
+                // Constants.RoleNames.TryGetValue(victim.Role,  out var value3) ? value3 : victim.Role);
             }
         }
 
@@ -532,15 +359,18 @@ public class RaidRecordManagerChat(
             var aggressor = archive?.EftStats?.Aggressor;
             if (aggressor != null)
             {
-                msg += string.Format("\n击杀者: {0}(阵营: {1})使用{2}命中{3}淘汰了你",
+                msg += GetLocalText("RC MC.Chat.GAD.info6",
                     aggressor.Name,
                     aggressor.Side,
-                    locals.TryGetValue(aggressor.WeaponName, out var value1) ? value1 : (aggressor.WeaponName ?? "未知武器"),
-                    Constants.RoleNames.TryGetValue(aggressor.Role,  out var value3) ? value3 : aggressor.Role);
+                    locals.TryGetValue(aggressor.WeaponName, out var value1)
+                        ? value1
+                        : (aggressor.WeaponName ?? "未知武器"),
+                    // Constants.RoleNames.TryGetValue(aggressor.Role,  out var value3) ? value3 : aggressor.Role);
+                    localizationManager.GetRoleName(aggressor.Role ?? ""));
             }
             else
             {
-                msg += "\n击杀者数据加载失败";
+                msg += GetLocalText("RC MC.Chat.GAD.killedLoadError");
             }
         }
 
@@ -555,45 +385,46 @@ public class RaidRecordManagerChat(
         var playerData = profileHelper.GetProfileByPmcId(playerId);
         // 本次对局元数据
         var _timeString = DateFormatterFull(archive.CreateTime);
-        string mapName = serverId.Substring(0, serverId.IndexOf('.')).ToLower();
+        string mapName = serverId[..serverId.IndexOf('.')].ToLower();
         
-        msg += string.Format("{0} 对局ID: {1} 玩家信息: {2}(Level={3}, id={4})", 
+        msg += GetLocalText("RC MC.Chat.GAD.info0", 
             _timeString, serverId, playerData.Info.Nickname, playerData.Info.Level, playerData.Id);
 
-        msg += string.Format("\n地图: {0} 生存时间: {1}", 
-            Constants.MapNames[mapName], Utils.TimeString(archive?.Results?.PlayTime ?? 0));
+        msg += GetLocalText("RC MC.Chat.GAD.info1", 
+            localizationManager.GetMapName(mapName), StringUtil.TimeString(archive?.Results?.PlayTime ?? 0));
 
-        msg += string.Format("\n入局战备: {0}rub, 安全箱物资价值: {1}rub, 总带入价值: {2}rub", 
+        msg += GetLocalText("RC MC.Chat.GAD.info2", 
             (int)(archive.EquipmentValue), (int)(archive.SecuredValue), (int)(archive.PreRaidValue));
 
-        msg += string.Format("\n带出价值: {0}rub, 战损{1}rub, 净利润{2}rub", 
+        msg += GetLocalText("RC MC.Chat.GAD.info3", 
             (int)(archive?.GrossProfit ?? 0), 
             (int)(archive?.CombatLosses ?? 0), 
             (int)(archive?.GrossProfit - archive?.CombatLosses ?? 0));
 
-        string result = "未知结果";
+        string result = GetLocalText("RC MC.Chat.GAD.unknow");
 
         if (archive?.Results?.Result != null)
         {
             ExitStatus nonNullResult = archive.Results.Result.Value;
             if (Constants.ResultNames.TryGetValue(nonNullResult, out string resultName))
             {
-                result = resultName;
+                result = localizationManager.GetText(resultName, resultName);
             }
         }
         
-        msg += string.Format("\n对局结果: {0} 撤离点: {1} 游戏风格: {2}", 
+        msg += GetLocalText("RC MC.Chat.GAD.info4", 
             result,
-            localizationManager.GetExitName(mapName, archive?.Results?.ExitName ?? "无撤离点"),
-            archive?.EftStats?.SurvivorClass ?? "未知");
+            localizationManager.GetExitName(mapName, archive?.Results?.ExitName ?? GetLocalText("RC MC.Chat.GAD.nullExitPosition")),
+            archive?.EftStats?.SurvivorClass ?? GetLocalText("RC MC.Chat.GAD.unknow"));
 
         var itemTpls = databaseService.GetTables().Templates.Items;
         var local = databaseService.GetTables().Locales.Global[localizationManager.CurrentLanguage].Value;
-        if (local == null) return "无法显示属性, 本地化数据库加载失败";
+        if (local == null) return GetLocalText("RC MC.Chat.GID.error0");
 
         if (archive.ItemsTakeIn.Count > 0)
         {
-            msg += string.Format("\n\n带入对局物品:\n   物品名称  物品单价  物品修正  物品总价值");
+            // "\n\n带入对局物品:\n   物品名称  物品单价  物品修正  物品总价值"
+            msg += GetLocalText("RC MC.Chat.GID.info0");
             foreach (var (tpl, modify) in archive.ItemsTakeIn)
             {
                 var item = itemTpls[tpl];
@@ -606,7 +437,8 @@ public class RaidRecordManagerChat(
         
         if (archive.ItemsTakeOut.Count > 0)
         {
-            msg += string.Format("\n\n带出对局物品:\n   物品名称  物品单价  物品修正  物品总价值  物品描述");
+            // "\n\n带出对局物品:\n   物品名称  物品单价  物品修正  物品总价值  物品描述"
+            msg += GetLocalText("RC MC.Chat.GID.info1");
 
             foreach (var (tpl, modify) in archive.ItemsTakeOut)
             {
@@ -629,8 +461,9 @@ public class RaidRecordManagerChat(
         {
             string? verify =  VerifyIParametrics(parametrics);
             if (verify != null) return verify;
-
-            string msg = "帮助信息(参数需要按键值对写, 例如\"list index 1\"; 中括号表示可选参数; 指令与参数不区分大小写):";
+            
+            // "帮助信息(参数需要按键值对写, 例如\"list index 1\"; 中括号表示可选参数; 指令与参数不区分大小写):"
+            string msg = GetLocalText("Command.Help.Head");
             foreach (var cmd in parametrics.ManagerChat._commands.Values)
             {
                 msg += $"\n - {cmd.Key}: {cmd.Desc}\n";
@@ -654,10 +487,11 @@ public class RaidRecordManagerChat(
             {
                 int count = dialog.Messages.Count;
                 dialog.Messages = [];
-                return $"已清除{count}条聊天记录, 重启游戏客户端后生效";
+                // $"已清除{count}条聊天记录, 重启游戏客户端后生效"
+                return GetLocalText("Command.Cls.info0", count);
             }
-
-            return "找不到你的聊天记录";
+            // "找不到你的聊天记录"
+            return GetLocalText("Command.Cls.error0");
         };
     }
     
@@ -674,37 +508,51 @@ public class RaidRecordManagerChat(
                 numberLimit = int.TryParse(parametrics.Paras.GetValueOrDefault("limit", "10"), out int _limit) ? _limit : 10;
                 page = int.TryParse(parametrics.Paras.GetValueOrDefault("page", "1"), out int _page) ? _page : 1;
             } catch (Exception e) {
-                return $"参数解析时出现错误: {e.Message}";
+                // return $"参数解析时出现错误: {e.Message}";
+                modConfig.LogError(e, "RaidRecordManagerChat.ListCommand", GetLocalText("Command.Para.Parse.error0", e.Message));
+                return GetLocalText("Command.Para.Parse.error0", e.Message);
             }
             numberLimit = Math.Min(20, Math.Max(1, numberLimit));
             page = Math.Max(1, page);
 
             int indexLeft = Math.Max(numberLimit *  (page - 1), 0);
             int indexRight = Math.Min(numberLimit * page, records.Count);
-            if (records.Count <= 0) return "您没有任何历史战绩, 请至少对局一次后再来查询吧";
+            // if (records.Count <= 0) return "您没有任何历史战绩, 请至少对局一次后再来查询吧";
+            if (records.Count <= 0) return GetLocalText("Command.List.error0");
             List<RaidArchive> results = [];
             for (int i = indexLeft; i < indexRight; i++) {
                 results.Add(records[i]);
             }
-            if (results.Count <= 0) return $"未查询到您第{indexLeft+1}到{indexRight}条历史战绩";
+            // if (results.Count <= 0) return $"未查询到您第{indexLeft+1}到{indexRight}条历史战绩";
+            if (results.Count <= 0) return GetLocalText("Command.List.error1", indexLeft+1, indexRight);
             
-            string msg = $"历史战绩(共{results.Count}/{records.Count}条):\n - serverId                 序号 地图 入场总价值 带出收益 战损 游戏时间 结果\n";
+            // string msg = $"历史战绩(共{results.Count}/{records.Count}条):\n - serverId                 序号 地图 入场总价值 带出收益 战损 游戏时间 结果\n";
+            string msg = GetLocalText("Command.List.info0", results.Count, records.Count);
+
             int jump = 0;
             for (int i = 0; i < results.Count; i++)
             {
                 if (results[i] == null || string.IsNullOrEmpty(results[i].ServerId)) { jump++; continue; }
 
-                string result = "未知结局";
+                string result = GetLocalText("Command.List.unknownEnding");
                 try
                 {
                     if (results[i].Results == null || results[i].Results.Result == null) throw new Exception();
-                    result = Constants.ResultNames[results[i].Results.Result.Value];
+                    var resultName = Constants.ResultNames[results[i].Results.Result.Value];
+                    result = localizationManager.GetText(resultName, resultName);
                 }
-                catch (Exception _) {}
+                catch (Exception e)
+                {
+                    modConfig.LogError(e, "RaidRecordManagerChat.ListCommand", "尝试从本地数据库获取对局结果信息时出错");
+                }
                 
-                msg += $" - {results[i].ServerId} {indexLeft + i} {Constants.MapNames[results[i].ServerId.Substring(0, results[i].ServerId.IndexOf('.')).ToLower()]} {results[i].PreRaidValue} {results[i].GrossProfit} {results[i].CombatLosses} {Utils.TimeString(results[i].Results.PlayTime)} {result}\n";
+                msg += $" - {results[i].ServerId} {indexLeft + i} "
+                       + $"{localizationManager.GetMapName(results[i].ServerId[..results[i].ServerId.IndexOf('.')].ToLower())} "
+                       + $"{results[i].PreRaidValue} {results[i].GrossProfit} {results[i].CombatLosses} "
+                       + $"{StringUtil.TimeString(results[i]?.Results?.PlayTime ?? 0)} {result}\n";
             }
-            if (jump > 0) msg += $"跳过{jump}条无效数据";
+            // if (jump > 0) msg += $"跳过{jump}条无效数据";
+            if (jump > 0) msg += GetLocalText("Command.List.info1", jump);
             return msg;
         };
     }
@@ -720,7 +568,9 @@ public class RaidRecordManagerChat(
                 serverId = parametrics.Paras.GetValueOrDefault("serverid", "");
                 index = int.TryParse(parametrics.Paras.GetValueOrDefault("index", "-1"), out int _index) ? _index : -1;
             } catch (Exception e) {
-                return $"参数解析时出现错误: {e.Message}";
+                // return $"参数解析时出现错误: {e.Message}";
+                modConfig.LogError(e, "RaidRecordManagerChat.ListCommand", GetLocalText("Command.Para.Parse.error0", e.Message));
+                return GetLocalText("Command.Para.Parse.error0", e.Message);
             }
 
             if (!string.IsNullOrEmpty(serverId)) {
@@ -729,16 +579,19 @@ public class RaidRecordManagerChat(
                 if (record != null) {
                     return GetArchiveDetails(record);
                 } else {
-                    return $"serverId为{serverId}的对局不存在, 请检查你的输入";
+                    // return $"serverId为{serverId}的对局不存在, 请检查你的输入";
+                    return GetLocalText("Command.Para.ServerId.NotExist", serverId);
                 }
             } 
             if (index >= 0) {
                 var records = GetArchivesBySession(parametrics.SessionId);
-                if (index >= records.Count) return $"索引{index}超出范围: [0, {records.Count})";
+                // if (index >= records.Count) return $"索引{index}超出范围: [0, {records.Count})";
+                if (index >= records.Count) return GetLocalText("Command.Para.Index.OutOfRange", index, records.Count);
                 return GetArchiveDetails(records[index]);
             }
             var records2 = GetArchivesBySession(parametrics.SessionId);
-            return $"请输入正确的serverId(当前: {serverId})或index(当前: {index} not in [0, {records2.Count}))";
+            // return $"请输入正确的serverId(当前: {serverId})或index(当前: {index} not in [0, {records2.Count}))";
+            return GetLocalText("Command.Para.Presentation", serverId, index, records2.Count);
         };
     } 
     
@@ -753,7 +606,9 @@ public class RaidRecordManagerChat(
                 serverId = parametrics.Paras.GetValueOrDefault("serverid", "");
                 index = int.TryParse(parametrics.Paras.GetValueOrDefault("index", "-1"), out int _index) ? _index : -1;
             } catch (Exception e) {
-                return $"参数解析时出现错误: {e.Message}";
+                // return $"参数解析时出现错误: {e.Message}";
+                modConfig.LogError(e, "RaidRecordManagerChat.ListCommand", GetLocalText("Command.Para.Parse.error0", e.Message));
+                return GetLocalText("Command.Para.Parse.error0", e.Message);
             }
             
             // TODO: 显示新获得/遗失/更改的物品
@@ -764,17 +619,20 @@ public class RaidRecordManagerChat(
                 if (record != null) {
                     return GetItemsDetails(record);
                 } else {
-                    return $"serverId为{serverId}的对局不存在, 请检查你的输入";
+                    // return $"serverId为{serverId}的对局不存在, 请检查你的输入";
+                    return GetLocalText("Command.Para.ServerId.NotExist", serverId);
                 }
             } 
             if (index >= 0) {
                 var records = GetArchivesBySession(parametrics.SessionId);
-                if (index >= records.Count) return $"索引{index}超出范围: [0, {records.Count})";
+                // if (index >= records.Count) return $"索引{index}超出范围: [0, {records.Count})";
+                if (index >= records.Count) return GetLocalText("Command.Para.Index.OutOfRange", index, records.Count);
                 return GetItemsDetails(records[index]);
             }
             
             var records2 = GetArchivesBySession(parametrics.SessionId);
-            return $"请输入正确的serverId(当前: {serverId})或index(当前: {index} not in [0, {records2.Count}))";
+            // return $"请输入正确的serverId(当前: {serverId})或index(当前: {index} not in [0, {records2.Count}))";
+            return GetLocalText("Command.Para.Presentation", serverId, index, records2.Count);
         };
     } 
 }
