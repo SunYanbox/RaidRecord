@@ -421,9 +421,7 @@ public class RaidRecordManagerChat(
             playerData?.Id);
 
         msg += GetLocalText("RC MC.Chat.GAD.info1",
-            localizationManager.GetMapName(mapName), StringUtil.TimeString(archive?.Results?.PlayTime ?? 0));
-
-        if (archive == null) return msg;
+            localizationManager.GetMapName(mapName), StringUtil.TimeString(archive.Results?.PlayTime ?? 0));
 
         msg += GetLocalText("RC MC.Chat.GAD.info2",
             (int)archive.EquipmentValue, (int)archive.SecuredValue, (int)archive.PreRaidValue);
@@ -446,10 +444,10 @@ public class RaidRecordManagerChat(
 
         msg += GetLocalText("RC MC.Chat.GAD.info4",
             result,
-            localizationManager.GetExitName(mapName, archive?.Results?.ExitName ?? GetLocalText("RC MC.Chat.GAD.nullExitPosition")),
-            archive?.EftStats?.SurvivorClass ?? GetLocalText("RC MC.Chat.GAD.unknow"));
+            localizationManager.GetExitName(mapName, archive.Results?.ExitName ?? GetLocalText("RC MC.Chat.GAD.nullExitPosition")),
+            archive.EftStats?.SurvivorClass ?? GetLocalText("RC MC.Chat.GAD.unknow"));
 
-        Dictionary<MongoId, TemplateItem> itemTpls = databaseService.GetTables().Templates.Items;
+        // Dictionary<MongoId, TemplateItem> itemTpls = databaseService.GetTables().Templates.Items;
         Dictionary<string, string>? local = databaseService.GetTables().Locales.Global[localizationManager.CurrentLanguage].Value;
         if (local == null) return GetLocalText("RC MC.Chat.GID.error0");
 
@@ -470,10 +468,9 @@ public class RaidRecordManagerChat(
             // "\n\n带出对局物品:\n   物品名称  物品单价  物品修正  物品总价值  物品描述"
             msg += GetLocalText("RC MC.Chat.GID.info1");
 
-            if (archive?.ItemsTakeOut == null) return msg;
             foreach ((MongoId tpl, double modify) in archive.ItemsTakeOut)
             {
-                TemplateItem item = itemTpls[tpl];
+                // TemplateItem item = itemTpls[tpl];
                 double price = itemHelper.GetItemPrice(tpl) ?? 0;
                 msg += $"\n\n - {local[$"{tpl} ShortName"]}  {price}  {modify}  {price * modify}  {local[$"{tpl} Description"]}";
             }
@@ -518,7 +515,7 @@ public class RaidRecordManagerChat(
             UserDialogInfo managerProfile = GetChatBot();
 
             Dictionary<MongoId, Dialogue> dialogs = dialogueHelper.GetDialogsForProfile(parametric.SessionId);
-            Dialogue? dialog = dialogs[managerProfile.Id];
+            Dialogue dialog = dialogs[managerProfile.Id];
             if (dialog.Messages == null) return GetLocalText("Command.Cls.error0");
             int count = dialog.Messages.Count;
             dialog.Messages = [];
@@ -536,12 +533,11 @@ public class RaidRecordManagerChat(
             if (verify != null) return verify;
 
             List<RaidArchive> records = GetArchivesBySession(parametric.SessionId);
-            int numberLimit = 0, page = 0;
-            bool showServerId = false;
+            int numberLimit, page;
             try
             {
-                numberLimit = int.TryParse(parametric.Paras.GetValueOrDefault("limit", "10"), out int _limit) ? _limit : 10;
-                page = int.TryParse(parametric.Paras.GetValueOrDefault("page", "1"), out int _page) ? _page : 1;
+                numberLimit = int.TryParse(parametric.Paras.GetValueOrDefault("limit", "10"), out int limitTemp) ? limitTemp : 10;
+                page = int.TryParse(parametric.Paras.GetValueOrDefault("page", "1"), out int pageTemp) ? pageTemp : 1;
             }
             catch (Exception e)
             {
@@ -615,7 +611,7 @@ public class RaidRecordManagerChat(
             try
             {
                 serverId = parametric.Paras.GetValueOrDefault("serverid", "");
-                index = int.TryParse(parametric.Paras.GetValueOrDefault("index", "-1"), out int _index) ? _index : -1;
+                index = int.TryParse(parametric.Paras.GetValueOrDefault("index", "-1"), out int indexTemp) ? indexTemp : -1;
             }
             catch (Exception e)
             {
@@ -663,7 +659,7 @@ public class RaidRecordManagerChat(
             try
             {
                 serverId = parametric.Paras.GetValueOrDefault("serverid", "");
-                index = int.TryParse(parametric.Paras.GetValueOrDefault("index", "-1"), out int _index) ? _index : -1;
+                index = int.TryParse(parametric.Paras.GetValueOrDefault("index", "-1"), out int indexTemp) ? indexTemp : -1;
             }
             catch (Exception e)
             {
