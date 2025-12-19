@@ -56,7 +56,7 @@
     </PropertyGroup>
 
     <Target Name="拷贝模组到SPT" AfterTargets="AfterBuild" Condition="'$(SPTPath)' != ''">
-        <Message Importance="high" Text="SPTPath是否存在: '$(SPTPath)'" />
+        <Message Importance="high" Text="SPTPath是否存在: '$(SPTPath)'"/>
         <Message Importance="high" Text="正在准备拷贝模组到: '$(SPTPath)$(ModsDirectoryPath)'"/>
         <ItemGroup>
             <FilesToCopy Include="$(OutputPath)$(TargetName).dll"/>

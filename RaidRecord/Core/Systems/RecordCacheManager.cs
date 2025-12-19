@@ -6,37 +6,151 @@ using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Eft.Common;
+using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Utils;
 
 namespace RaidRecord.Core.Systems;
 
-[Injectable(InjectionType = InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 3)]
+[Injectable(InjectionType = InjectionType.Singleton)]
 public class RecordCacheManager(
     ISptLogger<RecordCacheManager> logger,
     LocalizationManager localManager,
     JsonUtil jsonUtil,
     ModConfig modConfig,
-    ModHelper modHelper
+    ModHelper modHelper,
+    ProfileHelper profileHelper,
+    ItemHelper itemHelper,
+    SaveServer saveServer
 ): IOnLoad
 {
     private string? _recordDbPath;
-    private readonly Dictionary<MongoId, List<RaidDataWrapper>> _raidRecordCache = new();
 
-    public void Info(string message)
+    /// <summary> 账户id -> 账户历史战绩 </summary>
+    private readonly Dictionary<MongoId, EFTCombatRecord> _eftCombatRecords = new();
+
+    /// <summary> Pmc/Scav id 到账户id的映射 </summary>
+    private readonly Dictionary<MongoId, MongoId> _playerId2Account = new();
+
+    /// <summary> 所有账号id的映射 </summary>
+    private HashSet<MongoId> _accountIds = [];
+
+    /// <summary> 维护常用Id映射 </summary>
+    public void UpdateAccountData()
     {
-        modConfig.Log("Info", message);
-        logger.Info($"[RaidRecord] {message}");
+        Dictionary<MongoId, SptProfile> profiles = saveServer.GetProfiles();
+        HashSet<MongoId> accounts = profiles.Keys.ToHashSet();
+        _accountIds = accounts;
+        // 更新Pmc/Scav id 到账户id的映射
+        string msg = "从SPT加载数据: ";
+        foreach (MongoId accountId in accounts)
+        {
+            SptProfile sptProfile = profiles[accountId];
+            MongoId? pmcId = sptProfile.CharacterData?.PmcData?.Id;
+            MongoId? scavId = sptProfile.CharacterData?.ScavData?.Id;
+            if (pmcId is not null) _playerId2Account[pmcId.Value] = accountId;
+            if (scavId is not null) _playerId2Account[scavId.Value] = accountId;
+            msg += $"\n\tAccount: {accountId}, PmcId: {pmcId}, ScavId: {scavId}";
+        }
+        modConfig.Debug(msg);
     }
-    public void Error(string message)
+
+    /// <summary>
+    /// 根据已有的账号Id, 初始化全部账号的EFTCombatRecord数据
+    /// <br />
+    /// 注意: 必须在LoadAllRecords之后使用, 避免覆盖账户数据
+    /// </summary>
+    public void InitAllEFTCombatRecord()
     {
-        modConfig.Log("Error", message);
-        logger.Error($"[RaidRecord] {message}");
+        Dictionary<MongoId, SptProfile> profiles = saveServer.GetProfiles();
+        foreach (MongoId accountId in _accountIds)
+        {
+            if (_eftCombatRecords.ContainsKey(accountId)) continue;
+            _eftCombatRecords.Add(accountId, new EFTCombatRecord(accountId));
+        }
     }
 
     public Task OnLoad()
     {
+        UpdateAccountData();
+        LoadAllRecords();
+        InitAllEFTCombatRecord();
+        return Task.CompletedTask;
+    }
 
+    /// <summary>
+    /// 加载指定数据文件加载
+    /// </summary>
+    /// <param name="file">文件绝对路径</param>
+    private void LoadFile(string file)
+    {
+        if (_recordDbPath == null)
+        {
+            modConfig.Error($"加载记录数据库时数据库文件路径\"{_recordDbPath}\"意外不存在, 请确保`db\\records`文件夹路径存在, 保存失败");
+            return;
+        }
+        string fileName = Path.GetFileName(file);
+        string fileBaseName = Path.GetFileNameWithoutExtension(fileName);
+        if (!fileName.EndsWith(".json")) return;
+
+        try
+        {
+            try
+            {
+                // 0.6.2开始
+                var data = jsonUtil.DeserializeFromFile<EFTCombatRecord>(file);
+                if (data == null) throw new Exception($"反序列化文件{file}时获取不到数据");
+                _eftCombatRecords.Add(data.AccountId, data);
+            }
+            catch (Exception e)
+            {
+                modConfig.Error($"尝试以0.6.2+版本反序列化数据文件{file}时发生错误: {e.Message}, 将尝试迁移0.6.1版本数据库", e);
+                // 暂时兼容0.6.1版本的数据库
+                var data = jsonUtil.DeserializeFromFile<List<RaidDataWrapper>>(file);
+                if (data == null) throw new Exception($"反序列化文件{file}时获取不到数据");
+                MongoId account = _playerId2Account[fileBaseName];
+                _eftCombatRecords.Add(account, new EFTCombatRecord(account, data, null));
+                // 重命名文件, 避免重复迁移
+                string newFile = file.Replace(fileBaseName, account.ToString());
+                modConfig.Info($"正在将旧数据库文件{file}迁移为新版本格式: {newFile}");
+                File.Move(file, newFile);
+                SaveEFTRecord(account);
+            }
+        }
+        catch (Exception e)
+        {
+            modConfig.LogError(e, "RaidRecordManager.OnLoad.foreach.try-catch", file);
+            // 备份原文件为 .err，带序号避免重复
+            string originalFilePath = Path.Combine(_recordDbPath, fileName);
+            string backupBaseName = Path.GetFileNameWithoutExtension(fileName) + ".json.err";
+            string backupDir = _recordDbPath; // 备份在同一目录下，也可指定其他路径
+            string backupPath = Path.Combine(backupDir, backupBaseName);
+
+            int counter = 0;
+            while (File.Exists(backupPath))
+            {
+                backupPath = Path.Combine(backupDir, $"{Path.GetFileNameWithoutExtension(fileName)}.json.err.{counter}");
+                counter++;
+            }
+
+            try
+            {
+                File.Copy(originalFilePath, backupPath);
+                modConfig.Info($"序列化记录时出现问题: {e.Message}, 已备份损坏文件至: {backupPath}");
+                // Console.WriteLine($"[RaidRecord] DEBUG: {e.StackTrace}");
+            }
+            catch (Exception copyEx)
+            {
+                modConfig.Error($"备份文件过程中发生错误: {copyEx.Message}", copyEx);
+            }
+        }
+    }
+
+    /// <summary> 读取所有本地账户历史战绩 </summary>
+    public void LoadAllRecords()
+    {
         string localsDir = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
         _recordDbPath = Path.Combine(localsDir, "db\\records");
 
@@ -44,119 +158,93 @@ public class RecordCacheManager(
 
         foreach (string file in Directory.GetFiles(_recordDbPath))
         {
-            string fileName = Path.GetFileName(file);
-            if (!fileName.EndsWith(".json")) continue;
-            try
-            {
-                var data = jsonUtil.DeserializeFromFile<List<RaidDataWrapper>>(file);
-                if (data == null) throw new Exception($"反序列化文件{file}时获取不到数据");
-                _raidRecordCache.Add(new MongoId(fileName.Replace(".json", "")), data);
-            }
-            catch (Exception e)
-            {
-                modConfig.LogError(e, "RaidRecordManager.OnLoad.foreach.try-catch", file);
-                // 备份原文件为 .err，带序号避免重复
-                string originalFilePath = Path.Combine(_recordDbPath, fileName);
-                string backupBaseName = Path.GetFileNameWithoutExtension(fileName) + ".json.err";
-                string backupDir = _recordDbPath; // 备份在同一目录下，也可指定其他路径
-                string backupPath = Path.Combine(backupDir, backupBaseName);
-
-                int counter = 0;
-                while (File.Exists(backupPath))
-                {
-                    backupPath = Path.Combine(backupDir, $"{Path.GetFileNameWithoutExtension(fileName)}.json.err.{counter}");
-                    counter++;
-                }
-
-                try
-                {
-                    File.Copy(originalFilePath, backupPath);
-                    Info($"序列化记录时出现问题: {e.Message}, 已备份损坏文件至: {backupPath}");
-                    // Console.WriteLine($"[RaidRecord] DEBUG: {e.StackTrace}");
-                }
-                catch (Exception copyEx)
-                {
-                    modConfig.LogError(e, "RaidRecordManager.OnLoad.foreach.try-catch.try-catch", file);
-                    Error($"备份文件过程中发生错误: {copyEx.Message}");
-                }
-                //
-                // Console.WriteLine($"[RaidRecord] 记录文件{fileName}的Json格式错误");
-
-                _raidRecordCache.Add(new MongoId(fileName.Replace(".json", "")), []);
-            }
-
+            if (Path.Exists(file))
+                LoadFile(file);
         }
-        return Task.CompletedTask;
     }
 
-    public void SaveRecord(MongoId playerId)
+    /// <summary> 通过Pmc或Scav Id获取账号Id </summary>
+    public MongoId? GetAccount(MongoId playerId)
     {
-        if (!_raidRecordCache.ContainsKey(playerId))
-        {
-            Create(playerId);
-        }
+        return _playerId2Account.GetValueOrDefault(playerId);
+    }
 
-        string jsonString = jsonUtil.Serialize(_raidRecordCache[playerId]) ?? "[]";
+    /// <summary> 通过Account, Pmc, Session或Scav Id获取PmcData实例 </summary>
+    public PmcData GetPmcDataByPlayerId(MongoId playerId)
+    {
+        if (_playerId2Account.TryGetValue(playerId, out MongoId account))
+        {
+            SptProfile sptProfile = profileHelper.GetFullProfile(account);
+            /*
+             * SessionId, AccountId和PmcId相同, ScavId为PmcId+1
+             */
+            return (playerId == account
+                ? sptProfile.CharacterData!.PmcData
+                : sptProfile.CharacterData!.ScavData)!;
+        }
+        throw new Exception($"未找到{playerId}对应的PmcData实例");
+    }
+
+    /// <summary> 保存指定账户和的历史战绩 </summary>
+    public void SaveEFTRecord(MongoId account)
+    {
+        if (!_eftCombatRecords.TryGetValue(account, out EFTCombatRecord? eftRecord))
+        {
+            modConfig.Error($"保存记录数据库时账户Id: {account}未找到, 请确保已保存过该账户的记录");
+            return;
+        }
+        if (eftRecord.AccountId != account)
+        {
+            MongoId oldId = eftRecord.AccountId;
+            eftRecord.AccountId = account;
+            modConfig.Warn($"保存记录数据库时账户Id不一致, 已将数据库账户Id从{oldId}修改为: {account}");
+        }
+        if (_recordDbPath == null)
+        {
+            modConfig.Error($"保存记录数据库时数据库文件路径\"{_recordDbPath}\"意外不存在, 请确保`db\\records`文件夹路径存在, 保存失败");
+            return;
+        }
+        string path = Path.Combine(_recordDbPath, $"{account}.json");
+
+        File.WriteAllTextAsync(path, jsonUtil.Serialize(eftRecord));
+    }
+
+    /// <summary> 通过账号获取历史记录 </summary>
+    public EFTCombatRecord GetRecord(MongoId account)
+    {
+        if (_accountIds.Contains(account)) return _eftCombatRecords[account];
+        // 重新加载数据库
+        LoadAllRecords();
 
         if (_recordDbPath == null)
         {
-            Error("保存记录数据库时数据库文件路径意外不存在, 请确保`db\\records`文件夹路径存在");
-            return;
+            modConfig.Error("记录数据库文件路径未正确获取, 请确保`db\\records`文件夹路径存在");
+            throw new InvalidDataException($"记录数据库文件路径({nameof(_recordDbPath)})未正确获取, 请确保`db\\records`文件夹路径存在");
         }
-        File.WriteAllTextAsync(Path.Combine(_recordDbPath, $"{playerId}.json"), jsonString);
-    }
 
-    public List<RaidDataWrapper> GetRecord(MongoId playerId)
-    {
-        if (!_raidRecordCache.ContainsKey(playerId))
+        string file = Path.Combine(_recordDbPath, $"{account.ToString()}.json");
+        if (Path.Exists(file))
         {
-            if (_recordDbPath == null)
-            {
-                Error("记录数据库文件路径未正确获取, 请确保`db\\records`文件夹路径存在");
-                return [];
-            }
-
-            if (Path.Exists(Path.Combine(_recordDbPath, $"{playerId}.json")))
-            {
-                var raidDataWrappers = jsonUtil.DeserializeFromFile<List<RaidDataWrapper>>(Path.Combine(_recordDbPath, $"{playerId.ToString()}.json"));
-                if (raidDataWrappers == null)
-                {
-                    logger.Warning($"RecordCacheManager.GetRecord > 玩家{playerId}的记录文件{playerId}.json反序列化失败");
-                }
-                else
-                {
-                    _raidRecordCache.Add(playerId, raidDataWrappers);
-                }
-            }
-            else
-            {
-                _raidRecordCache.Add(playerId, []);
-            }
+            LoadFile(file);
         }
-        List<RaidDataWrapper> records = _raidRecordCache[playerId];
-        // Console.WriteLine($"DEBUG RecordCacheManager.GetRecord > 玩家{playerId}的记录有{records.Count}条");
-        return records;
-    }
-
-    public void Create(MongoId playerId)
-    {
-        if (!_raidRecordCache.ContainsKey(playerId))
+        else
         {
-            _raidRecordCache.Add(playerId, []);
+            _eftCombatRecords.Add(account, new EFTCombatRecord(account));
         }
-        SaveRecord(playerId);
+        return _eftCombatRecords[account];
     }
 
+    /// <summary> 为将进入对局的Pmc或Scav创建RaidDataWrapper记录 </summary>
     public RaidDataWrapper CreateRecord(MongoId playerId)
     {
         try
         {
-            if (playerId == null!)
+            MongoId? account = GetAccount(playerId);
+            if (account == null!)
             {
-                Error($"RecordCacheManager.CreateRecord > 玩家playerId为null");
-                throw new Exception($"{nameof(playerId)} is null");
+                throw new Exception($"创建记录时未找到玩家{playerId}的账户Id, 请确保已存在过该玩家账户的记录");
             }
-            List<RaidDataWrapper> records = GetRecord(playerId);
+            EFTCombatRecord records = GetRecord(account.Value);
             // Console.WriteLine($"DEBUG RecordCacheManager.CreateRecord > 玩家{playerId}的记录records为{records}, {records?.Count}条");
             // 检查 records 是否为 null
             if (records == null)
@@ -164,7 +252,12 @@ public class RecordCacheManager(
                 throw new Exception($"GetRecord中获取的records为null playId: {playerId}");
             }
             RaidDataWrapper wrapper = new();
-            records.Add(wrapper);
+            if (records.InfoRecordCache != null)
+            {
+                records.Records.Add(records.InfoRecordCache.Zip(itemHelper));
+                modConfig.Warn($"玩家{playerId}的战绩记录缓存不为空, 已直接归档缓存");
+            }
+            records.InfoRecordCache = wrapper;
             wrapper.Info = new RaidInfo();
             // Console.WriteLine($"DEBUG RecordCacheManager.CreateRecord > 返回值: {wrapper}, Info: {wrapper.Info}, Archive:  {wrapper.Archive}");
             return wrapper;
@@ -177,25 +270,43 @@ public class RecordCacheManager(
         }
     }
 
-    public void Delete(MongoId playerId)
+    /// <summary>
+    /// 删除一个账号下的所有历史记录数据(慎用!!!)
+    /// </summary>
+    /// <param name="account"></param>
+    public void Delete(MongoId account)
     {
-        if (_raidRecordCache.Remove(playerId))
-            SaveRecord(playerId);
+        if (_eftCombatRecords.Remove(account))
+            SaveEFTRecord(account);
     }
 
-    public void ZipAll(ItemHelper itemHelper)
+    public void ZipAll()
     {
-        foreach (MongoId playerId in _raidRecordCache.Keys)
+        foreach (MongoId playerId in _eftCombatRecords.Keys)
         {
-            ZipAll(itemHelper, playerId);
+            ZipAccount(playerId);
         }
     }
 
-    public void ZipAll(ItemHelper itemHelper, MongoId playerId)
+    /// <summary>
+    /// 压缩指定账户下的所有历史记录
+    /// <br />
+    /// 会同时压缩未归档缓存
+    /// </summary>
+    public void ZipAccount(MongoId account)
     {
-        foreach (RaidDataWrapper raidDataWrapper in _raidRecordCache.GetValueOrDefault(playerId, []))
+        if (_eftCombatRecords.TryGetValue(account, out EFTCombatRecord? combatRecord))
         {
-            raidDataWrapper.Zip(itemHelper);
+            foreach (RaidDataWrapper wrapper in combatRecord.Records)
+            {
+                wrapper.Zip(itemHelper);
+            }
+            if (combatRecord.InfoRecordCache != null)
+            {
+                combatRecord.Records.Add(combatRecord.InfoRecordCache.Zip(itemHelper));
+                combatRecord.InfoRecordCache = null;
+            }
         }
+        SaveEFTRecord(account);
     }
 }

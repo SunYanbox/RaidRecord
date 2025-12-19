@@ -1,8 +1,7 @@
 using System.Text.Json.Serialization;
-using RaidRecord.Core.Models;
 using SPTarkov.Server.Core.Helpers;
 
-namespace RaidRecord.Core.Systems;
+namespace RaidRecord.Core.Models;
 
 public class RaidDataWrapper
 {
@@ -16,11 +15,16 @@ public class RaidDataWrapper
     public bool IsInfo => Info != null;
     public bool IsArchive => Archive != null;
 
-    public void Zip(ItemHelper itemHelper)
+    /// <summary>
+    /// 如果未存档，则进行存档
+    /// <returns> 存档后的数据 </returns>
+    /// </summary>
+    public RaidDataWrapper Zip(ItemHelper itemHelper)
     {
-        if (!IsInfo) return;
+        if (!IsInfo) return this;
         Archive = new RaidArchive();
         Archive.Zip(Info!, itemHelper);
         Info = null;
+        return this;
     }
 }

@@ -55,19 +55,25 @@ public class ModConfig(ModHelper modHelper,
             }
         }
     }
-    
+
     public void Info(string message)
     {
         Log("Info", message);
         logger.Info($"[RaidRecord] {message}");
     }
-    
+
     public void Debug(string message)
     {
         Log("Debug", message);
         logger.Debug($"[RaidRecord] {message}");
     }
-    
+
+    public void Warn(string message)
+    {
+        Log("Warn", message);
+        logger.Warning($"[RaidRecord] {message}");
+    }
+
     public void Error(string message, Exception? ex = null)
     {
         string logMessage = message;
@@ -77,7 +83,7 @@ public class ModConfig(ModHelper modHelper,
             logMessage += $"\n\tException Type: {ex.GetType().Name}";
             logMessage += $"\n\tMessage: {ex.Message}";
             logMessage += $"\n\tStack Trace: {ex.StackTrace}";
-        
+
             // 如果有内部异常
             if (ex.InnerException != null)
             {

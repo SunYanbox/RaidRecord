@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
+using RaidRecord.Core.Systems;
 using RaidRecord.Core.Utils;
+using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
@@ -93,11 +95,19 @@ public record RaidInfo
     {
         ServerId = serverId;
         State = "未归档";
-        Side = ServerId.Contains("Pmc") ? "Pmc" : "Savage";
+        bool isPmc = ServerId.Contains("Pmc");
+        Side = isPmc ? "Pmc" : "Savage";
         PmcData? pmcProfile = profileHelper.GetPmcProfile(sessionId);
-        PlayerId = pmcProfile?.Id ?? throw new Exception("profileHelper.GetPmcProfile(sessionId).Id为null; 这可能是session已失效, 存档文件损坏或者存档数据库被意外修改!!!");
+        PmcData? scavProfile = profileHelper.GetScavProfile(sessionId);
+        PmcData raidProfile = isPmc switch
+        {
+            true when pmcProfile is { Id: not null } => pmcProfile,
+            false when scavProfile is { Id: not null } => scavProfile,
+            _ => throw new InvalidDataException($"无法通过session\"{sessionId}\"获取到与存档数据[{ServerId}]一致的非空PMC存档或SCAV存档数据")
+        };
+        PlayerId = (isPmc ? pmcProfile?.Id : scavProfile?.Id) ?? throw new Exception("获取到的PMC或SCAV存档的Id为null; 这可能是session已失效, 存档文件损坏或者存档数据库被意外修改!!!");
         CreateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
-        ItemsTakeIn = ItemUtil.GetInventoryInfo(pmcProfile, itemHelper);
+        ItemsTakeIn = ItemUtil.GetInventoryInfo(raidProfile, itemHelper);
         // Console.WriteLine($"获取到的物品:");
         // foreach (var item in ItemsTakeIn.Values)
         // {
@@ -112,28 +122,60 @@ public record RaidInfo
     }
 
     // 根据结束请求载入数据
-    public void HandleRaidEnd(EndLocalRaidRequestData data, MongoId sessionId, ItemHelper itemHelper,
-        ProfileHelper profileHelper)
+    public void HandleRaidEnd(EndLocalRaidRequestData request, MongoId sessionId, ItemHelper itemHelper,
+        RecordCacheManager recordCacheManager)
     {
-        PmcData? pmcProfile = profileHelper.GetPmcProfile(sessionId);
-        if (PlayerId != pmcProfile?.Id)
+        if (request == null) throw new NullReferenceException("HandleRaidEnd的EndLocalRaidRequestData类型参数data意外为null");
+        if (request.Results == null)
         {
-            Console.WriteLine($"[RaidRecord] 错误: 尝试修改不属于{pmcProfile?.Id}的对局数据");
-            return;
+            throw new NullReferenceException($"获取到的结束请求数据的结果为null, 忽略此请求");
         }
-        ItemsTakeOut = ItemUtil.GetInventoryInfo(pmcProfile, itemHelper);
-        HandleRaidEndInventoryAndValue(pmcProfile, itemHelper);
 
-        if (data == null) throw new Exception("HandleRaidEnd的参数data意外为null");
+        // 参考InRaidHelper和LocationLifecycleService处理对局结束的存档
+        if (request.Results.Profile != null)
+        {
+            // ServerId has various info stored in it, delimited by a period
+            string[] serverDetails = ServerId.Split(".");
+            string locationName = serverDetails[0].ToLowerInvariant();
+            bool isPmc = serverDetails[1].ToLowerInvariant().Contains("pmc");
+            bool isDead = request.Results.IsPlayerDead();
+            bool isTransfer = request.Results.IsMapToMapTransfer();
+            bool isSurvived = request.Results.IsPlayerSurvived();
+            PmcData postRaidProfile = request.Results.Profile; // 战局后角色数据
 
-        if (data.Results == null) return;
+            // Scav死亡时此处仍然能获取到物品(疑问: Pmc死亡时既无法断点到这里, 也没有else中的输出)
+            ItemsTakeOut = ItemUtil.GetInventoryInfo(postRaidProfile, itemHelper);
+
+            if (!isPmc && isDead)
+            {
+                // Scav死亡, 无法带出任何物品(由于Scav死亡时LocationLifecycleService会直接生成下一次存档, 直接清空字典保险一些)
+                ItemsTakeOut = new Dictionary<MongoId, Item>();
+            }
+
+            HandleRaidEndInventoryAndValue(postRaidProfile, itemHelper);
+        }
+        else
+        {
+            Console.WriteLine($"[RaidInfo] 警告: 获取对局结束数据时, 获取到的PostRaidProfile数据({nameof(request.Results.Profile)})为null");
+            try
+            {
+                PmcData pmcProfile = recordCacheManager.GetPmcDataByPlayerId(PlayerId);
+                ItemsTakeOut = ItemUtil.GetInventoryInfo(pmcProfile, itemHelper);
+                HandleRaidEndInventoryAndValue(pmcProfile, itemHelper);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"[RaidInfo] Error 推测对局结束数据时, 无法正确获取PMC存档数据: \n\tMessage: {e.Message}\n\tStackTrace: {e.StackTrace}");
+            }
+        }
+
         Results = new RaidResultData
         {
-            Result = data.Results.Result,
-            KillerId = data.Results.KillerId,
-            KillerAid = data.Results.KillerAid,
-            ExitName = data.Results.ExitName,
-            PlayTime = Convert.ToInt64(data.Results.PlayTime)
+            Result = request.Results.Result,
+            KillerId = request.Results.KillerId,
+            KillerAid = request.Results.KillerAid,
+            ExitName = request.Results.ExitName,
+            PlayTime = Convert.ToInt64(request.Results.PlayTime)
         };
     }
 
@@ -147,7 +189,7 @@ public record RaidInfo
         Changed.Clear();
         if (pmcData.Stats == null || pmcData.Stats.Eft == null)
         {
-            Console.WriteLine("[RaidInfo] 错误尝试获取对局结束数据时, 获取到的数据全部为null");
+            Console.WriteLine($"[RaidInfo] 错误尝试获取对局结束数据时, 获取到的数据({nameof(pmcData.Stats)}和{nameof(pmcData.Stats.Eft)})全部为null");
             return;
         }
         State = State == "推测对局" ? "推测对局" : "已归档";
@@ -171,7 +213,7 @@ public record RaidInfo
         {
             if (ItemsTakeOut.TryGetValue(itemId, out Item? newItem))
             {
-                if (Math.Abs(itemHelper.GetItemQualityModifier(item) - itemHelper.GetItemQualityModifier(newItem)) < 1e-6) continue;
+                if (Math.Abs(itemHelper.GetItemQualityModifier(item) - itemHelper.GetItemQualityModifier(newItem)) < Constants.ArchiveCheckJudgeError) continue;
                 Changed.Add(itemId);
             }
             else

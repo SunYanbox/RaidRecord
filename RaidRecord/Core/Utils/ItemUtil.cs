@@ -1,3 +1,4 @@
+using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
@@ -25,12 +26,12 @@ public static class ItemUtil
         double? price = itemHelper.GetItemPrice(item.Template);
         if (price == null)
         {
-            Console.WriteLine($"\t{item.Template}没有价格");
+            Console.WriteLine($"[RaidRecord] Warning: {item.Template}没有价格");
             return 0;
         }
-        Console.WriteLine($"\t{item.Template}价格: {price.Value} "
-                          + $"修正: {itemHelper.GetItemQualityModifier(item)} "
-                          + $"返回值: {Convert.ToInt64(Math.Max(0.0, itemHelper.GetItemQualityModifier(item) * price.Value))}");
+        // Console.WriteLine($"\t{item.Template}价格: {price.Value} "
+        //                   + $"修正: {itemHelper.GetItemQualityModifier(item)} "
+        //                   + $"返回值: {Convert.ToInt64(Math.Max(0.0, itemHelper.GetItemQualityModifier(item) * price.Value))}");
         // 修复了错误计算护甲值为0的物品的价值的问题
         return Convert.ToInt64(Math.Max(0.0, itemHelper.GetItemQualityModifier(item) * price.Value));
     }
@@ -135,7 +136,8 @@ public static class ItemUtil
         // }
 
         // 获取玩家进入/离开突袭时的所有物品
-        List<Item> aroundRaidItems = itemHelper.FindAndReturnChildrenByAssort(inventory.Equipment.Value, inventory.Items);
+        // List<Item> aroundRaidItems = itemHelper.FindAndReturnChildrenByAssort(inventory.Equipment.Value, inventory.Items);
+        List<Item> aroundRaidItems = inventory.Items.GetItemWithChildren(inventory.Equipment.Value);
         string copyError = "";
         // 转换为映射
         foreach (Item item in aroundRaidItems)

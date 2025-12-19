@@ -21,7 +21,7 @@ using SPTarkov.Server.Core.Utils.Json;
 
 namespace RaidRecord.Core.ChatBot;
 
-[Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 4)]
+[Injectable(InjectionType.Singleton)]
 public class RaidRecordManagerChat(
     MailSendService mailSendService,
     ISptLogger<RaidRecordManagerChat> logger,
@@ -263,19 +263,18 @@ public class RaidRecordManagerChat(
 
     }
 
-    protected PmcData? GetPmcProfile(string sessionId)
+    protected MongoId? GetAccountBySession(string sessionId)
     {
-        return profileHelper.GetPmcProfile(sessionId);
+        return recordCacheManager.GetAccount(profileHelper.GetPmcProfile(sessionId)?.Id ?? new MongoId());
     }
 
     protected List<RaidArchive> GetArchivesBySession(string sessionId)
     {
         List<RaidArchive> result = [];
-        PmcData? pmcData = GetPmcProfile(sessionId);
-        if (pmcData is not { Id: not null }) return result;
-
-        List<RaidDataWrapper> records = recordCacheManager.GetRecord(pmcData.Id.Value);
-        foreach (RaidDataWrapper record in records)
+        MongoId? account = GetAccountBySession(sessionId);
+        if (account == null) return result;
+        EFTCombatRecord records = recordCacheManager.GetRecord(account.Value);
+        foreach (RaidDataWrapper record in records.Records)
         {
             if (record.IsArchive)
             {
@@ -301,7 +300,8 @@ public class RaidRecordManagerChat(
         string msg = "";
         string serverId = archive.ServerId;
         string playerId = archive.PlayerId;
-        PmcData? playerData = profileHelper.GetProfileByPmcId(playerId);
+
+        PmcData playerData = recordCacheManager.GetPmcDataByPlayerId(playerId);
         // 本次对局元数据
         string timeString = DateFormatterFull(archive.CreateTime);
         string mapName = serverId[..serverId.IndexOf('.')].ToLower();
@@ -410,7 +410,8 @@ public class RaidRecordManagerChat(
         string msg = "";
         string serverId = archive.ServerId;
         string playerId = archive.PlayerId;
-        PmcData? playerData = profileHelper.GetProfileByPmcId(playerId);
+
+        PmcData playerData = recordCacheManager.GetPmcDataByPlayerId(playerId);
 
         // 本次对局元数据
         string timeString = DateFormatterFull(archive.CreateTime);
@@ -525,7 +526,7 @@ public class RaidRecordManagerChat(
         };
     }
 
-    public CommandCallback GetListCommand()
+    private CommandCallback GetListCommand()
     {
         return parametric =>
         {

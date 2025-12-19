@@ -16,7 +16,7 @@ public class InjectableClasses(
     ItemHelper itemHelper,
     ModConfig modConfig,
     TimeUtil timeUtil
-    )
+)
 {
     public JsonUtil? JsonUtil { get; set; } = jsonUtil;
     public RecordCacheManager? RecordCacheManager { get; set; } = recordCacheManager;
