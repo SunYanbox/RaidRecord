@@ -68,14 +68,32 @@ public class ModConfig(ModHelper modHelper,
         logger.Debug($"[RaidRecord] {message}");
     }
     
-    public void Error(string message)
+    public void Error(string message, Exception? ex = null)
     {
-        Log("Error", message);
-        logger.Error($"[RaidRecord] {message}");
+        string logMessage = message;
+        if (ex != null)
+        {
+            // 可以控制堆栈信息的详细程度
+            logMessage += $"\n\tException Type: {ex.GetType().Name}";
+            logMessage += $"\n\tMessage: {ex.Message}";
+            logMessage += $"\n\tStack Trace: {ex.StackTrace}";
+        
+            // 如果有内部异常
+            if (ex.InnerException != null)
+            {
+                logMessage += $"\n\tInner Exception: {ex.InnerException.Message}";
+            }
+        }
+        else
+        {
+            logMessage += $"\n\tStack Trace: {Environment.StackTrace}";
+        }
+        Log("Error", logMessage);
+        logger.Error($"[RaidRecord] {logMessage}");
     }
 
     public void LogError(Exception e, string where, string? message = null)
     {
-        Log("Error", $"where: {where}\nmessage: {e.Message}\nstack: {e.StackTrace}\nLogMessage: {message}");
+        Log("Error", $"where: {where}\nmessage: {e.GetType().Name}({e.Message})\nstack: {e.StackTrace}\nLogMessage: {message}\n");
     }
 }
