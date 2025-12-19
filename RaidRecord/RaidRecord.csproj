@@ -52,18 +52,18 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <ModsDirectoryPath>$(SPTPath)\user\mods\$(MSBuildProjectName)</ModsDirectoryPath>
+        <ModsDirectoryPath>\user\mods\$(AssemblyName)\</ModsDirectoryPath>
     </PropertyGroup>
 
-    <Target Name="CopyToSPT" AfterTargets="AfterBuild" Condition="'$(SPTPath)' != ''">
-        <Message Importance="high" Text="Copying mods to $(ModsDirectoryPath)"/>
+    <Target Name="拷贝模组到SPT" AfterTargets="AfterBuild" Condition="'$(SPTPath)' != ''">
+        <Message Importance="high" Text="SPTPath是否存在: '$(SPTPath)'" />
+        <Message Importance="high" Text="正在准备拷贝模组到: '$(SPTPath)$(ModsDirectoryPath)'"/>
         <ItemGroup>
             <FilesToCopy Include="$(OutputPath)$(TargetName).dll"/>
-            <FilesToCopy Include="$(OutputPath)$(TargetName)$(TargetExt)"/>
             <FilesToCopy Include="$(OutputPath)$(TargetName).pdb"/>
         </ItemGroup>
-        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(ModsDirectoryPath)" ContinueOnError="false"/>
-        <Message Text="Files copied"/>
+        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(SPTPath)$(ModsDirectoryPath)" ContinueOnError="false"/>
+        <Message Text="所有模组文件拷贝完成"/>
     </Target>
 
 </Project>
