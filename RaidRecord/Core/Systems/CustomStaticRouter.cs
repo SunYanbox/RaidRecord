@@ -1,10 +1,7 @@
-using Microsoft.Extensions.DependencyInjection;
 using RaidRecord.Core.Configs;
-using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
-using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.HttpResponse;
@@ -19,10 +16,12 @@ public class CustomStaticRouter: StaticRouter
 {
     // private static IContainer? _container;
     private static IServiceProvider? _serviceProvider;
+    private static InjectableClasses? _injectableClasses;
 
     public CustomStaticRouter(
-        // IContainer container,
+        ISptLogger<CustomStaticRouter> sptLogger,
         JsonUtil jsonUtil,
+        InjectableClasses injectableClasses,
         IServiceProvider serviceProvider
     ): base(
         jsonUtil,
@@ -30,12 +29,15 @@ public class CustomStaticRouter: StaticRouter
     )
     {
         _serviceProvider = serviceProvider;
+        _injectableClasses = injectableClasses;
+        if (!_injectableClasses.IsValid())
+        {
+            sptLogger.Error("[RaidRecord] CustomStaticRouter的参数InjectableClasses未正确注入");
+        }
     }
 
     private static List<RouteAction> GetCustomRoutes()
     {
-
-        // Console.WriteLine("************注册的路由已被获取************");
         return
         [
             new RouteAction<StartLocalRaidRequestData>(
@@ -66,88 +68,60 @@ public class CustomStaticRouter: StaticRouter
             )
         ];
     }
-
-    /// <summary>
-    /// CustomStaticRouter.HandleRaidStart中以下参数是否为null: data.RecordCacheManager({0}), data.JsonUtil({1}), data.ProfileHelper({2})), data.ItemHelper({3})
-    /// </summary>
-    private static bool ParaNotNullJudge(InjectableClasses data)
+    
+    private static void HandleRaidStart(StartLocalRaidRequestData request, MongoId sessionId, string output)
     {
-        // CustomStaticRouter.HandleRaidStart中以下参数是否为null: data.RecordCacheManager({0}), data.JsonUtil({1}), data.ProfileHelper({2})), data.ItemHelper({3})
-        if (data.IsValid()) return false;
-
-        string msg = data.LocalizationManager?.GetTextFormat(
-                "raidrecord.CSR.Para.null",
-                data.RecordCacheManager == null,
-                data.JsonUtil == null,
-                data.ProfileHelper == null,
-                data.ItemHelper == null
-            ) ?? $"data.LocalizationManager为null, data.RecordCacheManager({data.RecordCacheManager}), data.JsonUtil({data.JsonUtil}), data.ProfileHelper({data.ProfileHelper})), data.ItemHelper({data.ItemHelper})";
-
-        if (data.ModConfig == null)
-        {
-            msg += "data.ModConfig为null";
-        }
-        else
-        {
-            data.ModConfig.Log("Error", msg);
-        }
-
-        Console.WriteLine($"[RaidRecord]<Para> {msg}");
-
-        return true;
-
-    }
-
-    private static void HandleRaidStart(StartLocalRaidRequestData info, MongoId sessionId, string output)
-    {
-        var data = new InjectableClasses();
+        if (_serviceProvider == null) throw new NullReferenceException(nameof(_serviceProvider));
         try
         {
-            if (_serviceProvider == null) throw new NullReferenceException(nameof(_serviceProvider));
-            data.JsonUtil = _serviceProvider.GetService<JsonUtil>();
-            data.RecordCacheManager = _serviceProvider.GetService<RecordCacheManager>();
-            data.LocalizationManager = _serviceProvider.GetService<LocalizationManager>();
-            data.ProfileHelper = _serviceProvider.GetService<ProfileHelper>();
-            data.ItemHelper = _serviceProvider.GetService<ItemHelper>();
-            data.ModConfig = _serviceProvider.GetService<ModConfig>();
-
-            if (ParaNotNullJudge(data)) throw new Exception(data.LocalizationManager?.GetTextFormat("raidrecord.CSR.Para.error0") ?? "data.LocalizationManager为空, 其他属性也可能为空");
-            var response = data.JsonUtil!.Deserialize<GetBodyResponseData<StartLocalRaidResponseData>>(output);
-            // Console.WriteLine("解析后的output_response: " + data.JsonUtil.Serialize(response));
-            // Console.WriteLine("解析后的output.Data: " + data.JsonUtil.Serialize(response.Data));
-            PmcData? pmcData = data.ProfileHelper!.GetPmcProfile(sessionId);
-            if (pmcData == null) throw new Exception(data.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRS.error0", sessionId));
+            var response = _injectableClasses!.JsonUtil!.Deserialize<GetBodyResponseData<StartLocalRaidResponseData>>(output);
+            string serverId = response!.Data!.ServerId!;
+            PmcData? pmcData = _injectableClasses.ProfileHelper!.GetPmcProfile(sessionId);
+            if (pmcData == null) throw new Exception(_injectableClasses.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRS.error0", sessionId));
             MongoId? notSurePlayerId = pmcData.Id;
-            if (notSurePlayerId == null) throw new Exception(data.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRS.error1", sessionId));
+            if (notSurePlayerId == null) throw new Exception(_injectableClasses.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRS.error1", sessionId));
             MongoId playerId = notSurePlayerId.Value;
-
-            if (response?.Data?.ServerId?.Contains("Savage") ?? false) throw new Exception(data.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRS.error2"));
-
-            var logger = _serviceProvider.GetService<ModConfig>();
-            if (logger == null)
+            ModConfig? logger = _injectableClasses.ModConfig;
+            
+            List<string> errors = [];
+            
+            if (_injectableClasses.RecordCacheManager == null)
             {
-                Console.WriteLine("\n_serviceProvider没获取到日志记录器");
-                return;
+                errors.Add("RecordCacheManager is null" 
+                           + $"data type: {_injectableClasses.GetType()}"
+                           + $"data properties: {string.Join(", ", _injectableClasses.GetType().GetProperties().Select(p => p.Name))}");
             }
-            if (data.RecordCacheManager == null)
-            {
-                logger.Error("RecordCacheManager is null");
-                logger.Error($"data type: {data.GetType()}");
-                logger.Error($"data properties: {string.Join(", ", data.GetType().GetProperties().Select(p => p.Name))}");
-                return;
-            }
-
             if (string.IsNullOrEmpty(playerId))
             {
-                logger.Error("playerId is null or empty");
+                errors.Add("playerId is null or empty");
+            }
+            if (logger == null)
+            {
+                Console.WriteLine("[RaidRecord] ModConfig未正确注入InjectableClasses");
+                if (errors.Count > 0)
+                {
+                    Console.WriteLine($"[RaidRecord] 其他错误: {string.Join(", ", errors)}");
+                }
+                return;
+            }
+            if (errors.Count > 0)
+            {
+                logger.LogError(
+                    new InvalidDataException(
+                        $"{nameof(_injectableClasses.RecordCacheManager)}" +
+                        $"or {nameof(playerId)}"
+                        ),
+                    "CustomStaticRouter.HandleRaidStart",
+                    string.Join(", ", errors));
                 return;
             }
 
-            data.RecordCacheManager.ZipAll(data.ItemHelper!, playerId);
-            RaidDataWrapper? recordWrapper = data.RecordCacheManager.CreateRecord(playerId);
+
+            _injectableClasses.RecordCacheManager!.ZipAll(_injectableClasses.ItemHelper!, playerId);
+            RaidDataWrapper? recordWrapper = _injectableClasses.RecordCacheManager.CreateRecord(playerId);
 
             logger.Debug($"DEBUG CustomStaticRouter.HandleRaidStart > 获取的记录recordWrapper是否为空: {recordWrapper == null!}" +
-                         $"\njson解析的对象response是否为空: {response == null}" +
+                         $"\njson解析的对象response是否为空: {response == null!}" +
                          $"\nresponse.Data是否为空: {response?.Data == null}");
 
             if (response?.Data == null)
@@ -155,68 +129,56 @@ public class CustomStaticRouter: StaticRouter
                 logger.Error("response.Data为null, 无法正确解析回合开始的数据");
                 return;
             }
-            recordWrapper?.Info?.HandleRaidStart(response.Data, sessionId, data.ItemHelper!, data.ProfileHelper);
+            recordWrapper?.Info?.HandleRaidStart(serverId, sessionId, _injectableClasses.ItemHelper!, _injectableClasses.ProfileHelper);
             // recordWrapper.Info.ItemsTakeIn = Utils.GetInventoryInfo(pmcData, data.ItemHelper);
-            data.RecordCacheManager.SaveRecord(playerId);
-            logger.Info($"[RaidRecord] 已记录对局开始: {info.ServerId}, PlayerSide: {info.PlayerSide}, Location: {info.Location}");
+            _injectableClasses.RecordCacheManager.SaveRecord(playerId);
+            logger.Info($"[RaidRecord] 已记录对局开始: ServerId: {serverId}, SessionId: {sessionId}");
         }
         catch (Exception e)
         {
-            string msg = data.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRS.error3", e.Message, e.StackTrace);
+            string msg = _injectableClasses!.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRS.error3", e.Message, e.StackTrace);
             Console.WriteLine($"[RaidRecord] Error in HandleRaidStart: {msg}");
-            data.ModConfig?.LogError(e, "CustomStaticRouter.HandleRaidStart", msg);
+            _injectableClasses.ModConfig?.LogError(e, "CustomStaticRouter.HandleRaidStart", msg);
         }
     }
 
-    private static void HandleRaidEnd(EndLocalRaidRequestData info, MongoId sessionId, string? output)
+    private static void HandleRaidEnd(EndLocalRaidRequestData request, MongoId sessionId, string? _)
     {
-        var data = new InjectableClasses();
         try
         {
-            if (_serviceProvider == null) throw new NullReferenceException("_serviceProvider");
-            data.JsonUtil = _serviceProvider.GetService<JsonUtil>();
-            data.RecordCacheManager = _serviceProvider.GetService<RecordCacheManager>();
-            data.LocalizationManager = _serviceProvider.GetService<LocalizationManager>();
-            data.ProfileHelper = _serviceProvider.GetService<ProfileHelper>();
-            data.ItemHelper = _serviceProvider.GetService<ItemHelper>();
-            data.ModConfig = _serviceProvider.GetService<ModConfig>();
-            if (ParaNotNullJudge(data)) throw new Exception(data.LocalizationManager?.GetTextFormat("raidrecord.CSR.Para.error0") ?? "data.LocalizationManager为空, 其他属性也可能为空");
             // Console.WriteLine($"<HandleRaidStart>\n url: {url};\n info: {info};\n sessionId: {sessionId};\n output: {output};");
             // Console.WriteLine(data.JsonUtil.Serialize(info));
-            PmcData? pmcData = data.ProfileHelper!.GetPmcProfile(sessionId);
-            if (pmcData == null) throw new Exception(data.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error0"));
+            PmcData? pmcData = _injectableClasses!.ProfileHelper!.GetPmcProfile(sessionId);
+            if (pmcData == null) throw new Exception(_injectableClasses.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error0"));
             MongoId? notSurePlayerId = pmcData.Id;
-            if (notSurePlayerId == null) throw new Exception(data.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error1"));
+            if (notSurePlayerId == null) throw new Exception(_injectableClasses.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error1"));
             MongoId playerId = notSurePlayerId.Value;
             
-            var jsonUtil = _serviceProvider.GetService<JsonUtil>();
-
-            if (info.ServerId?.Contains("Savage") ?? false) 
-                throw new Exception(data.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error2"));
-
-            List<RaidDataWrapper> records = data.RecordCacheManager!.GetRecord(playerId);
+            JsonUtil? jsonUtil = _injectableClasses.JsonUtil;
+            
+            List<RaidDataWrapper> records = _injectableClasses.RecordCacheManager!.GetRecord(playerId);
 
             if (records.Count == 0 || !records[^1].IsInfo) 
-                throw new Exception(data.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error3"));
+                throw new Exception(_injectableClasses.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error3"));
 
-            if (info == null) throw new Exception("\nHandleRaidEnd的参数info为空, 这可能是SPT更改了服务端传递的参数; 在没有其他服务端模组影响的条件下, 该报错理论上很难发生!!!\n");
+            if (request == null) throw new Exception("\nHandleRaidEnd的参数info为空, 这可能是SPT更改了服务端传递的参数; 在没有其他服务端模组影响的条件下, 该报错理论上很难发生!!!\n");
             // Console.WriteLine($"\n\n info直接print: {info} \n\n info序列化: {data.JsonUtil.Serialize(info)}");
-            records[^1].Info!.HandleRaidEnd(info, sessionId, data.ItemHelper!, data.ProfileHelper);
+            records[^1].Info!.HandleRaidEnd(request, sessionId, _injectableClasses.ItemHelper!, _injectableClasses.ProfileHelper);
             // records[^1].Info.ItemsTakeIn = Utils.GetInventoryInfo(pmcData, data.ItemHelper);
-            records[^1].Zip(data.ItemHelper!);
+            records[^1].Zip(_injectableClasses.ItemHelper!);
 
-            data.RecordCacheManager.ZipAll(data.ItemHelper!, playerId);
-            data.RecordCacheManager.SaveRecord(playerId);
-            data.ModConfig?.Info($"[RaidRecord] 已记录对局结束: {info.ServerId}, "
+            _injectableClasses.RecordCacheManager.ZipAll(_injectableClasses.ItemHelper!, playerId);
+            _injectableClasses.RecordCacheManager.SaveRecord(playerId);
+            _injectableClasses.ModConfig?.Info($"[RaidRecord] 已记录对局结束: {request.ServerId}, "
                                  + $"Session: {jsonUtil?.Serialize(sessionId)}"
-                                 + $"Results: {jsonUtil?.Serialize(info.Results)}, "
-                                 + $"LocationTransit: {jsonUtil?.Serialize(info.LocationTransit)}");
+                                 + $"Results: {{ Result: {request.Results!.Result}, ExitName: {request.Results.ExitName}, PlayTime: {request.Results.PlayTime} }}, " // EndRaidResult对象太大了
+                                 + $"LocationTransit: {jsonUtil?.Serialize(request.LocationTransit)}");
         }
         catch (Exception e)
         {
-            string msg = data.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error4", e.Message, e.StackTrace);
+            string msg = _injectableClasses?.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error4", e.Message, e.StackTrace) ?? "data.LocalizationManager为空, 其他属性也可能为空";
             Console.WriteLine($"[RaidRecord] Error in HandleRaidEnd: {msg}");
-            data.ModConfig?.LogError(e, "CustomStaticRouter.HandleRaidEnd", msg);
+            _injectableClasses?.ModConfig?.LogError(e, "CustomStaticRouter.HandleRaidEnd", msg);
         }
     }
 

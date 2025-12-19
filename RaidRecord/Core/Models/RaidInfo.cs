@@ -89,15 +89,9 @@ public record RaidInfo
     }
 
     // 根据开局请求初始化数据
-    public void HandleRaidStart(StartLocalRaidResponseData data, MongoId sessionId, ItemHelper itemHelper, ProfileHelper profileHelper)
+    public void HandleRaidStart(string serverId, MongoId sessionId, ItemHelper itemHelper, ProfileHelper profileHelper)
     {
-        string? judge = VerifyStartLocalRaidResponseData(data);
-        if (judge != null)
-        {
-            Console.WriteLine($"[RaidRecord] 使用RaidInfo.HandleRaidStart过程中参数错误: {judge}");
-            return;
-        }
-        ServerId = data.ServerId ?? throw new Exception("data.ServerId为null; 这可能是SPT更改了服务端传递的参数; 在没有其他服务端模组影响的条件下, 该报错理论上很难发生!!!");
+        ServerId = serverId;
         State = "未归档";
         Side = ServerId.Contains("Pmc") ? "Pmc" : "Savage";
         PmcData? pmcProfile = profileHelper.GetPmcProfile(sessionId);
@@ -141,11 +135,6 @@ public record RaidInfo
             ExitName = data.Results.ExitName,
             PlayTime = Convert.ToInt64(data.Results.PlayTime)
         };
-    }
-
-    private string? VerifyStartLocalRaidResponseData(StartLocalRaidResponseData data)
-    {
-        return data.ServerId == null ? "参数ServerId意外为null" : null;
     }
 
     /// <summary>
