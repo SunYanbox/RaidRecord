@@ -160,9 +160,6 @@ public class RaidUtil(
     /// </summary>
     private void HandleRaidEndInventoryAndValue(RaidInfo raidInfo, PmcData pmcData)
     {
-        raidInfo.Addition.Clear();
-        raidInfo.Remove.Clear();
-        raidInfo.Changed.Clear();
         if (pmcData.Stats == null || pmcData.Stats.Eft == null)
         {
             Console.WriteLine($"[RaidInfo] 错误尝试获取对局结束数据时, 获取到的数据({nameof(pmcData.Stats)}和{nameof(pmcData.Stats.Eft)})全部为null");
@@ -188,23 +185,13 @@ public class RaidUtil(
                             = raidInfo.CombatLosses = 0;
             return;
         }
-        // 记录获取/变化的物资
-        foreach ((MongoId itemId, Item item) in raidInfo.ItemsTakeIn)
-        {
-            if (raidInfo.ItemsTakeOut.TryGetValue(itemId, out Item? newItem))
-            {
-                if (Math.Abs(itemHelper.GetItemQualityModifier(item) - itemHelper.GetItemQualityModifier(newItem)) < Constants.ArchiveCheckJudgeError) continue;
-                raidInfo.Changed.Add(itemId);
-            }
-            else
-            {
-                raidInfo.Remove.Add(itemId);
-            }
-        }
-        foreach ((MongoId itemId, Item _) in raidInfo.ItemsTakeOut)
-        {
-            if (!raidInfo.ItemsTakeIn.ContainsKey(itemId)) raidInfo.Addition.Add(itemId);
-        }
+        UpdateItemsChanged(
+            raidInfo.Addition,
+            raidInfo.Remove,
+            raidInfo.Changed,
+            raidInfo.ItemsTakeIn,
+            raidInfo.ItemsTakeOut
+        );
         // 收益, 战损记录
         raidInfo.GrossProfit = ItemUtil.CalculateInventoryValue(raidInfo.ItemsTakeOut, raidInfo.Addition.ToArray(), itemHelper);
         raidInfo.CombatLosses = ItemUtil.CalculateInventoryValue(raidInfo.ItemsTakeIn, raidInfo.Remove.ToArray(), itemHelper);
@@ -224,6 +211,79 @@ public class RaidUtil(
         }
     }
 
+    /// <summary>
+    /// 获取对局结束时物品的变动信息（基于完整 Item 对象）
+    /// </summary>
+    public void UpdateItemsChanged(
+        List<MongoId> add,
+        List<MongoId> remove,
+        List<MongoId> change,
+        Dictionary<MongoId, Item> itemsTakeIn,
+        Dictionary<MongoId, Item> itemsTakeOut)
+    {
+        add.Clear();
+        remove.Clear();
+        change.Clear();
+
+        foreach (var (itemId, itemIn) in itemsTakeIn)
+        {
+            if (itemsTakeOut.TryGetValue(itemId, out var itemOut))
+            {
+                double modIn = itemHelper.GetItemQualityModifier(itemIn);
+                double modOut = itemHelper.GetItemQualityModifier(itemOut);
+                if (Math.Abs(modIn - modOut) < Constants.ArchiveCheckJudgeError)
+                    continue;
+                change.Add(itemId);
+            }
+            else
+            {
+                remove.Add(itemId); // 注意：这里逻辑反了！see below
+            }
+        }
+
+        foreach (var (itemId, _) in itemsTakeOut)
+        {
+            if (!itemsTakeIn.ContainsKey(itemId))
+                add.Add(itemId);
+        }
+    }
+
+    /// <summary>
+    /// 获取对局结束时物品的变动信息（基于预计算的 double 修正值）
+    /// </summary>
+    public static void UpdateItemsChanged(
+        List<MongoId> add,
+        List<MongoId> remove,
+        List<MongoId> change,
+        Dictionary<MongoId, double> itemsTakeIn,
+        Dictionary<MongoId, double> itemsTakeOut)
+    {
+        add.Clear();
+        remove.Clear();
+        change.Clear();
+
+        foreach (var (itemId, modIn) in itemsTakeIn)
+        {
+            if (itemsTakeOut.TryGetValue(itemId, out double modOut))
+            {
+                if (Math.Abs(modIn - modOut) < Constants.ArchiveCheckJudgeError)
+                    continue;
+                change.Add(itemId);
+            }
+            else
+            {
+                remove.Add(itemId); // 注意：这里逻辑反了！
+            }
+        }
+
+        foreach (var (itemId, _) in itemsTakeOut)
+        {
+            if (!itemsTakeIn.ContainsKey(itemId))
+                add.Add(itemId);
+        }
+    }
+
+    
     // 被视为战备的基类(枪械, 胸挂, 背包, 护甲, 头盔等)
     private static readonly MongoId[] Equipments =
     [

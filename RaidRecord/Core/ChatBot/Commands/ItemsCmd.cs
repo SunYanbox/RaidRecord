@@ -38,47 +38,20 @@ public class ItemsCmd: CommandBase
         string? verify = _cmdUtil.VerifyIParametric(parametric);
         if (verify != null) return verify;
 
-        string serverId;
-        int index;
-        try
-        {
-            serverId = parametric.Paras.GetValueOrDefault("serverid", "");
-            index = int.TryParse(parametric.Paras.GetValueOrDefault("index", "-1"), out int indexTemp) ? indexTemp : -1;
-        }
-        catch (Exception e)
-        {
-            // return $"参数解析时出现错误: {e.Message}";
-            _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand", _cmdUtil.GetLocalText("Command.Para.Parse.error0", e.Message));
-            return _cmdUtil.GetLocalText("Command.Para.Parse.error0", e.Message);
-        }
+        string serverId = CmdUtil.GetParameter<string>(parametric.Paras, "serverId", "");
+        int index = CmdUtil.GetParameter(parametric.Paras, "index", -1);
+
+        RaidArchive? archive = _cmdUtil.GetArchiveWithServerId(serverId, parametric.SessionId);
 
         // TODO: 显示新获得/遗失/更改的物品
 
-        if (!string.IsNullOrEmpty(serverId))
+        if (archive != null)
         {
-            List<RaidArchive> records = _cmdUtil.GetArchivesBySession(parametric.SessionId);
-            RaidArchive? record = records.Find(x => x.ServerId.ToString() == serverId);
-            if (record != null)
-            {
-                return GetItemsDetails(record);
-            }
-            else
-            {
-                // return $"serverId为{serverId}的对局不存在, 请检查你的输入";
-                return _cmdUtil.GetLocalText("Command.Para.ServerId.NotExist", serverId);
-            }
+            return GetItemsDetails(archive);
         }
-        if (index >= 0)
-        {
-            List<RaidArchive> records = _cmdUtil.GetArchivesBySession(parametric.SessionId);
-            // if (index >= records.Count) return $"索引{index}超出范围: [0, {records.Count})";
-            if (index >= records.Count) return _cmdUtil.GetLocalText("Command.Para.Index.OutOfRange", index, records.Count);
-            return GetItemsDetails(records[index]);
-        }
-
-        List<RaidArchive> records2 = _cmdUtil.GetArchivesBySession(parametric.SessionId);
-        // return $"请输入正确的serverId(当前: {serverId})或index(当前: {index} not in [0, {records2.Count}))";
-        return _cmdUtil.GetLocalText("Command.Para.Presentation", serverId, index, records2.Count);
+        return index == -1 
+            ? _cmdUtil.GetLocalText("Command.Para.ServerId.NotExist", serverId) 
+            : GetItemsDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId));
     }
 
     protected string GetItemsDetails(RaidArchive archive)
@@ -154,5 +127,25 @@ public class ItemsCmd: CommandBase
         }
 
         return msg;
+    }
+    
+    private string GetItemDetails(MongoId tpl, double modify, Dictionary<string, string>? local = null)
+    {
+        double price = _itemHelper.GetItemPrice(tpl) ?? 0;
+        string name = local?.GetValueOrDefault($"{tpl} ShortName", tpl) ?? tpl;
+        string desc = local?.GetValueOrDefault($"{tpl} Description", tpl) ?? tpl;
+
+        // 截断描述，最多显示 30 个字符（可调），避免撑开行高
+        if (!string.IsNullOrEmpty(desc))
+        {
+            desc = desc.Length > 30 ? desc.Substring(0, 27) + "..." : desc;
+        }
+        else
+        {
+            desc = ""; // 空描述留空
+        }
+
+        // 格式化输出：使用固定宽度对齐，确保列整齐
+        return $"{name,-14} {price,6:F0} {modify,6:F2} {price * modify,8:F0} {desc}";
     }
 }

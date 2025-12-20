@@ -34,44 +34,17 @@ public class InfoCmd: CommandBase
         string? verify = _cmdUtil.VerifyIParametric(parametric);
         if (verify != null) return verify;
 
-        string serverId;
-        int index;
-        try
-        {
-            serverId = parametric.Paras.GetValueOrDefault("serverid", "");
-            index = int.TryParse(parametric.Paras.GetValueOrDefault("index", "-1"), out int indexTemp) ? indexTemp : -1;
-        }
-        catch (Exception e)
-        {
-            // return $"参数解析时出现错误: {e.Message}";
-            _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand", _cmdUtil.GetLocalText("Command.Para.Parse.error0", e.Message));
-            return _cmdUtil.GetLocalText("Command.Para.Parse.error0", e.Message);
-        }
+        string serverId = CmdUtil.GetParameter<string>(parametric.Paras, "serverId", "");
+        int index = CmdUtil.GetParameter(parametric.Paras, "index", -1);
 
-        if (!string.IsNullOrEmpty(serverId))
+        RaidArchive? archive = _cmdUtil.GetArchiveWithServerId(serverId, parametric.SessionId);
+        if (archive != null)
         {
-            List<RaidArchive> records = _cmdUtil.GetArchivesBySession(parametric.SessionId);
-            RaidArchive? record = records.Find(x => x.ServerId.ToString() == serverId);
-            if (record != null)
-            {
-                return GetArchiveDetails(record);
-            }
-            else
-            {
-                // return $"serverId为{serverId}的对局不存在, 请检查你的输入";
-                return _cmdUtil.GetLocalText("Command.Para.ServerId.NotExist", serverId);
-            }
+            return GetArchiveDetails(archive);
         }
-        if (index >= 0)
-        {
-            List<RaidArchive> records = _cmdUtil.GetArchivesBySession(parametric.SessionId);
-            // if (index >= records.Count) return $"索引{index}超出范围: [0, {records.Count})";
-            if (index >= records.Count) return _cmdUtil.GetLocalText("Command.Para.Index.OutOfRange", index, records.Count);
-            return GetArchiveDetails(records[index]);
-        }
-        List<RaidArchive> records2 = _cmdUtil.GetArchivesBySession(parametric.SessionId);
-        // return $"请输入正确的serverId(当前: {serverId})或index(当前: {index} not in [0, {records2.Count}))";
-        return _cmdUtil.GetLocalText("Command.Para.Presentation", serverId, index, records2.Count);
+        return index == -1 ?
+            _cmdUtil.GetLocalText("Command.Para.ServerId.NotExist", serverId) 
+            : GetArchiveDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId));
     }
 
     private string GetArchiveDetails(RaidArchive archive)

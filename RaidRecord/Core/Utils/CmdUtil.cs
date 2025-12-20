@@ -27,6 +27,45 @@ public class CmdUtil(
     public readonly ParaInfoBuilder ParaInfoBuilder = new();
     #endregion
 
+    /// <summary>
+    /// 从解析的参数字典中获取指定类型的参数的值
+    /// </summary>
+    /// <param name="parameters">参数字典</param>
+    /// <param name="key">参数键</param>
+    /// <param name="defaultValue">默认值</param>
+    /// <typeparam name="T">类型</typeparam>
+    /// <returns>获取到的参数值或者默认值</returns>
+    /// <exception cref="ArgumentException">传入的参数键为空</exception>
+    public static T GetParameter<T>(Dictionary<string, string> parameters, 
+        string key, 
+        T defaultValue)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+
+        if (string.IsNullOrEmpty(key))
+            throw new ArgumentException("Para key cannot be null or empty", nameof(key));
+        
+        // 如果字典中不存在该键，返回默认值
+        if (!parameters.TryGetValue(key.ToLower(), out string? stringValue))
+            return defaultValue;
+        
+        // 如果值为空，返回默认值
+        if (string.IsNullOrEmpty(stringValue))
+            return defaultValue;
+        
+        try
+        {
+            // 使用Convert.ChangeType进行转换
+            return (T)Convert.ChangeType(stringValue, typeof(T));
+        }
+        catch (Exception ex) when (
+            ex is InvalidCastException or FormatException or OverflowException)
+        {
+            // 转换失败时返回默认值
+            return defaultValue;
+        }
+    }
+    
     public UserDialogInfo GetChatBot()
     {
         return new UserDialogInfo
@@ -107,5 +146,28 @@ public class CmdUtil(
             }
         }
         return result;
+    }
+
+    /// <summary>
+    /// 尝试通过serverId配合sessionId获取准确存档
+    /// </summary>
+    public RaidArchive? GetArchiveWithServerId(string serverId, string sessionId)
+    {
+        if (string.IsNullOrEmpty(serverId)) return null;
+        List<RaidArchive> records = GetArchivesBySession(sessionId);
+        RaidArchive? record = records.Find(x => x.ServerId.ToString() == serverId);
+        return record;
+    }
+
+    /// <summary>
+    /// 尝试通过index配合sessionId获取准确存档
+    /// </summary>
+    /// <exception cref="IndexOutOfRangeException">索引超出范围时报错</exception>
+    public RaidArchive GetArchiveWithIndex(int index, string sessionId)
+    {
+        List<RaidArchive> records = GetArchivesBySession(sessionId);
+        if (index >= records.Count || index < 0) 
+            throw new IndexOutOfRangeException($"index {index} out of range: [0, {records.Count})");
+        return records[index];
     }
 }

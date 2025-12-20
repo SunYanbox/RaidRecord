@@ -12,9 +12,9 @@ public class ParaInfoBuilder
     /// <param name="desc">参数描述</param>
     public ParaInfoBuilder AddParam(string name, string type, string desc)
     {
-        _paraInfo.Paras.Add(name);
-        _paraInfo.Types[name] = type;
-        _paraInfo.Descs[name] = desc;
+        _paraInfo.Paras.Add(name.ToLower());
+        _paraInfo.Types[name.ToLower()] = type;
+        _paraInfo.Descs[name.ToLower()] = desc;
         return this;
     }
 
@@ -22,7 +22,7 @@ public class ParaInfoBuilder
     {
         foreach (string para in parameters)
         {
-            _paraInfo.Optional.Add(para);
+            _paraInfo.Optional.Add(para.ToLower());
         }
         return this;
     }

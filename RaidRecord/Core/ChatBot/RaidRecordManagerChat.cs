@@ -137,7 +137,16 @@ public class RaidRecordManagerChat(
             }
             index += 1;
         }
-        string result = iCmd.Execute(iCmd.Paras);
+        string result = string.Empty;
+        try
+        {
+            result = iCmd.Execute(iCmd.Paras);
+        }
+        catch (Exception e)
+        {
+            result += e.Message;
+            modConfig.Error($"RaidRecordManagerChat.HandleCommand中{iCmd.GetType().Name}执行时出现错误: ", e);
+        }
         // 垃圾回收 低效 未来再优化
         iCmd.Paras.ManagerChat = null;
         iCmd.Paras.Paras.Clear();

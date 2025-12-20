@@ -28,18 +28,8 @@ public class ListCmd: CommandBase
         if (verify != null) return verify;
 
         List<RaidArchive> records = _cmdUtil.GetArchivesBySession(parametric.SessionId);
-        int numberLimit, page;
-        try
-        {
-            numberLimit = int.TryParse(parametric.Paras.GetValueOrDefault("limit", "10"), out int limitTemp) ? limitTemp : 10;
-            page = int.TryParse(parametric.Paras.GetValueOrDefault("page", "1"), out int pageTemp) ? pageTemp : 1;
-        }
-        catch (Exception e)
-        {
-            // return $"参数解析时出现错误: {e.Message}";
-            _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand", _cmdUtil.GetLocalText("Command.Para.Parse.error0", e.Message));
-            return _cmdUtil.GetLocalText("Command.Para.Parse.error0", e.Message);
-        }
+        int numberLimit = CmdUtil.GetParameter(parametric.Paras, "Limit", 10); 
+        int page = CmdUtil.GetParameter(parametric.Paras, "Page", 1);
         numberLimit = Math.Min(20, Math.Max(1, numberLimit));
         page = Math.Max(1, page);
 
