@@ -175,7 +175,7 @@ public class CustomStaticRouter: StaticRouter
 
             if (request == null) throw new Exception("\nHandleRaidEnd的参数info为空, 这可能是SPT更改了服务端传递的参数; 在没有其他服务端模组影响的条件下, 该报错理论上很难发生!!!\n");
             // Console.WriteLine($"\n\n info直接print: {info} \n\n info序列化: {data.JsonUtil.Serialize(info)}");
-            
+
             if (records.InfoRecordCache.Info is not null)
                 _raidUtil?.HandleRaidEnd(records.InfoRecordCache.Info, request, sessionId);
 

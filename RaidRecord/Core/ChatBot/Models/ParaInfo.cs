@@ -1,4 +1,4 @@
-namespace RaidRecord.Core.ChatBot.Commands;
+namespace RaidRecord.Core.ChatBot.Models;
 
 /// <summary>
 /// 参数信息 | 仅用于help获取命令信息

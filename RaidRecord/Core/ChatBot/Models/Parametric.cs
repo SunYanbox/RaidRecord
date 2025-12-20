@@ -1,4 +1,4 @@
-namespace RaidRecord.Core.ChatBot.Commands;
+namespace RaidRecord.Core.ChatBot.Models;
 
 /// <summary>
 /// 命令参数 | 参与命令调用的参数
@@ -8,5 +8,4 @@ public class Parametric(string sessionId, RaidRecordManagerChat managerChat)
     public string SessionId { get; set; } = sessionId;
     public RaidRecordManagerChat? ManagerChat { get; set; } = managerChat;
     public Dictionary<string, string> Paras { get; set; } = new();
-
 }

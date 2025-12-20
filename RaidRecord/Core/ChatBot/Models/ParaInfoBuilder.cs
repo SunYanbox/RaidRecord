@@ -1,4 +1,4 @@
-namespace RaidRecord.Core.ChatBot.Commands;
+namespace RaidRecord.Core.ChatBot.Models;
 
 public class ParaInfoBuilder
 {

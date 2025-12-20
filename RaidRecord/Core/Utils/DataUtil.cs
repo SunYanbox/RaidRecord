@@ -1,5 +1,5 @@
 using System.Text.Json;
-using RaidRecord.Core.ChatBot.Commands;
+using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Models;
 
 namespace RaidRecord.Core.Utils;
@@ -7,7 +7,7 @@ namespace RaidRecord.Core.Utils;
 public static class DataUtil
 {
     // 根据 ParaInfo 属性更新一条命令使用指南, 追加到原有的 desc 后
-    public static void UpdateCommandDesc(Command command)
+    public static void UpdateCommandDesc(CommandBase command)
     {
         string desc = $"> {command.Key}";
 

@@ -12,7 +12,7 @@ namespace RaidRecord.Core.Utils;
 
 [Injectable]
 public class RaidUtil(
-    ItemHelper itemHelper, 
+    ItemHelper itemHelper,
     ProfileHelper profileHelper,
     RecordCacheManager recordCacheManager)
 {
@@ -154,7 +154,7 @@ public class RaidUtil(
             }
         }
     }
-    
+
     /// <summary>
     /// 根据对局结束的数据(变化量, 结果)归档到RaidInfo
     /// </summary>
@@ -181,10 +181,10 @@ public class RaidUtil(
         // 处理价值相关数据
         if (raidInfo.ItemsTakeIn.Count == 0 && raidInfo.ItemsTakeOut.Count == 0)
         {
-            raidInfo.PreRaidValue 
-                = raidInfo.EquipmentValue 
-                    = raidInfo.SecuredValue 
-                        = raidInfo.GrossProfit 
+            raidInfo.PreRaidValue
+                = raidInfo.EquipmentValue
+                    = raidInfo.SecuredValue
+                        = raidInfo.GrossProfit
                             = raidInfo.CombatLosses = 0;
             return;
         }
