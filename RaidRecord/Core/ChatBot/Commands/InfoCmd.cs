@@ -42,8 +42,8 @@ public class InfoCmd: CommandBase
         {
             return GetArchiveDetails(archive);
         }
-        return index == -1 ?
-            _cmdUtil.GetLocalText("Command.Para.ServerId.NotExist", serverId) 
+        return index == -1
+            ? _cmdUtil.GetLocalText("Command.Para.ServerId.NotExist", serverId)
             : GetArchiveDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId));
     }
 

@@ -36,23 +36,23 @@ public class CmdUtil(
     /// <typeparam name="T">类型</typeparam>
     /// <returns>获取到的参数值或者默认值</returns>
     /// <exception cref="ArgumentException">传入的参数键为空</exception>
-    public static T GetParameter<T>(Dictionary<string, string> parameters, 
-        string key, 
+    public static T GetParameter<T>(Dictionary<string, string> parameters,
+        string key,
         T defaultValue)
     {
         ArgumentNullException.ThrowIfNull(parameters);
 
         if (string.IsNullOrEmpty(key))
             throw new ArgumentException("Para key cannot be null or empty", nameof(key));
-        
+
         // 如果字典中不存在该键，返回默认值
         if (!parameters.TryGetValue(key.ToLower(), out string? stringValue))
             return defaultValue;
-        
+
         // 如果值为空，返回默认值
         if (string.IsNullOrEmpty(stringValue))
             return defaultValue;
-        
+
         try
         {
             // 使用Convert.ChangeType进行转换
@@ -65,7 +65,7 @@ public class CmdUtil(
             return defaultValue;
         }
     }
-    
+
     public UserDialogInfo GetChatBot()
     {
         return new UserDialogInfo
@@ -166,7 +166,7 @@ public class CmdUtil(
     public RaidArchive GetArchiveWithIndex(int index, string sessionId)
     {
         List<RaidArchive> records = GetArchivesBySession(sessionId);
-        if (index >= records.Count || index < 0) 
+        if (index >= records.Count || index < 0)
             throw new IndexOutOfRangeException($"index {index} out of range: [0, {records.Count})");
         return records[index];
     }
