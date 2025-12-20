@@ -225,9 +225,9 @@ public class RaidUtil(
         remove.Clear();
         change.Clear();
 
-        foreach (var (itemId, itemIn) in itemsTakeIn)
+        foreach ((MongoId itemId, Item itemIn) in itemsTakeIn)
         {
-            if (itemsTakeOut.TryGetValue(itemId, out var itemOut))
+            if (itemsTakeOut.TryGetValue(itemId, out Item? itemOut))
             {
                 double modIn = itemHelper.GetItemQualityModifier(itemIn);
                 double modOut = itemHelper.GetItemQualityModifier(itemOut);
@@ -237,11 +237,11 @@ public class RaidUtil(
             }
             else
             {
-                remove.Add(itemId); // 注意：这里逻辑反了！see below
+                remove.Add(itemId);
             }
         }
 
-        foreach (var (itemId, _) in itemsTakeOut)
+        foreach ((MongoId itemId, Item _) in itemsTakeOut)
         {
             if (!itemsTakeIn.ContainsKey(itemId))
                 add.Add(itemId);
@@ -262,28 +262,29 @@ public class RaidUtil(
         remove.Clear();
         change.Clear();
 
-        foreach (var (itemId, modIn) in itemsTakeIn)
+        foreach ((MongoId itemId, double modIn) in itemsTakeIn)
         {
             if (itemsTakeOut.TryGetValue(itemId, out double modOut))
             {
+                // 在带入且在带出就是改变了
                 if (Math.Abs(modIn - modOut) < Constants.ArchiveCheckJudgeError)
                     continue;
                 change.Add(itemId);
             }
             else
             {
-                remove.Add(itemId); // 注意：这里逻辑反了！
+                remove.Add(itemId);
             }
         }
 
-        foreach (var (itemId, _) in itemsTakeOut)
+        foreach ((MongoId itemId, double _) in itemsTakeOut)
         {
             if (!itemsTakeIn.ContainsKey(itemId))
                 add.Add(itemId);
         }
     }
 
-    
+
     // 被视为战备的基类(枪械, 胸挂, 背包, 护甲, 头盔等)
     private static readonly MongoId[] Equipments =
     [

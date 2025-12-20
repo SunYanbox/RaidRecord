@@ -51,8 +51,8 @@ public class ItemsCmd: CommandBase
         {
             return GetItemsDetails(archive, mode);
         }
-        return index == -1 
-            ? _cmdUtil.GetLocalText("Command.Para.ServerId.NotExist", serverId) 
+        return index == -1
+            ? _cmdUtil.GetLocalText("Command.Para.ServerId.NotExist", serverId)
             : GetItemsDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId), mode);
     }
 
@@ -117,6 +117,7 @@ public class ItemsCmd: CommandBase
 
             if (archive is { ItemsTakeOut.Count: <= 0 }) return msg;
             {
+                msg += "- - - - - - - - - - - - - - - - - - - - - - - - ";
                 foreach ((MongoId tpl, double modify) in archive.ItemsTakeOut)
                 {
                     msg += $"\n\n - {GetItemDetails(tpl, modify, local)}";
@@ -127,37 +128,37 @@ public class ItemsCmd: CommandBase
         }
 
         List<MongoId> add = [], remove = [], change = [];
-        
+
         RaidUtil.UpdateItemsChanged(add, remove, change, archive.ItemsTakeIn, archive.ItemsTakeOut);
 
         // "\n\n物品变化:\n   物品名称  物品单价(rub) * 物品修正 = 物品总价值(rub)  物品描述"
         msg += _cmdUtil.GetLocalText("RC MC.Chat.GID.info1");
-        
+
         foreach (MongoId addTpl in add)
         {
             double modify = archive.ItemsTakeOut.GetValueOrDefault(addTpl, 0);
-            if (modify > Constants.ArchiveCheckJudgeError)
+            if (Math.Abs(modify) > Constants.ArchiveCheckJudgeError)
                 msg += $"\n + {GetItemDetails(addTpl, modify, local)}";
         }
 
         foreach (MongoId removeTpl in remove)
         {
             double modify = archive.ItemsTakeIn.GetValueOrDefault(removeTpl, 0);
-            if (modify > Constants.ArchiveCheckJudgeError)
+            if (Math.Abs(modify) > Constants.ArchiveCheckJudgeError)
                 msg += $"\n - {GetItemDetails(removeTpl, modify, local)}";
         }
-        
+
         foreach (MongoId changeTpl in change)
         {
             double modify = archive.ItemsTakeOut.GetValueOrDefault(changeTpl, 0)
-                - archive.ItemsTakeIn.GetValueOrDefault(changeTpl, 0);
-            if (modify > Constants.ArchiveCheckJudgeError)
+                            - archive.ItemsTakeIn.GetValueOrDefault(changeTpl, 0);
+            if (Math.Abs(modify) > Constants.ArchiveCheckJudgeError)
                 msg += $"\n ~ {GetItemDetails(changeTpl, modify, local)}";
         }
 
         return msg;
     }
-    
+
     private string GetItemDetails(MongoId tpl, double modify, Dictionary<string, string>? local = null)
     {
         double price = _itemHelper.GetItemPrice(tpl) ?? 0;
