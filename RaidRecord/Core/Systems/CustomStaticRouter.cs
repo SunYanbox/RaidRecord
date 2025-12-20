@@ -1,5 +1,6 @@
 using RaidRecord.Core.Configs;
 using RaidRecord.Core.Models;
+using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Common;
@@ -17,17 +18,20 @@ public class CustomStaticRouter: StaticRouter
     // private static IContainer? _container;
     private static IServiceProvider? _serviceProvider;
     private static InjectableClasses? _injectableClasses;
+    private static RaidUtil? _raidUtil;
 
     public CustomStaticRouter(
         ISptLogger<CustomStaticRouter> sptLogger,
         JsonUtil jsonUtil,
         InjectableClasses injectableClasses,
-        IServiceProvider serviceProvider
+        IServiceProvider serviceProvider,
+        RaidUtil raidUtil
     ): base(
         jsonUtil,
         GetCustomRoutes()
     )
     {
+        _raidUtil = raidUtil;
         _serviceProvider = serviceProvider;
         _injectableClasses = injectableClasses;
         if (!_injectableClasses.IsValid())
@@ -131,7 +135,8 @@ public class CustomStaticRouter: StaticRouter
                 logger.Error("response.Data为null, 无法正确解析回合开始的数据");
                 return;
             }
-            recordWrapper?.Info?.HandleRaidStart(serverId, sessionId, _injectableClasses.ItemHelper!, _injectableClasses.ProfileHelper);
+            if (recordWrapper?.Info is not null)
+                _raidUtil?.HandleRaidStart(recordWrapper.Info, serverId, sessionId);
             // recordWrapper.Info.ItemsTakeIn = Utils.GetInventoryInfo(pmcData, data.ItemHelper);
             _injectableClasses.RecordCacheManager.SaveEFTRecord(account!.Value);
             logger.Info($"已记录对局开始: ServerId: {serverId}, SessionId: {sessionId}");
@@ -170,7 +175,9 @@ public class CustomStaticRouter: StaticRouter
 
             if (request == null) throw new Exception("\nHandleRaidEnd的参数info为空, 这可能是SPT更改了服务端传递的参数; 在没有其他服务端模组影响的条件下, 该报错理论上很难发生!!!\n");
             // Console.WriteLine($"\n\n info直接print: {info} \n\n info序列化: {data.JsonUtil.Serialize(info)}");
-            records.InfoRecordCache.Info!.HandleRaidEnd(request, sessionId, _injectableClasses.ItemHelper!, _injectableClasses.RecordCacheManager);
+            
+            if (records.InfoRecordCache.Info is not null)
+                _raidUtil?.HandleRaidEnd(records.InfoRecordCache.Info, request, sessionId);
 
             _injectableClasses.RecordCacheManager.ZipAccount(playerId);
             _injectableClasses.RecordCacheManager.SaveEFTRecord(accountId.Value);
