@@ -60,43 +60,39 @@ public class RaidUtil(
             throw new NullReferenceException($"获取到的结束请求数据的结果为null, 忽略此请求");
         }
 
-        // 参考InRaidHelper和LocationLifecycleService处理对局结束的存档
-        if (request.Results.Profile != null)
+        // 不能参考InRaidHelper和LocationLifecycleService处理对局结束的存档!!!
+
+        // ServerId has various info stored in it, delimited by a period
+        string[] serverDetails = raidInfo.ServerId.Split(".");
+        string locationName = serverDetails[0].ToLowerInvariant();
+        bool isPmc = serverDetails[1].ToLowerInvariant().Contains("pmc");
+        bool isDead = request.Results.IsPlayerDead();
+        bool isTransfer = request.Results.IsMapToMapTransfer();
+        bool isSurvived = request.Results.IsPlayerSurvived();
+        // PmcData postRaidProfile = request.Results.Profile; // 战局后角色数据(Pmc和战局进入时的物品相同)
+
+        // 正确获取Scav或Pmc数据
+        PmcData pmcProfile = recordCacheManager.GetPmcDataByPlayerId(raidInfo.PlayerId);
+
+        if (isPmc)
         {
-            // ServerId has various info stored in it, delimited by a period
-            string[] serverDetails = raidInfo.ServerId.Split(".");
-            string locationName = serverDetails[0].ToLowerInvariant();
-            bool isPmc = serverDetails[1].ToLowerInvariant().Contains("pmc");
-            bool isDead = request.Results.IsPlayerDead();
-            bool isTransfer = request.Results.IsMapToMapTransfer();
-            bool isSurvived = request.Results.IsPlayerSurvived();
-            PmcData postRaidProfile = request.Results.Profile; // 战局后角色数据
-
-            // Scav死亡时此处仍然能获取到物品(疑问: Pmc死亡时既无法断点到这里, 也没有else中的输出)
-            raidInfo.ItemsTakeOut = ItemUtil.GetInventoryInfo(postRaidProfile, itemHelper);
-
-            if (!isPmc && isDead)
-            {
-                // Scav死亡, 无法带出任何物品(由于Scav死亡时LocationLifecycleService会直接生成下一次存档, 直接清空字典保险一些)
-                raidInfo.ItemsTakeOut = new Dictionary<MongoId, Item>();
-            }
-
-            HandleRaidEndInventoryAndValue(raidInfo, postRaidProfile);
+            raidInfo.ItemsTakeOut = ItemUtil.GetInventoryInfo(pmcProfile, itemHelper);
         }
         else
         {
-            Console.WriteLine($"[RaidInfo] 警告: 获取对局结束数据时, 获取到的PostRaidProfile数据({nameof(request.Results.Profile)})为null");
-            try
+            // Scav模式
+            PmcData postRaidProfile = request.Results.Profile!;
+            
+            raidInfo.ItemsTakeOut = ItemUtil.GetInventoryInfo(postRaidProfile, itemHelper);
+            
+            if (isDead)
             {
-                PmcData pmcProfile = recordCacheManager.GetPmcDataByPlayerId(raidInfo.PlayerId);
-                raidInfo.ItemsTakeOut = ItemUtil.GetInventoryInfo(pmcProfile, itemHelper);
-                HandleRaidEndInventoryAndValue(raidInfo, pmcProfile);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"[RaidInfo] Error 推测对局结束数据时, 无法正确获取PMC存档数据: \n\tMessage: {e.Message}\n\tStackTrace: {e.StackTrace}");
+                // Scav死亡, 无法带出任何物品(由于Scav死亡时LocationLifecycleService会直接生成下一次存档, 直接清空字典)
+                raidInfo.ItemsTakeOut = new Dictionary<MongoId, Item>();
             }
         }
+
+        HandleRaidEndInventoryAndValue(raidInfo, pmcProfile);
 
         raidInfo.Results = new RaidResultData
         {

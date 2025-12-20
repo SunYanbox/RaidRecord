@@ -117,7 +117,7 @@ public class ItemsCmd: CommandBase
 
             if (archive is { ItemsTakeOut.Count: <= 0 }) return msg;
             {
-                msg += "- - - - - - - - - - - - - - - - - - - - - - - - ";
+                msg += "\n- - - - - - - - - - - - - - - - - - - - - - - - ";
                 foreach ((MongoId tpl, double modify) in archive.ItemsTakeOut)
                 {
                     msg += $"\n\n - {GetItemDetails(tpl, modify, local)}";

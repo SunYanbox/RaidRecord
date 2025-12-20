@@ -139,7 +139,7 @@ public class CustomStaticRouter: StaticRouter
                 _raidUtil?.HandleRaidStart(recordWrapper.Info, serverId, sessionId);
             // recordWrapper.Info.ItemsTakeIn = Utils.GetInventoryInfo(pmcData, data.ItemHelper);
             _injectableClasses.RecordCacheManager.SaveEFTRecord(account!.Value);
-            logger.Info($"已记录对局开始: ServerId: {serverId}, SessionId: {sessionId}");
+            logger.Info($"已记录对局开始: ServerId: {serverId}, SessionId: {sessionId}, 带入对局物品数量: {recordWrapper?.Info?.ItemsTakeIn.Count}");
         }
         catch (Exception e)
         {
@@ -179,12 +179,15 @@ public class CustomStaticRouter: StaticRouter
             if (records.InfoRecordCache.Info is not null)
                 _raidUtil?.HandleRaidEnd(records.InfoRecordCache.Info, request, sessionId);
 
+            int itemsTakeOutCount = records.InfoRecordCache.Info?.ItemsTakeOut.Count ?? 0;
+            
             _injectableClasses.RecordCacheManager.ZipAccount(playerId);
             _injectableClasses.RecordCacheManager.SaveEFTRecord(accountId.Value);
             _injectableClasses.ModConfig?.Info($"已记录对局结束: {request.ServerId}, "
                                                + $"Session: {jsonUtil?.Serialize(sessionId)}, "
                                                + $"Results: {{ Result: {request.Results!.Result}, ExitName: {request.Results.ExitName}, PlayTime: {request.Results.PlayTime} }}, " // EndRaidResult对象太大了
-                                               + $"LocationTransit: {jsonUtil?.Serialize(request.LocationTransit)}");
+                                               + $"LocationTransit: {jsonUtil?.Serialize(request.LocationTransit)}, "
+                                               + $"带出对局物品数量: {itemsTakeOutCount}");
         }
         catch (Exception e)
         {
