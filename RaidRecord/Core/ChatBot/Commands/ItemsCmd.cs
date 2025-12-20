@@ -29,7 +29,8 @@ public class ItemsCmd: CommandBase
         ParaInfo = cmdUtil.ParaInfoBuilder
             .AddParam("serverId", "string", cmdUtil.GetLocalText("Command.Para.ServerId.Desc"))
             .AddParam("index", "int", cmdUtil.GetLocalText("Command.Para.Index.Desc"))
-            .SetOptional(["serverId", "index"])
+            .AddParam("mode", "string", cmdUtil.GetLocalText("Command.Items.Para.Mode.Desc"))
+            .SetOptional(["serverId", "index", "mode"])
             .Build();
     }
 
@@ -40,6 +41,7 @@ public class ItemsCmd: CommandBase
 
         string serverId = CmdUtil.GetParameter<string>(parametric.Paras, "serverId", "");
         int index = CmdUtil.GetParameter(parametric.Paras, "index", -1);
+        string mode = CmdUtil.GetParameter<string>(parametric.Paras, "mode", "change");
 
         RaidArchive? archive = _cmdUtil.GetArchiveWithServerId(serverId, parametric.SessionId);
 
@@ -47,14 +49,14 @@ public class ItemsCmd: CommandBase
 
         if (archive != null)
         {
-            return GetItemsDetails(archive);
+            return GetItemsDetails(archive, mode);
         }
         return index == -1 
             ? _cmdUtil.GetLocalText("Command.Para.ServerId.NotExist", serverId) 
-            : GetItemsDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId));
+            : GetItemsDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId), mode);
     }
 
-    protected string GetItemsDetails(RaidArchive archive)
+    protected string GetItemsDetails(RaidArchive archive, string mode)
     {
         string msg = "";
         string serverId = archive.ServerId;
@@ -101,29 +103,56 @@ public class ItemsCmd: CommandBase
         Dictionary<string, string>? local = _databaseService.GetTables().Locales.Global[_cmdUtil.LocalizationManager.CurrentLanguage].Value;
         if (local == null) return _cmdUtil.GetLocalText("RC MC.Chat.GID.error0");
 
-        if (archive is { ItemsTakeIn.Count: > 0 })
+        if (mode == "all")
         {
-            // "\n\n带入对局物品:\n   物品名称  物品单价  物品修正  物品总价值"
-            msg += _cmdUtil.GetLocalText("RC MC.Chat.GID.info0");
-            foreach ((MongoId tpl, double modify) in archive.ItemsTakeIn)
+            if (archive is { ItemsTakeIn.Count: > 0 })
             {
-                // TemplateItem item = itemTpls[tpl];
-                double price = _itemHelper.GetItemPrice(tpl) ?? 0;
-                msg += $"\n\n - {local[$"{tpl} ShortName"]}  {price}  {modify}  {price * modify} {local[$"{tpl} Description"]}";
+                // "\n\n带入对局物品:\n   物品名称  物品单价(rub) * 物品修正 = 物品总价值(rub)  物品描述"
+                msg += _cmdUtil.GetLocalText("RC MC.Chat.GID.info0");
+                foreach ((MongoId tpl, double modify) in archive.ItemsTakeIn)
+                {
+                    msg += $"\n\n - {GetItemDetails(tpl, modify, local)}";
+                }
             }
+
+            if (archive is { ItemsTakeOut.Count: <= 0 }) return msg;
+            {
+                foreach ((MongoId tpl, double modify) in archive.ItemsTakeOut)
+                {
+                    msg += $"\n\n - {GetItemDetails(tpl, modify, local)}";
+                }
+            }
+
+            return msg;
         }
 
-        if (archive is { ItemsTakeOut.Count: <= 0 }) return msg;
-        {
-            // "\n\n带出对局物品:\n   物品名称  物品单价  物品修正  物品总价值  物品描述"
-            msg += _cmdUtil.GetLocalText("RC MC.Chat.GID.info1");
+        List<MongoId> add = [], remove = [], change = [];
+        
+        RaidUtil.UpdateItemsChanged(add, remove, change, archive.ItemsTakeIn, archive.ItemsTakeOut);
 
-            foreach ((MongoId tpl, double modify) in archive.ItemsTakeOut)
-            {
-                // TemplateItem item = itemTpls[tpl];
-                double price = _itemHelper.GetItemPrice(tpl) ?? 0;
-                msg += $"\n\n - {local[$"{tpl} ShortName"]}  {price}  {modify}  {price * modify}  {local[$"{tpl} Description"]}";
-            }
+        // "\n\n物品变化:\n   物品名称  物品单价(rub) * 物品修正 = 物品总价值(rub)  物品描述"
+        msg += _cmdUtil.GetLocalText("RC MC.Chat.GID.info1");
+        
+        foreach (MongoId addTpl in add)
+        {
+            double modify = archive.ItemsTakeOut.GetValueOrDefault(addTpl, 0);
+            if (modify > Constants.ArchiveCheckJudgeError)
+                msg += $"\n + {GetItemDetails(addTpl, modify, local)}";
+        }
+
+        foreach (MongoId removeTpl in remove)
+        {
+            double modify = archive.ItemsTakeIn.GetValueOrDefault(removeTpl, 0);
+            if (modify > Constants.ArchiveCheckJudgeError)
+                msg += $"\n - {GetItemDetails(removeTpl, modify, local)}";
+        }
+        
+        foreach (MongoId changeTpl in change)
+        {
+            double modify = archive.ItemsTakeOut.GetValueOrDefault(changeTpl, 0)
+                - archive.ItemsTakeIn.GetValueOrDefault(changeTpl, 0);
+            if (modify > Constants.ArchiveCheckJudgeError)
+                msg += $"\n ~ {GetItemDetails(changeTpl, modify, local)}";
         }
 
         return msg;
@@ -138,7 +167,7 @@ public class ItemsCmd: CommandBase
         // 截断描述，最多显示 30 个字符（可调），避免撑开行高
         if (!string.IsNullOrEmpty(desc))
         {
-            desc = desc.Length > 30 ? desc.Substring(0, 27) + "..." : desc;
+            desc = desc.Length > 30 ? desc[..27] + "..." : desc;
         }
         else
         {
@@ -146,6 +175,6 @@ public class ItemsCmd: CommandBase
         }
 
         // 格式化输出：使用固定宽度对齐，确保列整齐
-        return $"{name,-14} {price,6:F0} {modify,6:F2} {price * modify,8:F0} {desc}";
+        return $"{name,-14} {price,6:F0} * {modify,6:F2} = {price * modify,8:F0}   {desc}";
     }
 }
