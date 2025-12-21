@@ -58,13 +58,27 @@
     "pmcUSER": "PMC Usec"
   },
   "serverMessage": {
-    "Localization-已加载语言信息": "Languages loaded: {{AvailableLanguages}}, Current language: {{CurrentLanguage}}",
+    "Json-Error.反序列化出错并备份文件": "JSON deserialization error for record file {{OriginalFilePath}}: {{ErrorMessage}}, backing up file to {{FilePath}}",
+    "Json-Error.反序列化文件结果为null": "JSON deserialization result for file {{FilePath}} is null",
+    "Json-Error.备份文件出错": "Error during file backup: {{ErrorMessage}}",
+    "Localization-Info.撤离点数据加载完毕": "Extraction point data loading complete (Total {{MapCount}} maps, {{ExitCount}} extraction points)",
     "Localization-Warn.撤离点名称不存在": "Warning: Extraction point {{ExitName}} does not exist in the SPT localization dictionary\n",
     "Localization-Warn.重复添加撤离点": "Warning: Extraction point {{ExitName}} already exists in map {{MapName}} data, addition failed\n",
-    "Localization-Info.撤离点数据加载完毕": "Extraction point data loading complete (Total {{MapCount}} maps, {{ExitCount}} extraction points)",
+    "Localization-已加载语言信息": "Languages loaded: {{AvailableLanguages}}, Current language: {{CurrentLanguage}}",
     "MainMod-Info.成功注册ChatBot": "Successfully registered ChatBot: {{ChatBotId}}",
+    "RecordManager-Debug.从SPT加载账户数据.内容": "\n\tAccount ID: {{Account}}, PMC ID: {{PmcId}}, Scav ID: {{ScavId}}",
     "RecordManager-Debug.从SPT加载账户数据.标题": "Loading account data from SPT: ",
-    "RecordManager-Debug.从SPT加载账户数据.内容": "\n\tAccount ID: {{Account}}, PMC ID: {{PmcId}}, Scav ID: {{ScavId}}"
+    "RecordManager-Error.保存记录数据库时账户Id未找到": "Account ID {{AccountId}} not found when saving record database, please ensure the account record has been saved before",
+    "RecordManager-Error.创建记录实例时出错": "Error occurred while creating record instance",
+    "RecordManager-Error.指定的玩家账号不存在": "Account ID for player {{PlayerId}} not found when creating record, please ensure the player account record already exists",
+    "RecordManager-Error.数据库文件版本过时": "Error attempting to deserialize data file {{FilePath}} with version {{CurrentVersion}}: {{ErrorMessage}}, will attempt database migration",
+    "RecordManager-Error.未找到PmcData实例": "PmcData instance for player {{PlayerId}} not found",
+    "RecordManager-Error.记录数据库文件夹不存在": "Record database folder path could not be properly obtained, please ensure the `db\\records` folder path exists",
+    "RecordManager-Error.记录数据库文件夹不存在.Load": "Record database folder path \"{{RecordDbPath}}\" unexpectedly does not exist when loading record database, please ensure the `db\\records` folder path exists, loading failed",
+    "RecordManager-Error.记录数据库文件夹不存在.Save": "Record database file path \"{{RecordDbPath}}\" unexpectedly does not exist when saving record database, please ensure the `db\\records` folder path exists, saving failed",
+    "RecordManager-Info.数据库迁移完成": "Database migration completed, migrated {{OldFile}} to {{NewFile}}, old version files will be deleted",
+    "RecordManager-Warn.保存数据库时账户Id不一致": "Account ID inconsistency detected when saving record database, database account ID has been modified from {{OldId}} to {{NewId}}",
+    "RecordManager-Warn.创建记录时存在缓存->归档缓存": "Player {{PlayerId}}'s record cache was not empty when creating record, cache has been directly archived"
   },
   "translations": {
     "SURVIVED": "Survived",

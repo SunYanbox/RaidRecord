@@ -58,13 +58,27 @@
     "pmcUSER": "UserPMC"
   },
   "serverMessage": {
-    "Localization-已加载语言信息": "已加载语言: {{AvailableLanguages}}, 当前语言: {{CurrentLanguage}}",
+    "Json-Error.反序列化出错并备份文件": "Json反序列化记录文件{{OriginalFilePath}}时出错: {{ErrorMessage}}, 将备份文件至{{FilePath}}",
+    "Json-Error.反序列化文件结果为null": "Json反序列化文件{{FilePath}}结果为null",
+    "Json-Error.备份文件出错": "备份文件时出错: {{ErrorMessage}}",
+    "Localization-Info.撤离点数据加载完毕": "撤离点数据加载完毕(共有 {{MapCount}} 张地图, 一共 {{ExitCount}} 个撤离点)",
     "Localization-Warn.撤离点名称不存在": "警告: 撤离点 {{ExitName}} 不存在于SPT本地化字典中\n",
     "Localization-Warn.重复添加撤离点": "警告: 地图 {{MapName}} 的数据中已存在撤离点 {{ExitName}}，添加失败\n",
-    "Localization-Info.撤离点数据加载完毕": "撤离点数据加载完毕(共有 {{MapCount}} 张地图, 一共 {{ExitCount}} 个撤离点)",
+    "Localization-已加载语言信息": "已加载语言: {{AvailableLanguages}}, 当前语言: {{CurrentLanguage}}",
     "MainMod-Info.成功注册ChatBot": "成功注册ChatBot: {{ChatBotId}}",
+    "RecordManager-Debug.从SPT加载账户数据.内容": "\n\t账户Id: {{Account}}, PmcId: {{PmcId}}, ScavId: {{ScavId}}",
     "RecordManager-Debug.从SPT加载账户数据.标题": "从SPT加载账户数据: ",
-    "RecordManager-Debug.从SPT加载账户数据.内容": "\n\t账户Id: {{Account}}, PmcId: {{PmcId}}, ScavId: {{ScavId}}"
+    "RecordManager-Error.保存记录数据库时账户Id未找到": "保存记录数据库时账户Id: {{AccountId}}未找到, 请确保已保存过该账户的记录",
+    "RecordManager-Error.创建记录实例时出错": "创建记录实例时出错",
+    "RecordManager-Error.指定的玩家账号不存在": "创建记录时未找到玩家{{PlayerId}}的账户Id, 请确保已存在过该玩家账户的记录",
+    "RecordManager-Error.数据库文件版本过时": "尝试以{{CurrentVersion}}版本反序列化数据文件{{FilePath}}时发生错误: {{ErrorMessage}}, 将尝试迁移数据库",
+    "RecordManager-Error.未找到PmcData实例": "未找到{{PlayerId}}对应的PmcData实例",
+    "RecordManager-Error.记录数据库文件夹不存在": "记录数据库文件路径未正确获取, 请确保`db\\records`文件夹路径存在",
+    "RecordManager-Error.记录数据库文件夹不存在.Load": "加载记录数据库时记录的数据库文件夹路径\"{{RecordDbPath}}\"意外不存在, 请确保`db\\records`文件夹路径存在, 加载失败",
+    "RecordManager-Error.记录数据库文件夹不存在.Save": "保存记录数据库时记录的数据库文件路径\"{{RecordDbPath}}\"意外不存在, 请确保`db\\records`文件夹路径存在, 保存失败",
+    "RecordManager-Info.数据库迁移完成": "数据库迁移完成, 将{{OldFile}}迁移为{{NewFile}}, 同时将删除旧版本文件",
+    "RecordManager-Warn.保存数据库时账户Id不一致": "保存记录数据库时账户Id不一致, 已将数据库账户Id从{{OldId}}修改为: {{NewId}}",
+    "RecordManager-Warn.创建记录时存在缓存->归档缓存": "创建记录时玩家{{PlayerId}}的战绩记录缓存不为空, 已直接归档缓存"
   },
   "translations": {
     "SURVIVED": "幸存",

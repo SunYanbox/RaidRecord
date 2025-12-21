@@ -100,7 +100,11 @@ public class RecordManager(
     {
         if (_recordDbPath == null)
         {
-            modConfig.Error($"加载记录数据库时数据库文件路径\"{_recordDbPath}\"意外不存在, 请确保`db\\records`文件夹路径存在, 保存失败");
+            modConfig.Error(localManager.GetText(
+                    "RecordManager-Error.记录数据库文件夹不存在.Load",
+                    new { RecordDbPath = _recordDbPath }
+                ));
+            // modConfig.Error($"加载记录数据库时记录的数据库文件夹路径\"{_recordDbPath}\"意外不存在, 请确保`db\\records`文件夹路径存在, 保存失败");
             return;
         }
         string fileName = Path.GetFileName(file);
@@ -113,20 +117,47 @@ public class RecordManager(
             {
                 // 0.6.2开始
                 var data = jsonUtil.DeserializeFromFile<EFTCombatRecord>(file);
-                if (data == null) throw new Exception($"反序列化文件{file}时获取不到数据");
+                // if (data is null) throw new Exception($"反序列化文件{file}时获取不到数据");
+                if (data is null)
+                    throw new Exception(localManager.GetText(
+                        "Json-Error.反序列化文件结果为null",
+                        new { FilePath = file }
+                    ));
                 _eftCombatRecords.Add(data.AccountId, data);
             }
             catch (Exception e)
             {
-                modConfig.Error($"尝试以0.6.2+版本反序列化数据文件{file}时发生错误: {e.Message}, 将尝试迁移0.6.1版本数据库", e);
+                modConfig.Error(localManager.GetText(
+                        "RecordManager-Error.加载记录数据时发生错误",
+                        new
+                        {
+                            CurrentVersion = modConfig.Metadata.Version.ToString(),
+                            FilePath = file, 
+                            ErrorMessage = e.Message
+                        }
+                    ), e);
+                // modConfig.Error($"尝试以0.6.2+版本反序列化数据文件{file}时发生错误: {e.Message}, 将尝试迁移0.6.1版本数据库", e);
                 // 暂时兼容0.6.1版本的数据库
                 var data = jsonUtil.DeserializeFromFile<List<RaidDataWrapper>>(file);
-                if (data == null) throw new Exception($"反序列化文件{file}时获取不到数据");
+                // if (data is null) throw new Exception($"反序列化文件{file}时获取不到数据");
+                if (data is null)
+                    throw new Exception(localManager.GetText(
+                        "Json-Error.反序列化文件结果为null",
+                        new { FilePath = file }
+                    ));
                 MongoId account = _playerId2Account[fileBaseName];
                 _eftCombatRecords.Add(account, new EFTCombatRecord(account, data));
                 // 重命名文件, 避免重复迁移
                 string newFile = file.Replace(fileBaseName, account.ToString());
                 modConfig.Info($"正在将旧数据库文件{file}迁移为新版本格式: {newFile}");
+                modConfig.Info(localManager.GetText(
+                        "RecordManager-Info.数据库迁移完成",
+                        new
+                        {
+                            OldFile = file,
+                            NewFile = newFile
+                        }
+                    ));
                 File.Move(file, newFile);
                 SaveEFTRecord(account);
             }
@@ -150,12 +181,21 @@ public class RecordManager(
             try
             {
                 File.Copy(originalFilePath, backupPath);
-                modConfig.Info($"序列化记录时出现问题: {e.Message}, 已备份损坏文件至: {backupPath}");
-                // Console.WriteLine($"[RaidRecord] DEBUG: {e.StackTrace}");
+                // modConfig.Info($"序列化记录时出现问题: {e.Message}, 已备份损坏文件至: {backupPath}");
+                modConfig.Info(localManager.GetText(
+                        "Json-Error.反序列化出错并备份文件",
+                        new
+                        {
+                            OriginalFilePath = originalFilePath,
+                            ErrorMessage = e.Message,
+                            FilePath = backupPath,
+                        }
+                    ));
             }
             catch (Exception copyEx)
             {
-                modConfig.Error($"备份文件过程中发生错误: {copyEx.Message}", copyEx);
+                // modConfig.Error($"备份文件过程中发生错误: {copyEx.Message}", copyEx);
+                modConfig.Error(localManager.GetText("Json-Error.备份文件出错", new { ErrorMessage = copyEx.Message }));
             }
         }
     }
@@ -194,7 +234,11 @@ public class RecordManager(
                 ? sptProfile.CharacterData!.PmcData
                 : sptProfile.CharacterData!.ScavData)!;
         }
-        throw new Exception($"未找到{playerId}对应的PmcData实例");
+        // throw new Exception($"未找到{playerId}对应的PmcData实例");
+        throw new Exception(localManager.GetText(
+                "RecordManager-Error.未找到PmcData实例",
+                new { PlayerId = playerId }
+            ));
     }
 
     /// <summary> 保存指定账户和的历史战绩 </summary>
@@ -202,18 +246,36 @@ public class RecordManager(
     {
         if (!_eftCombatRecords.TryGetValue(account, out EFTCombatRecord? eftRecord))
         {
-            modConfig.Error($"保存记录数据库时账户Id: {account}未找到, 请确保已保存过该账户的记录");
+            // modConfig.Error($"保存记录数据库时账户Id: {account}未找到, 请确保已保存过该账户的记录");
+            modConfig.Error(localManager.GetText(
+                "RecordManager-Error.保存记录数据库时账户Id未找到", 
+                new { AccountId = account }));
             return;
         }
         if (eftRecord.AccountId != account)
         {
             MongoId oldId = eftRecord.AccountId;
             eftRecord.AccountId = account;
-            modConfig.Warn($"保存记录数据库时账户Id不一致, 已将数据库账户Id从{oldId}修改为: {account}");
+            // modConfig.Warn($"保存记录数据库时账户Id不一致, 已将数据库账户Id从{oldId}修改为: {account}");
+            modConfig.Warn(localManager.GetText(
+                "RecordManager-Warn.保存数据库时账户Id不一致",
+                new
+                {
+                    OldId = oldId,
+                    NewId = account
+                }
+            ));
         }
         if (_recordDbPath == null)
         {
             modConfig.Error($"保存记录数据库时数据库文件路径\"{_recordDbPath}\"意外不存在, 请确保`db\\records`文件夹路径存在, 保存失败");
+            modConfig.Error(localManager.GetText(
+                "RecordManager-Error.记录数据库文件夹不存在.Save",
+                    new
+                    {
+                        RecordDbPath = _recordDbPath
+                    }
+                ));
             return;
         }
         string path = Path.Combine(_recordDbPath, $"{account}.json");
@@ -230,8 +292,9 @@ public class RecordManager(
 
         if (_recordDbPath == null)
         {
-            modConfig.Error("记录数据库文件路径未正确获取, 请确保`db\\records`文件夹路径存在");
-            throw new InvalidDataException($"记录数据库文件路径({nameof(_recordDbPath)})未正确获取, 请确保`db\\records`文件夹路径存在");
+            string errorMsg = localManager.GetText("RecordManager-Error.记录数据库文件夹不存在");
+            modConfig.Error(errorMsg);
+            throw new InvalidDataException(errorMsg);
         }
 
         string file = Path.Combine(_recordDbPath, $"{account.ToString()}.json");
@@ -254,20 +317,23 @@ public class RecordManager(
             MongoId? account = GetAccount(playerId);
             if (account == null!)
             {
-                throw new Exception($"创建记录时未找到玩家{playerId}的账户Id, 请确保已存在过该玩家账户的记录");
+                throw new Exception(localManager.GetText("RecordManager-Error.指定的玩家账号不存在", new
+                {
+                    PlayerId = playerId
+                }));
+                // throw new Exception($"创建记录时未找到玩家{playerId}的账户Id, 请确保已存在过该玩家账户的记录");
             }
             EFTCombatRecord records = GetRecord(account.Value);
             // Console.WriteLine($"DEBUG RecordManager.CreateRecord > 玩家{playerId}的记录records为{records}, {records?.Count}条");
             // 检查 records 是否为 null
-            if (records == null)
-            {
-                throw new Exception($"GetRecord中获取的records为null playId: {playerId}");
-            }
             RaidDataWrapper wrapper = new();
             if (records.InfoRecordCache != null)
             {
                 records.Records.Add(records.InfoRecordCache.Zip(itemHelper));
-                modConfig.Warn($"玩家{playerId}的战绩记录缓存不为空, 已直接归档缓存");
+                // modConfig.Warn($"玩家{playerId}的战绩记录缓存不为空, 已直接归档缓存");
+                modConfig.Warn(localManager.GetText(
+                    "RecordManager-Warn.创建记录时存在缓存->归档缓存",
+                    new { PlayerId = playerId }));
             }
             records.InfoRecordCache = wrapper;
             wrapper.Info = new RaidInfo();
@@ -277,7 +343,8 @@ public class RecordManager(
         catch (Exception e)
         {
             Console.WriteLine($"RecordManager.CreateRecord: {e.Message}\nstack: {e.StackTrace}");
-            modConfig.LogError(e, "RaidRecordManager.CreateRecord.try-catch", "创建记录实例时出错");
+            modConfig.LogError(e, "RaidRecordManager.CreateRecord.try-catch", 
+                localManager.GetText("创建记录实例时出错"));
             throw;
         }
     }
