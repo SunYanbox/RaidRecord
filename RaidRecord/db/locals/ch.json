@@ -1,4 +1,18 @@
 {
+  "translations": {
+    "SURVIVED": "幸存",
+    "KILLED": "行动中阵亡",
+    "LEFT": "离开行动",
+    "RUNNER": "匆匆逃离",
+    "MISSINGINACTION": "迷失",
+    "TRANSIT": "转移"
+  },
+  "serverMessage": {
+    "Localization-已加载语言信息": "已加载语言: {{AvailableLanguages}}, 当前语言: {{CurrentLanguage}}",
+    "Localization-Warn.撤离点名称不存在": "警告: 撤离点 {{ExitName}} 不存在于SPT本地化字典中\n",
+    "Localization-Warn.重复添加撤离点": "警告: 地图 {{MapName}} 的数据中已存在撤离点 {{ExitName}}，添加失败\n",
+    "Localization-Info.撤离点数据加载完毕": "撤离点数据加载完毕(共有 {{MapCount}} 张地图, 一共 {{ExitCount}} 个撤离点)"
+  },
   "armorZone": {
     "Chest": "胸腔",
     "Head": "头部",
@@ -56,14 +70,5 @@
     "pmcBot": "人机",
     "pmcBEAR": "BearPMC",
     "pmcUSER": "UserPMC"
-  },
-  "translations": {
-    "SURVIVED": "幸存",
-    "KILLED": "行动中阵亡",
-    "LEFT": "离开行动",
-    "RUNNER": "匆匆逃离",
-    "MISSINGINACTION": "迷失",
-    "TRANSIT": "转移"
-  },
-  "serverMessage": {}
+  }
 }

@@ -1,4 +1,5 @@
 {
   "local": "ch",
-  "logPath": "log.log"
+  "logPath": "log.log",
+  "autoUnloadOtherLanguages": true
 }

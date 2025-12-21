@@ -27,6 +27,29 @@ public class LocalizationManager(
     public readonly Dictionary<string, Dictionary<string, string>> ExitNames = new();
     private readonly Dictionary<string, LocalizationData> _allLocalizations = new();
     private string _currentLanguage = "ch"; // 默认语言
+    // 所有的地图名称
+    private readonly string[] _mapNames =
+    [
+        "Woods",
+        "bigmap",
+        // "develop",
+        "factory4_day", // factory4_day
+        "factory4_night", // factory4_night
+        // "hideout",
+        "Interchange",
+        "Laboratory",
+        "Labyrinth",
+        "Lighthouse",
+        // "privatearea",
+        "RezervBase",
+        "Sandbox",
+        // "sandboxhigh",
+        "Shoreline",
+        // "suburbs",
+        "TarkovStreets"
+        // "terminal",
+        // "town"
+    ];
 
     public Task OnLoad()
     {
@@ -52,16 +75,34 @@ public class LocalizationManager(
                     modConfig.Error($"加载本地化数据库时出错: {fileName}", e);
                 }
             }
-
-            modConfig.Info($"已加载语言: {string.Join(", ", AvailableLanguages)}");
+            // 从这里加载完毕
+            modConfig.Info(GetText("Localization-已加载语言信息", new
+            {
+                AvailableLanguages = string.Join(", ", AvailableLanguages),
+                CurrentLanguage
+            }));
+            // modConfig.Info($"已加载语言: {string.Join(", ", AvailableLanguages)}");
         }
         else
         {
+            // 没加载成功就中英分别输出一遍
             logger.Error($"[RaidRecord] 本地化数据库不存在: {localsDir}");
             logger.Error($"[RaidRecord] Localisation database does not exist: {localsDir}");
         }
 
         CurrentLanguage = modConfig.Configs.Local;
+
+        if (modConfig.Configs.AutoUnloadOtherLanguages)
+        {
+            // 卸载不用的语言内存
+            foreach (string language in _allLocalizations.Keys.ToArray())
+            {
+                if (language != "ch" && language != CurrentLanguage)
+                {
+                    _allLocalizations.Remove(language);
+                }
+            }
+        }
 
         DatabaseTables tables = databaseServer.GetTables();
         InitLocalization(tables.Locations, tables.Locales);
@@ -81,16 +122,16 @@ public class LocalizationManager(
             return !_allLocalizations.TryGetValue("ch", out LocalizationData? defaults1)
                 ? errorKey
                 : // 区域未加载，返回键本身
-                defaults1.Translations.GetValueOrDefault(key, errorKey); // 区域未加载，返回键本身
+                defaults1.AllLocalizations.GetValueOrDefault(key, errorKey); // 区域未加载，返回键本身
         }
-        if (locales.Translations.TryGetValue(key, out string? value))
+        if (locales.AllLocalizations.TryGetValue(key, out string? value))
         {
             return value;
         }
         return !_allLocalizations.TryGetValue("ch", out LocalizationData? defaults2)
             ? errorKey
             : // 区域未加载，返回键本身
-            defaults2.Translations.GetValueOrDefault(key, errorKey); // 区域未加载，返回键本身
+            defaults2.AllLocalizations.GetValueOrDefault(key, errorKey); // 区域未加载，返回键本身
     }
 
     /// <summary>
@@ -134,41 +175,18 @@ public class LocalizationManager(
     /// <summary>
     /// 获取小写去除_的地图名称, 作为字典的键
     /// </summary>
-    private string GetMapKey(string mapName)
+    private static string GetMapKey(string mapName)
     {
         return mapName.Replace("_", "").ToLower();
     }
 
     protected void InitLocalization(Locations locations, LocaleBase locales)
     {
-        // 所有的地图名称
-        string[] mapNames =
-        [
-            "Woods",
-            "bigmap",
-            // "develop",
-            "factory4_day", // factory4_day
-            "factory4_night", // factory4_night
-            // "hideout",
-            "Interchange",
-            "Laboratory",
-            "Labyrinth",
-            "Lighthouse",
-            // "privatearea",
-            "RezervBase",
-            "Sandbox",
-            // "sandboxhigh",
-            "Shoreline",
-            // "suburbs",
-            "TarkovStreets"
-            // "terminal",
-            // "town"
-        ];
         Dictionary<string, string>? localesMap = locales.Global[CurrentLanguage].Value;
         string warnMsg = "";
 
         // 获取地图的本地化表示
-        foreach (string mapName in mapNames)
+        foreach (string mapName in _mapNames)
         {
             MapNames[GetMapKey(mapName)]
                 = localesMap?.TryGetValue(mapName, out string? name) ?? false ? name : mapName;
@@ -178,7 +196,7 @@ public class LocalizationManager(
 
         Dictionary<string, Location> sptLocations = locations.GetDictionary();
 
-        foreach (string mapName in mapNames)
+        foreach (string mapName in _mapNames)
         {
             string mapKey = GetMapKey(mapName);
             
@@ -194,13 +212,22 @@ public class LocalizationManager(
                 if (exit.Name == null) continue;
                 if (localesMap != null && !localesMap.ContainsKey(exit.Name))
                 {
-                    warnMsg += $"警告: {exit.Name}不存在于本地化字典中" + "\n";
+                    warnMsg += GetText("Localization-Warn.撤离点名称不存在", new
+                    {
+                        ExitName = exit.Name
+                    });
+                    // warnMsg += $"警告: 撤离点{exit.Name}不存在于SPT本地化字典中" + "\n";
                     continue;
                 }
 
                 if (ExitNames[mapKey].ContainsKey(exit.Name))
                 {
-                    warnMsg += $"警告: 尝试重复添加撤离点{exit.Name}到{mapName}的数据" + "\n";
+                    warnMsg += GetText("Localization-Warn.重复添加撤离点", new
+                    {
+                        ExitName = exit.Name,
+                        MapName = mapName
+                    });
+                    // warnMsg += $"警告: 地图 {mapName} 的数据中已存在撤离点 {exit.Name}，添加失败" + "\n";
                     continue;
                 }
                 if (localesMap != null)
@@ -209,7 +236,12 @@ public class LocalizationManager(
         }
 
         if (!string.IsNullOrEmpty(warnMsg)) modConfig.Log("Warn", warnMsg);
-        modConfig.Info("已成功加载各个地图撤离点数据");
+        // modConfig.Info("已成功加载各个地图撤离点数据");
+        modConfig.Info(GetText("Localization-Info.撤离点数据加载完毕", new
+        {
+            MapCount = MapNames.Count,
+            ExitCount = ExitNames.Sum(x => x.Value.Count)
+        }));
     }
 
     public string CurrentLanguage
