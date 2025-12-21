@@ -37,8 +37,8 @@ public class ItemsCmd: CommandBase
         string? verify = _cmdUtil.VerifyIParametric(parametric);
         if (verify != null) return verify;
 
-        int index = CmdUtil.GetParameter(parametric.Paras, "index", -1);
-        string mode = CmdUtil.GetParameter<string>(parametric.Paras, "mode", "change");
+        int index = _cmdUtil.GetParameter(parametric.Paras, "index", -1);
+        string mode = _cmdUtil.GetParameter<string>(parametric.Paras, "mode", "change");
 
         return GetItemsDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId), mode);
     }

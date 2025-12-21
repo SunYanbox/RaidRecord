@@ -36,14 +36,15 @@ public class CmdUtil(
     /// <typeparam name="T">类型</typeparam>
     /// <returns>获取到的参数值或者默认值</returns>
     /// <exception cref="ArgumentException">传入的参数键为空</exception>
-    public static T GetParameter<T>(Dictionary<string, string> parameters,
+    public T GetParameter<T>(Dictionary<string, string> parameters,
         string key,
         T defaultValue)
     {
         ArgumentNullException.ThrowIfNull(parameters);
 
         if (string.IsNullOrEmpty(key))
-            throw new ArgumentException("Para key cannot be null or empty", nameof(key));
+            throw new ArgumentException(LocalizationManager!.GetText("CmdUtil-Error.参数键为空", new { KeyName = nameof(key) }));
+        // throw new ArgumentException("Para key cannot be null or empty", nameof(key));
 
         // 如果字典中不存在该键，返回默认值
         if (!parameters.TryGetValue(key.ToLower(), out string? stringValue))
@@ -74,7 +75,7 @@ public class CmdUtil(
             Aid = 8100860,
             Info = new UserDialogDetails
             {
-                Nickname = "对局战绩管理",
+                Nickname = LocalizationManager!.GetText("ChatBotName"),
                 Side = "Usec",
                 Level = 69,
                 MemberCategory = MemberCategory.Sherpa,
@@ -91,7 +92,14 @@ public class CmdUtil(
         int month = date.Month;
         int day = date.Day;
         string time = date.ToShortTimeString();
-        return $"{year}年{month}月{day}日 {time}";
+        return LocalizationManager!.GetText("CmdUtil-日期时间格式化", new
+        {
+            Year = year,
+            Month = month,
+            Day = day,
+            Time = time
+        });
+        // return $"{year}年{month}月{day}日 {time}";
     }
 
     /// <summary>  Command验证参数的工具 </summary>
@@ -99,7 +107,9 @@ public class CmdUtil(
     {
         if (string.IsNullOrEmpty(parametric.SessionId))
         {
-            return "未输入session参数或session为空";
+            return LocalizationManager!.GetText("CmdUtil-Error.参数验证.Value为空",
+                new { ValueName = nameof(parametric.SessionId) });
+            // return "未输入session参数或session为空";
         }
 
         try
@@ -107,18 +117,31 @@ public class CmdUtil(
             PmcData? pmcData = profileHelper.GetPmcProfile(parametric.SessionId!);
             if (pmcData?.Id == null)
             {
-                throw new NullReferenceException($"{nameof(pmcData)} or {nameof(pmcData.Id)}");
+                throw new NullReferenceException(LocalizationManager!.GetText(
+                    "CmdUtil-Error.PmcData为空或PmcData.Id为空"
+                ));
+                // throw new NullReferenceException($"{nameof(pmcData)} or {nameof(pmcData.Id)}");
             }
             string playerId = pmcData.Id;
-            if (string.IsNullOrEmpty(playerId)) throw new Exception("playerId为null或为空");
+            // if (string.IsNullOrEmpty(playerId)) throw new Exception("playerId为null或为空");
+            if (string.IsNullOrEmpty(playerId))
+            {
+                throw new Exception(LocalizationManager!.GetText("CmdUtil-Error.参数验证.Value为空",
+                    new { ValueName = nameof(playerId) }));
+            }
         }
         catch (Exception e)
         {
-            ModConfig?.LogError(e, "RaidRecordManagerChat.VerifyIParametric", $"用户未注册或者session已失效: {e.Message}");
-            return $"用户未注册或者session已失效: {e.Message}";
+            string errorMsg = LocalizationManager!.GetText("CmdUtil-Error.用户未注册或者Session已失效",
+                new { ErrorMessage = e.Message });
+            ModConfig?.LogError(e, "RaidRecordManagerChat.VerifyIParametric", errorMsg);
+            return errorMsg;
         }
 
-        return parametric.ManagerChat == null ? "实例未正确初始化: 缺少managerChat属性" : null;
+        return parametric.ManagerChat == null
+            ? LocalizationManager!.GetText("CmdUtil-Error.参数验证.属性ManagerChat为空")
+            : null;
+        // return parametric.ManagerChat == null ? "实例未正确初始化: 缺少managerChat属性" : null;
     }
 
     public MongoId? GetAccountBySession(string sessionId)
@@ -161,7 +184,16 @@ public class CmdUtil(
     {
         List<RaidArchive> records = GetArchivesBySession(sessionId);
         if (index >= records.Count || index < 0)
-            throw new IndexOutOfRangeException($"index {index} out of range: [0, {records.Count})");
+        {
+            throw new IndexOutOfRangeException(LocalizationManager!.GetText(
+                "CmdUtil-Error.索引超出记录数量范围",
+                new
+                {
+                    Index = index,
+                    RecordCount = records.Count
+                }));
+        }
+        // throw new IndexOutOfRangeException($"index {index} out of range: [0, {records.Count})");
         return records[index];
     }
 }

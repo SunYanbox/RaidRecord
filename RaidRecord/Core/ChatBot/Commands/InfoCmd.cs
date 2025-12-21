@@ -33,7 +33,7 @@ public class InfoCmd: CommandBase
         string? verify = _cmdUtil.VerifyIParametric(parametric);
         if (verify != null) return verify;
 
-        int index = CmdUtil.GetParameter(parametric.Paras, "index", -1);
+        int index = _cmdUtil.GetParameter(parametric.Paras, "index", -1);
 
         return GetArchiveDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId));
     }

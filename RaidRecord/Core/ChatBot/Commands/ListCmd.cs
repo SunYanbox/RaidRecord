@@ -28,8 +28,8 @@ public class ListCmd: CommandBase
         if (verify != null) return verify;
 
         List<RaidArchive> records = _cmdUtil.GetArchivesBySession(parametric.SessionId);
-        int numberLimit = CmdUtil.GetParameter(parametric.Paras, "Limit", 10);
-        int page = CmdUtil.GetParameter(parametric.Paras, "Page", 1);
+        int numberLimit = _cmdUtil.GetParameter(parametric.Paras, "Limit", 10);
+        int page = _cmdUtil.GetParameter(parametric.Paras, "Page", 1);
         numberLimit = Math.Min(20, Math.Max(1, numberLimit));
         page = Math.Max(1, page);
 

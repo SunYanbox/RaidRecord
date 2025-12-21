@@ -1,7 +1,10 @@
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 
 namespace RaidRecord.Core;
 
+[Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 1)]
 public record ModMetadata: AbstractModMetadata
 {
     public override string ModGuid { get; init; } = "com.suntion.raidrecord";

@@ -58,6 +58,14 @@
     "pmcUSER": "PMC Usec"
   },
   "serverMessage": {
+    "ChatBotName": "Match Record Management",
+    "CmdUtil-Error.PmcData为空或PmcData.Id为空": "PmcData is null or PmcData.Id is null",
+    "CmdUtil-Error.参数键为空": "Parameter key {{KeyName}} cannot be null or empty",
+    "CmdUtil-Error.参数验证.Value为空": "Parameter {{ValueName}} not entered or is empty",
+    "CmdUtil-Error.参数验证.属性ManagerChat为空": "Parameter instance not properly initialized: missing ManagerChat property",
+    "CmdUtil-Error.用户未注册或者Session已失效": "User not registered or session has expired: {{ErrorMessage}}",
+    "CmdUtil-Error.索引超出记录数量范围": "Index {{Index}} is out of record count range: [0, {{RecordCount}})",
+    "CmdUtil-日期时间格式化": "{{Month}}/{{Day}}/{{Year}} {{Time}}",
     "Json-Error.反序列化出错并备份文件": "JSON deserialization error for record file {{OriginalFilePath}}: {{ErrorMessage}}, backing up file to {{FilePath}}",
     "Json-Error.反序列化文件结果为null": "JSON deserialization result for file {{FilePath}} is null",
     "Json-Error.备份文件出错": "Error during file backup: {{ErrorMessage}}",

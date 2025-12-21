@@ -34,19 +34,7 @@ public class RaidRecordManagerChat(
 
     public UserDialogInfo GetChatBot()
     {
-        return new UserDialogInfo
-        {
-            Id = "68e2d45e17ea301214c2596d",
-            Aid = 8100860,
-            Info = new UserDialogDetails
-            {
-                Nickname = "对局战绩管理",
-                Side = "Usec",
-                Level = 69,
-                MemberCategory = MemberCategory.Sherpa,
-                SelectedMemberCategory = MemberCategory.Sherpa
-            }
-        };
+        return cmdUtil.GetChatBot();
     }
 
     public ValueTask<string> HandleMessage(MongoId sessionId, SendMessageRequest request)
