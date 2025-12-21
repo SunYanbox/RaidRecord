@@ -30,13 +30,16 @@ public class LocalizationData
     /// </summary>
     [JsonPropertyName("roleNames")]
     public Dictionary<string, string> RoleNames { get; set; } = new();
+
     [JsonIgnore]
     private Dictionary<string, string>? _allLocalizationsCache;
+
     /// <summary>
     /// 所有本地化的缓存
     /// </summary>
     [JsonIgnore]
-    public Dictionary<string, string> AllLocalizations {
+    public Dictionary<string, string> AllLocalizations
+    {
         get
         {
             if (_allLocalizationsCache != null) return _allLocalizationsCache;
@@ -58,5 +61,6 @@ public class LocalizationData
                 _allLocalizationsCache.Add(key, value);
             }
             return _allLocalizationsCache;
-        }}
+        }
+    }
 }

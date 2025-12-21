@@ -26,7 +26,9 @@ public class LocalizationManager(
     public readonly Dictionary<string, string> MapNames = new();
     public readonly Dictionary<string, Dictionary<string, string>> ExitNames = new();
     private readonly Dictionary<string, LocalizationData> _allLocalizations = new();
+
     private string _currentLanguage = "ch"; // 默认语言
+
     // 所有的地图名称
     private readonly string[] _mapNames =
     [
@@ -199,7 +201,7 @@ public class LocalizationManager(
         foreach (string mapName in _mapNames)
         {
             string mapKey = GetMapKey(mapName);
-            
+
             ExitNames.Add(mapKey, new Dictionary<string, string>());
 
             if (!sptLocations.TryGetValue(mapName.Replace("_", ""), out Location? map))

@@ -8,7 +8,6 @@ using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Profile;
-using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Utils;
 
@@ -16,7 +15,6 @@ namespace RaidRecord.Core.Systems;
 
 [Injectable(InjectionType = InjectionType.Singleton)]
 public class RecordCacheManager(
-    ISptLogger<RecordCacheManager> logger,
     LocalizationManager localManager,
     JsonUtil jsonUtil,
     ModConfig modConfig,
@@ -44,7 +42,8 @@ public class RecordCacheManager(
         HashSet<MongoId> accounts = profiles.Keys.ToHashSet();
         _accountIds = accounts;
         // 更新Pmc/Scav id 到账户id的映射
-        string msg = "从SPT加载数据: ";
+        string msg = localManager.GetText("RecordCacheManager-Debug.从SPT加载账户数据.标题");
+        // string msg = "从SPT加载账户数据: ";
         foreach (MongoId accountId in accounts)
         {
             SptProfile sptProfile = profiles[accountId];
@@ -52,7 +51,13 @@ public class RecordCacheManager(
             MongoId? scavId = sptProfile.CharacterData?.ScavData?.Id;
             if (pmcId is not null) _playerId2Account[pmcId.Value] = accountId;
             if (scavId is not null) _playerId2Account[scavId.Value] = accountId;
-            msg += $"\n\tAccount: {accountId}, PmcId: {pmcId}, ScavId: {scavId}";
+            // msg += $"\n\tAccount: {accountId}, PmcId: {pmcId}, ScavId: {scavId}";
+            msg += localManager.GetText("RecordCacheManager-Debug.从SPT加载账户数据.内容", new
+            {
+                Account = accountId,
+                PmcId = pmcId,
+                ScavId = scavId
+            });
         }
         modConfig.Debug(msg);
     }

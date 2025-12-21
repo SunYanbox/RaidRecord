@@ -11,7 +11,10 @@
     "Localization-已加载语言信息": "已加载语言: {{AvailableLanguages}}, 当前语言: {{CurrentLanguage}}",
     "Localization-Warn.撤离点名称不存在": "警告: 撤离点 {{ExitName}} 不存在于SPT本地化字典中\n",
     "Localization-Warn.重复添加撤离点": "警告: 地图 {{MapName}} 的数据中已存在撤离点 {{ExitName}}，添加失败\n",
-    "Localization-Info.撤离点数据加载完毕": "撤离点数据加载完毕(共有 {{MapCount}} 张地图, 一共 {{ExitCount}} 个撤离点)"
+    "Localization-Info.撤离点数据加载完毕": "撤离点数据加载完毕(共有 {{MapCount}} 张地图, 一共 {{ExitCount}} 个撤离点)",
+    "MainMod-Info.成功注册ChatBot": "成功注册ChatBot: {{ChatBotId}}",
+    "RecordCacheManager-Debug.从SPT加载账户数据.标题": "从SPT加载账户数据: ",
+    "RecordCacheManager-Debug.从SPT加载账户数据.内容": "\n\tAccount: {{Account}}, PmcId: {{PmcId}}, ScavId: {{ScavId}}"
   },
   "armorZone": {
     "Chest": "胸腔",
