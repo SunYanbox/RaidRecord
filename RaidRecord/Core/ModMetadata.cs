@@ -13,7 +13,7 @@ public record ModMetadata: AbstractModMetadata
 
     public override List<string>? Incompatibilities { get; init; }
     public override Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
-    public override string? Url { get; init; }
+    public override string? Url { get; init; } = "https://forge.sp-tarkov.com/mod/2341/raidrecord";
     public override bool? IsBundleMod { get; init; }
     public override string? License { get; init; } = "CC-BY-SA";
 }
