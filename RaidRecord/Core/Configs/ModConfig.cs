@@ -14,10 +14,12 @@ public class ModConfig(ModHelper modHelper,
 {
     public required ModConfigData Configs;
     private StreamWriter? _logFile;
+
     /// <summary>
     /// 本模组元数据
     /// </summary>
     public readonly ModMetadata Metadata = modMetadata;
+
     private readonly Lock _logLock = new();
 
 
