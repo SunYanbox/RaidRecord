@@ -82,9 +82,9 @@ public class CustomStaticRouter: StaticRouter
             var response = _injectableClasses!.JsonUtil!.Deserialize<GetBodyResponseData<StartLocalRaidResponseData>>(output);
             string serverId = response!.Data!.ServerId!;
             PmcData? pmcData = _injectableClasses.ProfileHelper!.GetPmcProfile(sessionId);
-            if (pmcData == null) throw new Exception($"获取不到来自session: {sessionId}的存档数据pmcData");
+            if (pmcData == null) throw new NullReferenceException("pmcData");
             MongoId? notSurePlayerId = pmcData.Id;
-            if (notSurePlayerId == null) throw new Exception($"获取不到来自session: {sessionId}的玩家ID数据pmcData.Id");
+            if (notSurePlayerId == null) throw new NullReferenceException("pmcData.Id");
             MongoId playerId = notSurePlayerId.Value;
             MongoId? account = _injectableClasses.RecordManager!.GetAccount(sessionId);
             ModConfig? logger = _injectableClasses.ModConfig;

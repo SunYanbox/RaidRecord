@@ -58,7 +58,6 @@
     "pmcUSER": "PMC Usec"
   },
   "serverMessage": {
-    "ChatBotName": "Match Record Management",
     "CmdUtil-Error.PmcData为空或PmcData.Id为空": "PmcData is null or PmcData.Id is null",
     "CmdUtil-Error.参数键为空": "Parameter key {{KeyName}} cannot be null or empty",
     "CmdUtil-Error.参数验证.Value为空": "Parameter {{ValueName}} not entered or is empty",
@@ -98,6 +97,7 @@
     "RecordManager-Warn.创建记录时存在缓存->归档缓存": "Player {{PlayerId}}'s record cache was not empty when creating record, cache has been directly archived"
   },
   "translations": {
+    "ChatBotName": "Match Record Management",
     "SURVIVED": "Survived",
     "KILLED": "Killed",
     "LEFT": "Left",

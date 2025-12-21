@@ -58,7 +58,6 @@
     "pmcUSER": "UserPMC"
   },
   "serverMessage": {
-    "ChatBotName": "对局战绩管理",
     "CmdUtil-Error.PmcData为空或PmcData.Id为空": "PmcData为空或PmcData.Id为空",
     "CmdUtil-Error.参数键为空": "参数键{{KeyName}}不能为null或为空",
     "CmdUtil-Error.参数验证.Value为空": "未输入{{ValueName}}参数或{{ValueName}}为空",
@@ -98,6 +97,7 @@
     "RecordManager-Warn.创建记录时存在缓存->归档缓存": "创建记录时玩家{{PlayerId}}的战绩记录缓存不为空, 已直接归档缓存"
   },
   "translations": {
+    "ChatBotName": "对局战绩管理",
     "SURVIVED": "幸存",
     "KILLED": "行动中阵亡",
     "LEFT": "离开行动",
