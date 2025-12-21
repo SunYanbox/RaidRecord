@@ -40,7 +40,7 @@ public class RaidRecordManagerChat(
             Aid = 8100860,
             Info = new UserDialogDetails
             {
-                Nickname = cmdUtil.GetLocalText("RC MC.ChatBot.NickName"),
+                Nickname = "对局战绩管理",
                 Side = "Usec",
                 Level = 69,
                 MemberCategory = MemberCategory.Sherpa,
@@ -57,12 +57,9 @@ public class RaidRecordManagerChat(
         }
         catch (Exception e)
         {
-            // this.error(e.name);
-            // this.error(e.message);
-            // this.error(e.stack);
-            logger.Error($"[RaidRecord]<Chat> {cmdUtil.GetLocalText("RC MC.Chat.HM.error0", sessionId, e.Message)}");
-            modConfig.LogError(e, "RaidRecordManagerChat.HandleMessage", cmdUtil.GetLocalText("RC MC.Chat.HM.error0", sessionId, e.Message));
-            SendMessage(sessionId, cmdUtil.GetLocalText("RC MC.Chat.HM.error1", request.Text, e.Message));
+            logger.Error($"[RaidRecord]<Chat> 用户{sessionId}输入的指令处理失败: {e.Message}");
+            modConfig.Error($"用户{sessionId}输入的指令处理失败: ", e);
+            SendMessage(sessionId, $"指令处理失败: {request.Text}\n请检查你输入的指令: '{e.Message}'");
         }
         return ValueTask.FromResult(request.DialogId);
     }
@@ -91,7 +88,7 @@ public class RaidRecordManagerChat(
             RegisterCommand<ListCmd>();
             RegisterCommand<ItemsCmd>();
 
-            logger.Info($"[RaidRecord] {cmdUtil.GetLocalText("RC MC.Chat.initCmd.info0", string.Join(", ", Commands.Keys.ToArray()))}");
+            logger.Info($"[RaidRecord] 对局战绩管理命令({string.Join(", ", Commands.Keys.ToArray())})已注册");
         }
         catch (Exception e)
         {
@@ -116,13 +113,13 @@ public class RaidRecordManagerChat(
         string[] data = StringUtil.SplitCommand(command.ToLower());
         if (data.Length <= 0)
         {
-            return cmdUtil.GetLocalText("RC MC.Chat.handleCmd.error0");
+            return "未输入任何命令";
         }
 
         // logger.Info($"全部命令: {string.Join(", ", _commands.Keys.ToArray())}, 输入的指令: \"{command}\", 检测出的指令: {data[0]}");
         if (!Commands.ContainsKey(data[0]))
         {
-            return cmdUtil.GetLocalText("RC MC.Chat.handleCmd.error1", data[0], string.Join(",", Commands.Keys.ToArray()));
+            return $"未知的命令: {data[0]}, 可用的命令包括: {string.Join(",", Commands.Keys.ToArray())}";
         }
         CommandBase iCmd = Commands[data[0]];
         iCmd.Paras = new Parametric(sessionId, this);

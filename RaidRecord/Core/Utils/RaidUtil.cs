@@ -82,9 +82,9 @@ public class RaidUtil(
         {
             // Scav模式
             PmcData postRaidProfile = request.Results.Profile!;
-            
+
             raidInfo.ItemsTakeOut = ItemUtil.GetInventoryInfo(postRaidProfile, itemHelper);
-            
+
             if (isDead)
             {
                 // Scav死亡, 无法带出任何物品(由于Scav死亡时LocationLifecycleService会直接生成下一次存档, 直接清空字典)

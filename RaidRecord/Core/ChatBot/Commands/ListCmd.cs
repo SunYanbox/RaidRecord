@@ -14,10 +14,10 @@ public class ListCmd: CommandBase
     {
         _cmdUtil = cmdUtil;
         Key = "list";
-        Desc = cmdUtil.GetLocalText("Command.List.Desc");
+        Desc = "获取自身所有符合条件的对局历史记录, 使用方式: \n";
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("limit", "int", cmdUtil.GetLocalText("Command.Para.Limit.Desc"))
-            .AddParam("page", "int", cmdUtil.GetLocalText("Command.Para.Page.Desc"))
+            .AddParam("limit", "int", "每一页历史记录数量限制")
+            .AddParam("page", "int", "要查看的页码")
             .SetOptional(["limit", "page"])
             .Build();
     }
@@ -33,20 +33,19 @@ public class ListCmd: CommandBase
         numberLimit = Math.Min(20, Math.Max(1, numberLimit));
         page = Math.Max(1, page);
 
+        int totalCount = records.Count;
         int indexLeft = Math.Max(numberLimit * (page - 1), 0);
-        int indexRight = Math.Min(numberLimit * page, records.Count);
-        // if (records.Count <= 0) return "您没有任何历史战绩, 请至少对局一次后再来查询吧";
-        if (records.Count <= 0) return _cmdUtil.GetLocalText("Command.List.error0");
+        int indexRight = Math.Min(numberLimit * page, totalCount);
+        if (totalCount <= 0) return "您没有任何历史战绩, 请至少对局一次后再来查询吧";
         List<RaidArchive> results = [];
         for (int i = indexLeft; i < indexRight; i++)
         {
             results.Add(records[i]);
         }
-        // if (results.Count <= 0) return $"未查询到您第{indexLeft+1}到{indexRight}条历史战绩";
-        if (results.Count <= 0) return _cmdUtil.GetLocalText("Command.List.error1", indexLeft + 1, indexRight);
+        if (results.Count <= 0) return $"未查询到您第{indexLeft + 1}到{indexRight}条历史战绩";
 
-        // string msg = $"历史战绩(共{results.Count}/{records.Count}条):\n - serverId                 序号 地图 入场总价值 带出收益 战损 游戏时间 结果\n";
-        string msg = _cmdUtil.GetLocalText("Command.List.info0", results.Count, records.Count);
+        string msg = $"历史战绩(共{results.Count}/{totalCount}条, 第{page}页/共{(int)Math.Ceiling((double)totalCount / numberLimit)}页):\n";
+        msg += " - serverId                 序号 地图 入场总价值 带出收益 战损 游戏时间 结果\n";
 
         int jump = 0;
         for (int i = 0; i < results.Count; i++)
@@ -57,7 +56,7 @@ public class ListCmd: CommandBase
                 continue;
             }
 
-            string result = _cmdUtil.GetLocalText("Command.List.unknownEnding");
+            string result = "未知结局";
             RaidResultData? raidResultData = results[i].Results;
             try
             {
@@ -65,8 +64,7 @@ public class ListCmd: CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                string resultName = Constants.ResultNames[raidResultData.Result.Value];
-                result = _cmdUtil.LocalizationManager!.GetText(resultName, resultName);
+                result = _cmdUtil.LocalizationManager!.GetText(raidResultData.Result.Value.ToString());
             }
             catch (Exception e)
             {
@@ -78,8 +76,7 @@ public class ListCmd: CommandBase
                    + $"{results[i].PreRaidValue} {results[i].GrossProfit} {results[i].CombatLosses} "
                    + $"{StringUtil.TimeString(results[i].Results?.PlayTime ?? 0)} {result}\n";
         }
-        // if (jump > 0) msg += $"跳过{jump}条无效数据";
-        if (jump > 0) msg += _cmdUtil.GetLocalText("Command.List.info1", jump);
+        if (jump > 0) msg += $"跳过{jump}条无效数据";
         return msg;
     }
 }

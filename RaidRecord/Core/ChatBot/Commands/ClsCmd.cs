@@ -18,7 +18,7 @@ public class ClsCmd: CommandBase
         _cmdUtil = cmdUtil;
         _dialogueHelper = dialogueHelper;
         Key = "cls";
-        Desc = cmdUtil.GetLocalText("Command.Cls.Desc");
+        Desc = "清除聊天对话框历史记录, 使用方式: \n";
     }
 
     public override string Execute(Parametric parametric)
@@ -30,11 +30,11 @@ public class ClsCmd: CommandBase
 
         Dictionary<MongoId, Dialogue> dialogs = _dialogueHelper.GetDialogsForProfile(parametric.SessionId);
         Dialogue dialog = dialogs[managerProfile.Id];
-        if (dialog.Messages == null) return _cmdUtil.GetLocalText("Command.Cls.error0");
+        if (dialog.Messages == null) return "找不到你的聊天记录";
         int count = dialog.Messages.Count;
         dialog.Messages = [];
         // $"已清除{count}条聊天记录, 重启游戏客户端后生效"
-        return _cmdUtil.GetLocalText("Command.Cls.info0", count);
+        return $"已清除{count}条聊天记录, 重启游戏客户端后生效";
         // "找不到你的聊天记录"
     }
 }

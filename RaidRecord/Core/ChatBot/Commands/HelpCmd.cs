@@ -13,7 +13,7 @@ public class HelpCmd: CommandBase
     {
         _cmdUtil = cmdUtil;
         Key = "help";
-        Desc = cmdUtil.GetLocalText("Command.Help.Desc");
+        Desc = "获取所有命令的帮助信息, 使用方式: \n";
     }
 
     public override string Execute(Parametric parametric)
@@ -22,7 +22,7 @@ public class HelpCmd: CommandBase
         if (verify != null) return verify;
 
         // "帮助信息(参数需要按键值对写, 例如\"list index 1\"; 中括号表示可选参数; 指令与参数不区分大小写):"
-        string msg = _cmdUtil.GetLocalText("Command.Help.Head");
+        string msg = "帮助信息(参数需要按键值对写, 例如\"list index 1\"; 中括号表示可选参数; 指令与参数不区分大小写):";
         if (parametric.ManagerChat == null)
         {
             _cmdUtil.ModConfig!.LogError(

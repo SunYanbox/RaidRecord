@@ -1,12 +1,6 @@
 using System.Text.Json.Serialization;
-using RaidRecord.Core.Systems;
-using RaidRecord.Core.Utils;
-using SPTarkov.Server.Core.Extensions;
-using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
-using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Eft.Match;
 
 namespace RaidRecord.Core.Models;
 

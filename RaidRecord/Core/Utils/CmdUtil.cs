@@ -74,7 +74,7 @@ public class CmdUtil(
             Aid = 8100860,
             Info = new UserDialogDetails
             {
-                Nickname = GetLocalText("RC MC.ChatBot.NickName"),
+                Nickname = "对局战绩管理",
                 Side = "Usec",
                 Level = 69,
                 MemberCategory = MemberCategory.Sherpa,
@@ -91,12 +91,7 @@ public class CmdUtil(
         int month = date.Month;
         int day = date.Day;
         string time = date.ToShortTimeString();
-        return GetLocalText("RC MC.Chat.Format.Time", year, month, day, time);
-    }
-
-    public string GetLocalText(string msgId, params object?[] args)
-    {
-        return LocalizationManager?.GetTextFormat(msgId, args) ?? $"[Cant find text: {msgId}]";
+        return $"{year}年{month}月{day}日 {time}";
     }
 
     /// <summary>  Command验证参数的工具 </summary>
@@ -104,7 +99,7 @@ public class CmdUtil(
     {
         if (string.IsNullOrEmpty(parametric.SessionId))
         {
-            return GetLocalText("RC MC.Chat.verify.error0");
+            return "未输入session参数或session为空";
         }
 
         try
@@ -115,16 +110,15 @@ public class CmdUtil(
                 throw new NullReferenceException($"{nameof(pmcData)} or {nameof(pmcData.Id)}");
             }
             string playerId = pmcData.Id;
-            if (string.IsNullOrEmpty(playerId)) throw new Exception(GetLocalText("RC MC.Chat.verify.error1"));
+            if (string.IsNullOrEmpty(playerId)) throw new Exception("playerId为null或为空");
         }
         catch (Exception e)
         {
-            ModConfig?.LogError(e, "RaidRecordManagerChat.VerifyIParametric", GetLocalText("RC MC.Chat.verify.error2", e.Message));
-            return GetLocalText("RC MC.Chat.verify.error2", e.Message);
+            ModConfig?.LogError(e, "RaidRecordManagerChat.VerifyIParametric", $"用户未注册或者session已失效: {e.Message}");
+            return $"用户未注册或者session已失效: {e.Message}";
         }
 
-        return parametric.ManagerChat == null ? GetLocalText("RC MC.Chat.verify.error3") : null;
-
+        return parametric.ManagerChat == null ? "实例未正确初始化: 缺少managerChat属性" : null;
     }
 
     public MongoId? GetAccountBySession(string sessionId)

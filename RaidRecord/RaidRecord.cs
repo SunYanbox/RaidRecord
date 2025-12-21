@@ -11,7 +11,7 @@ using SPTarkov.Server.Core.Servers;
 
 namespace RaidRecord;
 
-[Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 5)]
+[Injectable]
 internal class RaidRecordMod(
     ISptLogger<RaidRecordMod> logger,
     ConfigServer configServer,
@@ -32,7 +32,7 @@ internal class RaidRecordMod(
         var coreConfig = configServer.GetConfig<CoreConfig>();
         coreConfig.Features.ChatbotFeatures.Ids[chatbot.Info.Nickname] = chatbot.Id;
         coreConfig.Features.ChatbotFeatures.EnabledBots[chatbot.Id] = true;
-        logger.Info($"[RaidRecord] {localManager.GetTextFormat("raidrecord.RCM.RCB.info0", chatbot.Id)}");
+        logger.Info($"[RaidRecord] 已经成功注册ChatBot: {chatbot.Id}");
     }
 }
 

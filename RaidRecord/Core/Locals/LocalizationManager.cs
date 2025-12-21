@@ -1,5 +1,6 @@
 using System.Reflection;
 using RaidRecord.Core.Configs;
+using SPTarkov.Common.Extensions;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
@@ -13,9 +14,9 @@ using Path = System.IO.Path;
 namespace RaidRecord.Core.Locals;
 
 /// <summary>
-/// 第一时间初始化本地数据
+/// 初始化本地数据
 /// </summary>
-[Injectable(InjectionType = InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 3)]
+[Injectable(InjectionType = InjectionType.Singleton)]
 public class LocalizationManager(
     ISptLogger<LocalizationManager> logger,
     ModHelper modHelper,
@@ -40,15 +41,19 @@ public class LocalizationManager(
 
                 string fileName = Path.GetFileNameWithoutExtension(file);
                 // logger.Info($"尝试加载{localsDir}文件夹下的{fileName}, file: {file}");
-                if (file.EndsWith(".json") && fileName.Length == 2)
+                if (!file.EndsWith(".json") || fileName.Length != 2) continue;
+                // logger.Info($"> {fileName}成功加载");
+                try
                 {
-                    // logger.Info($"> {fileName}成功加载");
                     _allLocalizations[fileName] = modHelper.GetJsonDataFromFile<LocalizationData>(localsDir, $"{fileName}.json");
+                }
+                catch (Exception e)
+                {
+                    modConfig.Error($"加载本地化数据库时出错: {fileName}", e);
                 }
             }
 
-            logger.Info(
-                $"[RaidRecord] {GetTextFormat("models.local.LM.onload.info0", string.Join(", ", AvailableLanguages))}");
+            modConfig.Info($"已加载语言: {string.Join(", ", AvailableLanguages)}");
         }
         else
         {
@@ -63,85 +68,148 @@ public class LocalizationManager(
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// 获取本地化值的核心方法
+    /// 实现多级回退：当前语言 -> 回退到中文 -> 报错加key的值
+    /// </summary>
+    public string GetLocalisedValue(string key)
+    {
+        string errorKey = $"[Error {key}]";
+        // 获取当前区域的本地化字典
+        if (!_allLocalizations.TryGetValue(CurrentLanguage, out LocalizationData? locales))
+        {
+            return !_allLocalizations.TryGetValue("ch", out LocalizationData? defaults1)
+                ? errorKey
+                : // 区域未加载，返回键本身
+                defaults1.Translations.GetValueOrDefault(key, errorKey); // 区域未加载，返回键本身
+        }
+        if (locales.Translations.TryGetValue(key, out string? value))
+        {
+            return value;
+        }
+        return !_allLocalizations.TryGetValue("ch", out LocalizationData? defaults2)
+            ? errorKey
+            : // 区域未加载，返回键本身
+            defaults2.Translations.GetValueOrDefault(key, errorKey); // 区域未加载，返回键本身
+    }
+
+    /// <summary>
+    /// 处理带参数的本地化字符串
+    /// 将{{属性名}}替换为参数对象的属性值
+    /// </summary>
+    protected string GetLocalised(string key, object? args)
+    {
+        string rawLocalizedString = GetLocalisedValue(key);
+        if (args == null) return rawLocalizedString;
+
+        PropertyInfo[] typeProperties = args.GetType().GetProperties();
+
+        foreach (PropertyInfo propertyInfo in typeProperties)
+        {
+            // 获取JSON属性名（支持[JsonProperty]特性）
+            string localizedName = $"{{{{{propertyInfo.GetJsonName()}}}}}";
+            if (rawLocalizedString.Contains(localizedName))
+            {
+                rawLocalizedString = rawLocalizedString.Replace(
+                    localizedName,
+                    propertyInfo.GetValue(args)?.ToString() ?? string.Empty
+                );
+            }
+        }
+
+        return rawLocalizedString;
+    }
+
+    /// <summary>
+    /// 获取本地化文本（主要公共方法）
+    /// </summary>
+    /// <param name="key">本地化键</param>
+    /// <param name="args">可选参数对象，属性将替换字符串中的{{属性名}}</param>
+    /// <returns>本地化后的字符串</returns>
+    public string GetText(string key, object? args = null)
+    {
+        return args is null ? GetLocalisedValue(key) : GetLocalised(key, args);
+    }
+
+    /// <summary>
+    /// 获取小写去除_的地图名称, 作为字典的键
+    /// </summary>
+    private string GetMapKey(string mapName)
+    {
+        return mapName.Replace("_", "").ToLower();
+    }
+
     protected void InitLocalization(Locations locations, LocaleBase locales)
     {
         // 所有的地图名称
         string[] mapNames =
         [
-            "woods",
+            "Woods",
             "bigmap",
             // "develop",
             "factory4_day", // factory4_day
             "factory4_night", // factory4_night
             // "hideout",
-            "interchange",
-            "laboratory",
-            "labyrinth",
-            "lighthouse",
+            "Interchange",
+            "Laboratory",
+            "Labyrinth",
+            "Lighthouse",
             // "privatearea",
-            "rezervbase",
-            "sandbox",
-            "sandboxhigh",
-            "shoreline",
+            "RezervBase",
+            "Sandbox",
+            // "sandboxhigh",
+            "Shoreline",
             // "suburbs",
-            "tarkovstreets"
+            "TarkovStreets"
             // "terminal",
             // "town"
         ];
         Dictionary<string, string>? localesMap = locales.Global[CurrentLanguage].Value;
-        string errorMsg = "";
+        string warnMsg = "";
 
         // 获取地图的本地化表示
         foreach (string mapName in mapNames)
         {
-            MapNames[mapName.Replace("_", "")] = localesMap?.TryGetValue(mapName, out string? name) ?? false ? name : mapName;
+            MapNames[GetMapKey(mapName)]
+                = localesMap?.TryGetValue(mapName, out string? name) ?? false ? name : mapName;
         }
+
+        modConfig.Debug($"已加载地图: {string.Join(", ", MapNames.Values.Select(x => x.ToString()))}");
+
+        Dictionary<string, Location> sptLocations = locations.GetDictionary();
 
         foreach (string mapName in mapNames)
         {
-            ExitNames.Add(mapName, new Dictionary<string, string>());
+            string mapKey = GetMapKey(mapName);
+            
+            ExitNames.Add(mapKey, new Dictionary<string, string>());
 
-            if (!locations.GetDictionary().ContainsKey(mapName.Replace("_", "")))
+            if (!sptLocations.TryGetValue(mapName.Replace("_", ""), out Location? map))
             {
-                // Console.WriteLine($"警告: 没有键为{mapName}的数据, ");
-                // var options1 = new JsonSerializerOptions
-                // {
-                //     Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                //     WriteIndented = true
-                // };
-                // Console.WriteLine("当前有的键: " + JsonSerializer.Serialize(Locations.GetDictionary().Keys.ToArray(), options1));
                 continue;
             }
-            Location map = locations.GetDictionary()[mapName.Replace("_", "")]; // Locations.GetMappedKey(mapName)
             foreach (AllExtractsExit exit in map.AllExtracts)
             {
                 // Console.WriteLine($"map: {mapName}\n exit: {exit}\n data: " + JsonSerializer.Serialize(ExitNames));
                 if (exit.Name == null) continue;
                 if (localesMap != null && !localesMap.ContainsKey(exit.Name))
                 {
-                    errorMsg += GetTextFormat("models.local.LM.init.warn0", exit.Name) + "\n";
+                    warnMsg += $"警告: {exit.Name}不存在于本地化字典中" + "\n";
                     continue;
                 }
 
-                if (ExitNames[mapName].ContainsKey(exit.Name))
+                if (ExitNames[mapKey].ContainsKey(exit.Name))
                 {
-                    errorMsg += GetTextFormat("models.local.LM.init.warn1", exit.Name, mapName) + "\n";
+                    warnMsg += $"警告: 尝试重复添加撤离点{exit.Name}到{mapName}的数据" + "\n";
                     continue;
                 }
                 if (localesMap != null)
-                    ExitNames[mapName].Add(exit.Name, localesMap[exit.Name]);
+                    ExitNames[mapKey].Add(exit.Name, localesMap[exit.Name]);
             }
         }
 
-        // var options = new JsonSerializerOptions
-        // {
-        //     Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        //     WriteIndented = true
-        // };
-        // Console.WriteLine(JsonSerializer.Serialize(ExitNames, options));
-        // Console.WriteLine("[RaidRecord] " + errorMsg);
-        modConfig.Log("Info", errorMsg);
-        Console.WriteLine($"[RaidRecord] {GetTextFormat("models.local.LM.init.info0")}");
+        if (!string.IsNullOrEmpty(warnMsg)) modConfig.Log("Warn", warnMsg);
+        modConfig.Info("已成功加载各个地图撤离点数据");
     }
 
     public string CurrentLanguage
@@ -154,39 +222,33 @@ public class LocalizationManager(
         }
     }
 
-    // 优先key, 备用en(ch百分百提供), 最终默认值: 未定义
-    public string GetText(string key, string fallback = "未定义")
-    {
-        _allLocalizations.TryGetValue(CurrentLanguage, out LocalizationData? localization);
-        if (localization == null) { return fallback; }
-        localization.Translations.TryGetValue(key, out string? result);
-        if (result == null)
-        {
-            localization.Translations.TryGetValue("en", out result);
-        }
-        return result ?? fallback;
-    }
-
-    public string GetTextFormat(string msgId, params object?[] args)
-    {
-        return string.Format(GetText(msgId), args);
-    }
-
+    /// <summary>
+    /// 获取地图本地化名称
+    /// </summary>
     public string GetMapName(string map)
     {
-        return MapNames.GetValueOrDefault(map.Replace("_", "").ToLower(), map);
+        return MapNames.GetValueOrDefault(GetMapKey(map), map);
     }
 
+    /// <summary>
+    /// 获取撤离点本地化名称
+    /// </summary>
     public string GetExitName(string map, string key)
     {
-        return ExitNames.TryGetValue(map.Replace("_", "").ToLower(), out Dictionary<string, string>? mapExits) ? mapExits.GetValueOrDefault(key, key) : key;
+        return ExitNames.TryGetValue(GetMapKey(map), out Dictionary<string, string>? mapExits) ? mapExits.GetValueOrDefault(key, key) : key;
     }
 
+    /// <summary>
+    /// 获取命中区域本地化名称
+    /// </summary>
     public string GetArmorZoneName(string key)
     {
         return _allLocalizations[CurrentLanguage].ArmorZone.GetValueOrDefault(key, key);
     }
 
+    /// <summary>
+    /// 获取角色本地化名称
+    /// </summary>
     public string GetRoleName(string key)
     {
         return _allLocalizations[CurrentLanguage].RoleNames.GetValueOrDefault(key, key);

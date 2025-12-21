@@ -81,9 +81,9 @@ public class CustomStaticRouter: StaticRouter
             var response = _injectableClasses!.JsonUtil!.Deserialize<GetBodyResponseData<StartLocalRaidResponseData>>(output);
             string serverId = response!.Data!.ServerId!;
             PmcData? pmcData = _injectableClasses.ProfileHelper!.GetPmcProfile(sessionId);
-            if (pmcData == null) throw new Exception(_injectableClasses.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRS.error0", sessionId));
+            if (pmcData == null) throw new Exception($"获取不到来自session: {sessionId}的存档数据pmcData");
             MongoId? notSurePlayerId = pmcData.Id;
-            if (notSurePlayerId == null) throw new Exception(_injectableClasses.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRS.error1", sessionId));
+            if (notSurePlayerId == null) throw new Exception($"获取不到来自session: {sessionId}的玩家ID数据pmcData.Id");
             MongoId playerId = notSurePlayerId.Value;
             MongoId? account = _injectableClasses.RecordCacheManager!.GetAccount(sessionId);
             ModConfig? logger = _injectableClasses.ModConfig;
@@ -143,9 +143,9 @@ public class CustomStaticRouter: StaticRouter
         }
         catch (Exception e)
         {
-            string msg = _injectableClasses!.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRS.error3", e.Message, e.StackTrace);
+            string msg = $"在HandleRaidStart函数出现错误: {e.Message}\nstack: {e.StackTrace}";
             Console.WriteLine($"[RaidRecord] Error in HandleRaidStart: {msg}");
-            _injectableClasses.ModConfig?.LogError(e, "CustomStaticRouter.HandleRaidStart", msg);
+            _injectableClasses?.ModConfig?.LogError(e, "CustomStaticRouter.HandleRaidStart", msg);
         }
     }
 
@@ -156,9 +156,9 @@ public class CustomStaticRouter: StaticRouter
             // Console.WriteLine($"<HandleRaidStart>\n url: {url};\n info: {info};\n sessionId: {sessionId};\n output: {output};");
             // Console.WriteLine(data.JsonUtil.Serialize(info));
             PmcData? pmcData = _injectableClasses!.ProfileHelper!.GetPmcProfile(sessionId);
-            if (pmcData == null) throw new Exception(_injectableClasses.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error0"));
+            if (pmcData == null) throw new Exception("pmcData意外为空");
             MongoId? notSurePlayerId = pmcData.Id;
-            if (notSurePlayerId == null) throw new Exception(_injectableClasses.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error1"));
+            if (notSurePlayerId == null) throw new Exception("获取不到非空pmcData.Id");
             MongoId playerId = notSurePlayerId.Value;
 
             JsonUtil? jsonUtil = _injectableClasses.JsonUtil;
@@ -171,7 +171,7 @@ public class CustomStaticRouter: StaticRouter
             EFTCombatRecord records = _injectableClasses.RecordCacheManager!.GetRecord(accountId.Value);
 
             if (records.Records.Count == 0 || records.InfoRecordCache == null)
-                throw new Exception(_injectableClasses.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error3"));
+                throw new Exception("游戏结束时没有发现任何已经开始的对局数据");
 
             if (request == null) throw new Exception("\nHandleRaidEnd的参数info为空, 这可能是SPT更改了服务端传递的参数; 在没有其他服务端模组影响的条件下, 该报错理论上很难发生!!!\n");
             // Console.WriteLine($"\n\n info直接print: {info} \n\n info序列化: {data.JsonUtil.Serialize(info)}");
@@ -180,7 +180,7 @@ public class CustomStaticRouter: StaticRouter
                 _raidUtil?.HandleRaidEnd(records.InfoRecordCache.Info, request, sessionId);
 
             int itemsTakeOutCount = records.InfoRecordCache.Info?.ItemsTakeOut.Count ?? 0;
-            
+
             _injectableClasses.RecordCacheManager.ZipAccount(playerId);
             _injectableClasses.RecordCacheManager.SaveEFTRecord(accountId.Value);
             _injectableClasses.ModConfig?.Info($"已记录对局结束: {request.ServerId}, "
@@ -191,7 +191,7 @@ public class CustomStaticRouter: StaticRouter
         }
         catch (Exception e)
         {
-            string msg = _injectableClasses?.LocalizationManager!.GetTextFormat("raidrecord.CSR.HRE.error4", e.Message, e.StackTrace) ?? "data.LocalizationManager为空, 其他属性也可能为空";
+            string msg = $"在HandleRaidEnd函数出现错误: {e.Message}\nstack: {e.StackTrace}";
             Console.WriteLine($"[RaidRecord] Error in HandleRaidEnd: {msg}");
             _injectableClasses?.ModConfig?.LogError(e, "CustomStaticRouter.HandleRaidEnd", msg);
         }

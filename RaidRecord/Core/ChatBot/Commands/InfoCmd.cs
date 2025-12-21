@@ -21,11 +21,10 @@ public class InfoCmd: CommandBase
         _cmdUtil = cmdUtil;
         _databaseService = databaseService;
         Key = "info";
-        Desc = cmdUtil.GetLocalText("Command.Info.Desc");
+        Desc = "使用序号或serverId获取详细对局记录(至少需要一个参数), 使用方式: \n";
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("serverId", "string", cmdUtil.GetLocalText("Command.Para.ServerId.Desc"))
-            .AddParam("index", "int", cmdUtil.GetLocalText("Command.Para.Index.Desc"))
-            .SetOptional(["serverId", "index"])
+            .AddParam("index", "int", "对局索引")
+            .SetOptional(["index"])
             .Build();
     }
 
@@ -34,17 +33,9 @@ public class InfoCmd: CommandBase
         string? verify = _cmdUtil.VerifyIParametric(parametric);
         if (verify != null) return verify;
 
-        string serverId = CmdUtil.GetParameter<string>(parametric.Paras, "serverId", "");
         int index = CmdUtil.GetParameter(parametric.Paras, "index", -1);
 
-        RaidArchive? archive = _cmdUtil.GetArchiveWithServerId(serverId, parametric.SessionId);
-        if (archive != null)
-        {
-            return GetArchiveDetails(archive);
-        }
-        return index == -1
-            ? _cmdUtil.GetLocalText("Command.Para.ServerId.NotExist", serverId)
-            : GetArchiveDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId));
+        return GetArchiveDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId));
     }
 
     private string GetArchiveDetails(RaidArchive archive)
@@ -58,36 +49,22 @@ public class InfoCmd: CommandBase
         string timeString = _cmdUtil.DateFormatterFull(archive.CreateTime);
         string mapName = serverId[..serverId.IndexOf('.')].ToLower();
 
-        msg += _cmdUtil.GetLocalText("RC MC.Chat.GAD.info0",
-            timeString, serverId, playerData.Info?.Nickname,
-            playerData.Info?.Level, playerData.Id);
+        msg += $"{timeString} 对局ID: {serverId} 玩家信息: {playerData.Info?.Nickname}(Level={playerData.Info?.Level}, id={playerData.Id})";
 
-        msg += _cmdUtil.GetLocalText("RC MC.Chat.GAD.info1",
-            _cmdUtil.LocalizationManager!.GetMapName(mapName), StringUtil.TimeString(archive.Results?.PlayTime ?? 0));
+        msg += $"\n地图: {_cmdUtil.LocalizationManager!.GetMapName(mapName)} 生存时间: {StringUtil.TimeString(archive.Results?.PlayTime ?? 0)}";
 
-        msg += _cmdUtil.GetLocalText("RC MC.Chat.GAD.info2",
-            (int)archive.EquipmentValue, (int)archive.SecuredValue, (int)archive.PreRaidValue);
+        msg += $"\n入局战备: {(int)archive.EquipmentValue}rub, 安全箱物资价值: {(int)archive.SecuredValue}rub, 总带入价值: {(int)archive.PreRaidValue}rub";
 
-        msg += _cmdUtil.GetLocalText("RC MC.Chat.GAD.info3",
-            (int)archive.GrossProfit,
-            (int)archive.CombatLosses,
-            (int)(archive.GrossProfit - archive.CombatLosses));
+        msg += $"\n带出价值: {(int)archive.GrossProfit}rub, 战损{(int)archive.CombatLosses}rub, 净利润{(int)(archive.GrossProfit - archive.CombatLosses)}rub";
 
-        string result = _cmdUtil.GetLocalText("RC MC.Chat.GAD.unknowResult");
+        string result = "未知结果";
 
         if (archive.Results?.Result != null)
         {
-            ExitStatus nonNullResult = archive.Results.Result.Value;
-            if (Constants.ResultNames.TryGetValue(nonNullResult, out string? resultName))
-            {
-                result = _cmdUtil.LocalizationManager.GetText(resultName, resultName);
-            }
+            result = _cmdUtil.LocalizationManager.GetText(archive.Results.Result.Value.ToString());
         }
 
-        msg += _cmdUtil.GetLocalText("RC MC.Chat.GAD.info4",
-            result,
-            _cmdUtil.LocalizationManager.GetExitName(mapName, archive.Results?.ExitName ?? _cmdUtil.GetLocalText("RC MC.Chat.GAD.nullExitPosition")),
-            archive.EftStats?.SurvivorClass ?? _cmdUtil.GetLocalText("RC MC.Chat.GAD.unknow"));
+        msg += $"\n对局结果: {result} 撤离点: {_cmdUtil.LocalizationManager.GetExitName(mapName, archive.Results?.ExitName ?? string.Format("RC MC.Chat.GAD.nullExitPosition"))} 游戏风格: {archive.EftStats?.SurvivorClass ?? "未知风格"}";
 
         List<Victim> victims = archive.EftStats?.Victims?.ToList() ?? [];
         LazyLoad<Dictionary<string, string>> localTemps = _databaseService.GetTables().Locales.Global[_cmdUtil.LocalizationManager.CurrentLanguage];
@@ -95,7 +72,7 @@ public class InfoCmd: CommandBase
 
         if (victims.Count > 0)
         {
-            msg += _cmdUtil.GetLocalText("RC MC.Chat.GAD.killed");
+            msg += "\n本局击杀:";
             foreach (Victim victim in victims)
             {
                 string weapon;
@@ -103,23 +80,16 @@ public class InfoCmd: CommandBase
                 {
                     weapon = locals.TryGetValue(victim.Weapon, out string? value1)
                         ? value1
-                        : victim.Weapon ?? _cmdUtil.GetLocalText("RC MC.Chat.GAD.unknowWeapon");
+                        : victim.Weapon ?? "未知武器";
                 }
                 else
                 {
-                    weapon = victim.Weapon ?? _cmdUtil.GetLocalText("RC MC.Chat.GAD.unknowWeapon");
+                    weapon = victim.Weapon ?? "未知武器";
                 }
 
 
-                msg += _cmdUtil.GetLocalText("RC MC.Chat.GAD.info5",
-                    victim.Time,
-                    weapon,
-                    _cmdUtil.LocalizationManager.GetArmorZoneName(victim.BodyPart ?? ""),
-                    (int)(victim.Distance ?? 0),
-                    victim.Name,
-                    victim.Level,
-                    victim.Side,
-                    _cmdUtil.LocalizationManager.GetRoleName(victim.Role ?? ""));
+                msg +=
+                    $"\n {victim.Time} 使用{weapon}命中{_cmdUtil.LocalizationManager.GetArmorZoneName(victim.BodyPart ?? "")}淘汰距离{(int)(victim.Distance ?? 0)}m远的{victim.Name}(等级:{victim.Level} 阵营:{victim.Side} 角色:{_cmdUtil.LocalizationManager.GetRoleName(victim.Role ?? "")})";
                 // Constants.RoleNames.TryGetValue(victim.Role,  out var value3) ? value3 : victim.Role);
             }
         }
@@ -134,23 +104,18 @@ public class InfoCmd: CommandBase
                 {
                     weapon = locals.TryGetValue(aggressor.WeaponName, out string? value1)
                         ? value1
-                        : aggressor.WeaponName ?? _cmdUtil.GetLocalText("RC MC.Chat.GAD.unknowWeapon");
+                        : aggressor.WeaponName ?? "未知武器";
                 }
                 else
                 {
-                    weapon = aggressor.WeaponName ?? _cmdUtil.GetLocalText("RC MC.Chat.GAD.unknowWeapon");
+                    weapon = aggressor.WeaponName ?? "未知武器";
                 }
 
-                msg += _cmdUtil.GetLocalText("RC MC.Chat.GAD.info6",
-                    aggressor.Name,
-                    aggressor.Side,
-                    weapon,
-                    // Constants.RoleNames.TryGetValue(aggressor.Role,  out var value3) ? value3 : aggressor.Role);
-                    _cmdUtil.LocalizationManager.GetRoleName(aggressor.Role ?? ""));
+                msg += $"\n击杀者: {aggressor.Name}(阵营: {aggressor.Side})使用{weapon}命中{_cmdUtil.LocalizationManager.GetRoleName(aggressor.Role ?? "")}淘汰了你";
             }
             else
             {
-                msg += _cmdUtil.GetLocalText("RC MC.Chat.GAD.killedLoadError");
+                msg += "\n击杀者数据加载失败";
             }
         }
 

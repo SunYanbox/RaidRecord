@@ -7,7 +7,7 @@ using SPTarkov.Server.Core.Models.Utils;
 namespace RaidRecord.Core.Configs;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-[Injectable(InjectionType = InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 2)]
+[Injectable(InjectionType = InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 1)]
 public class ModConfig(ModHelper modHelper,
     ISptLogger<ModConfig> logger): IOnLoad
 {
