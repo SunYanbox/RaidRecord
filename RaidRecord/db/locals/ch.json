@@ -58,6 +58,15 @@
     "pmcUSER": "UserPMC"
   },
   "serverMessage": {
+    "Chatbot-Error.命令初始化失败": "初始化命令过程中出现错误: {{ErrorMessage}}",
+    "Chatbot-Error.命令执行失败": "执行命令 {{Command}} 时出现错误: {{ErrorMessage}}",
+    "Chatbot-Error.指令处理失败": "用户{{SessionId}}输入的指令处理失败: ",
+    "Chatbot-Error.未知的命令": "未知的命令: {{Command}}, 可用的命令包括: {{AvailableCommands}}",
+    "Chatbot-Error.未输入任何命令": "未输入任何命令",
+    "Chatbot-Error.添加命令失败.缺少键": "添加命令 {{CommandType}} 失败, 缺少Key属性",
+    "Chatbot-Info.命令初始化完毕": "对局战绩管理命令({{WhichCommandsRegister}})已注册",
+    "Chatbot-Mail.发送指令处理失败信息": "指令处理失败: {{ErrorMessage}}\n请检查你输入的指令: '{{SendText}}'",
+    "Chatbot-Warn.无法从DI解析命令实例": "无法从DI容器解析{{CommandType}}命令的实例",
     "CmdUtil-Error.PmcData为空或PmcData.Id为空": "PmcData为空或PmcData.Id为空",
     "CmdUtil-Error.参数键为空": "参数键{{KeyName}}不能为null或为空",
     "CmdUtil-Error.参数验证.Value为空": "未输入{{ValueName}}参数或{{ValueName}}为空",

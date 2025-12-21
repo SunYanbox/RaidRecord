@@ -58,6 +58,15 @@
     "pmcUSER": "PMC Usec"
   },
   "serverMessage": {
+    "Chatbot-Error.命令初始化失败": "An error occurred during command initialization: {{ErrorMessage}}",
+    "Chatbot-Error.命令执行失败": "An error occurred while executing command {{Command}}: {{ErrorMessage}}",
+    "Chatbot-Error.指令处理失败": "Failed to process command entered by user {{SessionId}}: ",
+    "Chatbot-Error.未知的命令": "Unknown command: {{Command}}. Available commands include: {{AvailableCommands}}",
+    "Chatbot-Error.未输入任何命令": "No command entered",
+    "Chatbot-Error.添加命令失败.缺少键": "Failed to add command {{CommandType}}, missing Key attribute",
+    "Chatbot-Info.命令初始化完毕": "Match record management commands ({{WhichCommandsRegister}}) have been registered",
+    "Chatbot-Mail.发送指令处理失败信息": "Command processing failed: {{ErrorMessage}}\nPlease check your input: '{{SendText}}'",
+    "Chatbot-Warn.无法从DI解析命令实例": "Unable to resolve instance of command {{CommandType}} from the DI container",
     "CmdUtil-Error.PmcData为空或PmcData.Id为空": "PmcData is null or PmcData.Id is null",
     "CmdUtil-Error.参数键为空": "Parameter key {{KeyName}} cannot be null or empty",
     "CmdUtil-Error.参数验证.Value为空": "Parameter {{ValueName}} not entered or is empty",
