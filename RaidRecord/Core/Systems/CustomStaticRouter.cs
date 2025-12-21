@@ -1,4 +1,5 @@
 using RaidRecord.Core.Configs;
+using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
@@ -73,7 +74,7 @@ public class CustomStaticRouter: StaticRouter
         ];
     }
 
-    private static void HandleRaidStart(StartLocalRaidRequestData request, MongoId sessionId, string output)
+    private static void HandleRaidStart(StartLocalRaidRequestData _, MongoId sessionId, string output)
     {
         if (_serviceProvider == null) throw new NullReferenceException(nameof(_serviceProvider));
         try
@@ -87,25 +88,41 @@ public class CustomStaticRouter: StaticRouter
             MongoId playerId = notSurePlayerId.Value;
             MongoId? account = _injectableClasses.RecordManager!.GetAccount(sessionId);
             ModConfig? logger = _injectableClasses.ModConfig;
+            LocalizationManager localizationManager = _injectableClasses.LocalizationManager!;
 
             List<string> errors = [];
 
             if (_injectableClasses.RecordManager == null)
             {
-                errors.Add("RecordManager is null"
-                           + $"data type: {_injectableClasses.GetType()}"
-                           + $"data properties: {string.Join(", ", _injectableClasses.GetType().GetProperties().Select(p => p.Name))}");
+                errors.Add(localizationManager.GetText(
+                    "CustomStaticRouter-Error.RecordManager为null",
+                    new
+                    {
+                        DataType = _injectableClasses.GetType(),
+                        DataProperties = _injectableClasses.GetType().GetProperties().Select(p => p.Name).ToList(),
+                    }
+                    ));
+                // errors.Add("RecordManager is null"
+                //            + $"data type: {_injectableClasses.GetType()}"
+                //            + $"data properties: {string.Join(", ", _injectableClasses.GetType().GetProperties().Select(p => p.Name))}");
             }
             if (account == null)
             {
-                errors.Add("无法通过playerId获取玩家账户ID");
+                errors.Add(localizationManager.GetText("CustomStaticRouter-Error.无法通过PlayerId获取玩家账户"));
             }
             if (logger == null)
             {
-                Console.WriteLine("[RaidRecord] ModConfig未正确注入InjectableClasses");
+                Console.WriteLine("[RaidRecord] " 
+                                  + localizationManager.GetText(
+                                      "CustomStaticRouter-Error.InjectableClasses未正确注入ModConfig属性"));
+                // Console.WriteLine("[RaidRecord] ModConfig未正确注入InjectableClasses");
                 if (errors.Count > 0)
                 {
-                    Console.WriteLine($"[RaidRecord] 其他错误: {string.Join(", ", errors)}");
+                    Console.WriteLine("[RaidRecord]" 
+                                      + localizationManager
+                                          .GetText("CustomStaticRouter-Error.对局开始.其他错误",
+                                              new { Errors = string.Join(", ", errors) }));
+                    // Console.WriteLine($"[RaidRecord] 其他错误: {string.Join(", ", errors)}");
                 }
                 return;
             }
@@ -132,14 +149,25 @@ public class CustomStaticRouter: StaticRouter
 
             if (response?.Data == null)
             {
-                logger.Error("response.Data为null, 无法正确解析回合开始的数据");
+                logger.Error(
+                    localizationManager
+                        .GetText("CustomStaticRouter-Error.对局开始.响应解析失败"));
+                // logger.Error("response.Data为null, 无法正确解析回合开始的数据");
                 return;
             }
             if (recordWrapper?.Info is not null)
                 _raidUtil?.HandleRaidStart(recordWrapper.Info, serverId, sessionId);
             // recordWrapper.Info.ItemsTakeIn = Utils.GetInventoryInfo(pmcData, data.ItemHelper);
             _injectableClasses.RecordManager.SaveEFTRecord(account!.Value);
-            logger.Info($"已记录对局开始: ServerId: {serverId}, SessionId: {sessionId}, 带入对局物品数量: {recordWrapper?.Info?.ItemsTakeIn.Count}");
+            logger.Info(localizationManager
+                .GetText("CustomStaticRouter-Info.对局开始.已记录",
+                    new
+                    {
+                        ServerId = serverId,
+                        SessionId = sessionId,
+                        ItemsTakeInCount = recordWrapper?.Info?.ItemsTakeIn.Count
+                    }));
+            // logger.Info($"已记录对局开始: ServerId: {serverId}, SessionId: {sessionId}, 带入对局物品数量: {recordWrapper?.Info?.ItemsTakeIn.Count}");
         }
         catch (Exception e)
         {
@@ -156,22 +184,22 @@ public class CustomStaticRouter: StaticRouter
             // Console.WriteLine($"<HandleRaidStart>\n url: {url};\n info: {info};\n sessionId: {sessionId};\n output: {output};");
             // Console.WriteLine(data.JsonUtil.Serialize(info));
             PmcData? pmcData = _injectableClasses!.ProfileHelper!.GetPmcProfile(sessionId);
-            if (pmcData == null) throw new Exception("pmcData意外为空");
+            if (pmcData == null) throw new NullReferenceException("pmcData");
             MongoId? notSurePlayerId = pmcData.Id;
-            if (notSurePlayerId == null) throw new Exception("获取不到非空pmcData.Id");
+            if (notSurePlayerId == null) throw new NullReferenceException("pmcData.Id");
             MongoId playerId = notSurePlayerId.Value;
 
             JsonUtil? jsonUtil = _injectableClasses.JsonUtil;
-
+            LocalizationManager localizationManager = _injectableClasses.LocalizationManager!;
             MongoId? accountId = _injectableClasses.RecordManager!.GetAccount(playerId);
 
             if (accountId == null)
-                throw new Exception($"创建记录时未找到玩家{playerId}的账户Id, 请确保已存在过该玩家账户的记录");
+                throw new Exception(localizationManager.GetText("RecordManager-Error.指定的玩家账号不存在", new { PlayerId = playerId }));
 
             EFTCombatRecord records = _injectableClasses.RecordManager!.GetRecord(accountId.Value);
 
             if (records.Records.Count == 0 || records.InfoRecordCache == null)
-                throw new Exception("游戏结束时没有发现任何已经开始的对局数据");
+                throw new Exception(localizationManager.GetText("CustomStaticRouter-Error.对局结束.没有有效开局数据"));
 
             if (request == null) throw new Exception("\nHandleRaidEnd的参数info为空, 这可能是SPT更改了服务端传递的参数; 在没有其他服务端模组影响的条件下, 该报错理论上很难发生!!!\n");
             // Console.WriteLine($"\n\n info直接print: {info} \n\n info序列化: {data.JsonUtil.Serialize(info)}");
@@ -183,11 +211,26 @@ public class CustomStaticRouter: StaticRouter
 
             _injectableClasses.RecordManager.ZipAccount(playerId);
             _injectableClasses.RecordManager.SaveEFTRecord(accountId.Value);
-            _injectableClasses.ModConfig?.Info($"已记录对局结束: {request.ServerId}, "
-                                               + $"Session: {jsonUtil?.Serialize(sessionId)}, "
-                                               + $"Results: {{ Result: {request.Results!.Result}, ExitName: {request.Results.ExitName}, PlayTime: {request.Results.PlayTime} }}, " // EndRaidResult对象太大了
-                                               + $"LocationTransit: {jsonUtil?.Serialize(request.LocationTransit)}, "
-                                               + $"带出对局物品数量: {itemsTakeOutCount}");
+            _injectableClasses.ModConfig?.Info(
+                localizationManager.GetText(
+                    "CustomStaticRouter-Info.对局结束.已记录",
+                    new
+                    {
+                        request.ServerId,
+                        SessionId = jsonUtil?.Serialize(sessionId),
+                        ResultsResult = request.Results!.Result,
+                        ResultsExitName = request.Results.ExitName,
+                        ResultsPlayTime = request.Results.PlayTime,
+                        LocationTransit = jsonUtil?.Serialize(request.LocationTransit),
+                        ItemsTakeOutCount = itemsTakeOutCount
+                    }
+                    )
+                );
+            // _injectableClasses.ModConfig?.Info($"已记录对局结束: {request.ServerId}, "
+            //                                    + $"Session: {jsonUtil?.Serialize(sessionId)}, "
+            //                                    + $"Results: {{ Result: {request.Results!.Result}, ExitName: {request.Results.ExitName}, PlayTime: {request.Results.PlayTime} }}, " // EndRaidResult对象太大了
+            //                                    + $"LocationTransit: {jsonUtil?.Serialize(request.LocationTransit)}, "
+            //                                    + $"带出对局物品数量: {itemsTakeOutCount}");
         }
         catch (Exception e)
         {
