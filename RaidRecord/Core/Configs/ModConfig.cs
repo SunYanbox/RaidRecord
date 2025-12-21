@@ -9,10 +9,15 @@ namespace RaidRecord.Core.Configs;
 // ReSharper disable once ClassNeverInstantiated.Global
 [Injectable(InjectionType = InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 1)]
 public class ModConfig(ModHelper modHelper,
-    ISptLogger<ModConfig> logger): IOnLoad
+    ISptLogger<ModConfig> logger,
+    ModMetadata modMetadata): IOnLoad
 {
     public required ModConfigData Configs;
-    public required StreamWriter? LogFile;
+    private StreamWriter? _logFile;
+    /// <summary>
+    /// 本模组元数据
+    /// </summary>
+    public readonly ModMetadata Metadata = modMetadata;
     private readonly Lock _logLock = new();
 
 
@@ -26,12 +31,12 @@ public class ModConfig(ModHelper modHelper,
         {
             lock (_logLock)
             {
-                LogFile = new StreamWriter(logPath);
+                _logFile = new StreamWriter(logPath);
             }
         }
         catch (Exception ex)
         {
-            LogFile = null;
+            _logFile = null;
             logger.Error($"由于{ex.Message}, 无法获取模组日志流");
         }
 
@@ -41,7 +46,7 @@ public class ModConfig(ModHelper modHelper,
 
     public void Log(string mode, string message)
     {
-        if (LogFile == null)
+        if (_logFile == null)
         {
 
         }
@@ -49,7 +54,7 @@ public class ModConfig(ModHelper modHelper,
         {
             lock (_logLock)
             {
-                using var sw = new StreamWriter(LogFile.BaseStream, LogFile.Encoding, 1024, true);
+                using var sw = new StreamWriter(_logFile.BaseStream, _logFile.Encoding, 1024, true);
                 sw.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {mode} - {message}");
                 // using 语句结束时自动调用 Dispose 和 Flush
             }
