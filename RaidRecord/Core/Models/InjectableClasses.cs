@@ -10,7 +10,7 @@ namespace RaidRecord.Core.Models;
 [Injectable]
 public class InjectableClasses(
     JsonUtil jsonUtil,
-    RecordCacheManager recordCacheManager,
+    RecordManager recordCacheManager,
     LocalizationManager localizationManager,
     ProfileHelper profileHelper,
     ItemHelper itemHelper,
@@ -19,7 +19,7 @@ public class InjectableClasses(
 )
 {
     public JsonUtil? JsonUtil { get; set; } = jsonUtil;
-    public RecordCacheManager? RecordCacheManager { get; set; } = recordCacheManager;
+    public RecordManager? RecordManager { get; set; } = recordCacheManager;
     public LocalizationManager? LocalizationManager { get; set; } = localizationManager;
     public ProfileHelper? ProfileHelper { get; set; } = profileHelper;
     public ItemHelper? ItemHelper { get; set; } = itemHelper;
@@ -29,7 +29,7 @@ public class InjectableClasses(
     public bool IsValid()
     {
         return JsonUtil != null
-               && RecordCacheManager != null
+               && RecordManager != null
                && LocalizationManager != null
                && ProfileHelper != null
                && ItemHelper != null

@@ -13,8 +13,15 @@ using SPTarkov.Server.Core.Utils;
 
 namespace RaidRecord.Core.Systems;
 
+/// <summary>
+/// 管理每个账户的战绩数据
+/// <br />
+/// 用于加载, 保存, 获取账户战绩数据
+/// <br />
+/// 提供获取PmcData的辅助方法
+/// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
-public class RecordCacheManager(
+public class RecordManager(
     LocalizationManager localManager,
     JsonUtil jsonUtil,
     ModConfig modConfig,
@@ -42,7 +49,7 @@ public class RecordCacheManager(
         HashSet<MongoId> accounts = profiles.Keys.ToHashSet();
         _accountIds = accounts;
         // 更新Pmc/Scav id 到账户id的映射
-        string msg = localManager.GetText("RecordCacheManager-Debug.从SPT加载账户数据.标题");
+        string msg = localManager.GetText("RecordManager-Debug.从SPT加载账户数据.标题");
         // string msg = "从SPT加载账户数据: ";
         foreach (MongoId accountId in accounts)
         {
@@ -52,7 +59,7 @@ public class RecordCacheManager(
             if (pmcId is not null) _playerId2Account[pmcId.Value] = accountId;
             if (scavId is not null) _playerId2Account[scavId.Value] = accountId;
             // msg += $"\n\tAccount: {accountId}, PmcId: {pmcId}, ScavId: {scavId}";
-            msg += localManager.GetText("RecordCacheManager-Debug.从SPT加载账户数据.内容", new
+            msg += localManager.GetText("RecordManager-Debug.从SPT加载账户数据.内容", new
             {
                 Account = accountId,
                 PmcId = pmcId,
@@ -116,7 +123,7 @@ public class RecordCacheManager(
                 var data = jsonUtil.DeserializeFromFile<List<RaidDataWrapper>>(file);
                 if (data == null) throw new Exception($"反序列化文件{file}时获取不到数据");
                 MongoId account = _playerId2Account[fileBaseName];
-                _eftCombatRecords.Add(account, new EFTCombatRecord(account, data, null));
+                _eftCombatRecords.Add(account, new EFTCombatRecord(account, data));
                 // 重命名文件, 避免重复迁移
                 string newFile = file.Replace(fileBaseName, account.ToString());
                 modConfig.Info($"正在将旧数据库文件{file}迁移为新版本格式: {newFile}");
@@ -250,7 +257,7 @@ public class RecordCacheManager(
                 throw new Exception($"创建记录时未找到玩家{playerId}的账户Id, 请确保已存在过该玩家账户的记录");
             }
             EFTCombatRecord records = GetRecord(account.Value);
-            // Console.WriteLine($"DEBUG RecordCacheManager.CreateRecord > 玩家{playerId}的记录records为{records}, {records?.Count}条");
+            // Console.WriteLine($"DEBUG RecordManager.CreateRecord > 玩家{playerId}的记录records为{records}, {records?.Count}条");
             // 检查 records 是否为 null
             if (records == null)
             {
@@ -264,12 +271,12 @@ public class RecordCacheManager(
             }
             records.InfoRecordCache = wrapper;
             wrapper.Info = new RaidInfo();
-            // Console.WriteLine($"DEBUG RecordCacheManager.CreateRecord > 返回值: {wrapper}, Info: {wrapper.Info}, Archive:  {wrapper.Archive}");
+            // Console.WriteLine($"DEBUG RecordManager.CreateRecord > 返回值: {wrapper}, Info: {wrapper.Info}, Archive:  {wrapper.Archive}");
             return wrapper;
         }
         catch (Exception e)
         {
-            Console.WriteLine($"RecordCacheManager.CreateRecord: {e.Message}\nstack: {e.StackTrace}");
+            Console.WriteLine($"RecordManager.CreateRecord: {e.Message}\nstack: {e.StackTrace}");
             modConfig.LogError(e, "RaidRecordManager.CreateRecord.try-catch", "创建记录实例时出错");
             throw;
         }

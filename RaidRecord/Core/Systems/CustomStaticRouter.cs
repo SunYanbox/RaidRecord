@@ -85,14 +85,14 @@ public class CustomStaticRouter: StaticRouter
             MongoId? notSurePlayerId = pmcData.Id;
             if (notSurePlayerId == null) throw new Exception($"获取不到来自session: {sessionId}的玩家ID数据pmcData.Id");
             MongoId playerId = notSurePlayerId.Value;
-            MongoId? account = _injectableClasses.RecordCacheManager!.GetAccount(sessionId);
+            MongoId? account = _injectableClasses.RecordManager!.GetAccount(sessionId);
             ModConfig? logger = _injectableClasses.ModConfig;
 
             List<string> errors = [];
 
-            if (_injectableClasses.RecordCacheManager == null)
+            if (_injectableClasses.RecordManager == null)
             {
-                errors.Add("RecordCacheManager is null"
+                errors.Add("RecordManager is null"
                            + $"data type: {_injectableClasses.GetType()}"
                            + $"data properties: {string.Join(", ", _injectableClasses.GetType().GetProperties().Select(p => p.Name))}");
             }
@@ -113,7 +113,7 @@ public class CustomStaticRouter: StaticRouter
             {
                 logger.LogError(
                     new InvalidDataException(
-                        $"{nameof(_injectableClasses.RecordCacheManager)}" +
+                        $"{nameof(_injectableClasses.RecordManager)}" +
                         $"or {nameof(playerId)}"
                     ),
                     "CustomStaticRouter.HandleRaidStart",
@@ -122,9 +122,9 @@ public class CustomStaticRouter: StaticRouter
             }
 
             // 归档已有玩家对局缓存
-            _injectableClasses.RecordCacheManager!.ZipAccount(playerId);
+            _injectableClasses.RecordManager!.ZipAccount(playerId);
             // 创建新缓存
-            RaidDataWrapper? recordWrapper = _injectableClasses.RecordCacheManager.CreateRecord(playerId);
+            RaidDataWrapper? recordWrapper = _injectableClasses.RecordManager.CreateRecord(playerId);
 
             logger.Debug($"DEBUG CustomStaticRouter.HandleRaidStart > 获取的记录recordWrapper是否为空: {recordWrapper == null!}" +
                          $"\njson解析的对象response是否为空: {response == null!}" +
@@ -138,7 +138,7 @@ public class CustomStaticRouter: StaticRouter
             if (recordWrapper?.Info is not null)
                 _raidUtil?.HandleRaidStart(recordWrapper.Info, serverId, sessionId);
             // recordWrapper.Info.ItemsTakeIn = Utils.GetInventoryInfo(pmcData, data.ItemHelper);
-            _injectableClasses.RecordCacheManager.SaveEFTRecord(account!.Value);
+            _injectableClasses.RecordManager.SaveEFTRecord(account!.Value);
             logger.Info($"已记录对局开始: ServerId: {serverId}, SessionId: {sessionId}, 带入对局物品数量: {recordWrapper?.Info?.ItemsTakeIn.Count}");
         }
         catch (Exception e)
@@ -163,12 +163,12 @@ public class CustomStaticRouter: StaticRouter
 
             JsonUtil? jsonUtil = _injectableClasses.JsonUtil;
 
-            MongoId? accountId = _injectableClasses.RecordCacheManager!.GetAccount(playerId);
+            MongoId? accountId = _injectableClasses.RecordManager!.GetAccount(playerId);
 
             if (accountId == null)
                 throw new Exception($"创建记录时未找到玩家{playerId}的账户Id, 请确保已存在过该玩家账户的记录");
 
-            EFTCombatRecord records = _injectableClasses.RecordCacheManager!.GetRecord(accountId.Value);
+            EFTCombatRecord records = _injectableClasses.RecordManager!.GetRecord(accountId.Value);
 
             if (records.Records.Count == 0 || records.InfoRecordCache == null)
                 throw new Exception("游戏结束时没有发现任何已经开始的对局数据");
@@ -181,8 +181,8 @@ public class CustomStaticRouter: StaticRouter
 
             int itemsTakeOutCount = records.InfoRecordCache.Info?.ItemsTakeOut.Count ?? 0;
 
-            _injectableClasses.RecordCacheManager.ZipAccount(playerId);
-            _injectableClasses.RecordCacheManager.SaveEFTRecord(accountId.Value);
+            _injectableClasses.RecordManager.ZipAccount(playerId);
+            _injectableClasses.RecordManager.SaveEFTRecord(accountId.Value);
             _injectableClasses.ModConfig?.Info($"已记录对局结束: {request.ServerId}, "
                                                + $"Session: {jsonUtil?.Serialize(sessionId)}, "
                                                + $"Results: {{ Result: {request.Results!.Result}, ExitName: {request.Results.ExitName}, PlayTime: {request.Results.PlayTime} }}, " // EndRaidResult对象太大了

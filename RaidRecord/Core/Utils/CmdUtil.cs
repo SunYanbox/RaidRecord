@@ -16,13 +16,13 @@ namespace RaidRecord.Core.Utils;
 public class CmdUtil(
     ProfileHelper profileHelper,
     LocalizationManager localizationManager,
-    RecordCacheManager recordCacheManager,
+    RecordManager recordCacheManager,
     ModConfig modConfig
 )
 {
     #region 提供依赖给工具调用 | 只放大部分命令需要的依赖
     public readonly LocalizationManager? LocalizationManager = localizationManager;
-    public readonly RecordCacheManager? RecordCacheManager = recordCacheManager;
+    public readonly RecordManager? RecordManager = recordCacheManager;
     public readonly ModConfig? ModConfig = modConfig;
     public readonly ParaInfoBuilder ParaInfoBuilder = new();
     #endregion
@@ -123,7 +123,7 @@ public class CmdUtil(
 
     public MongoId? GetAccountBySession(string sessionId)
     {
-        return RecordCacheManager!.GetAccount(profileHelper.GetPmcProfile(sessionId)?.Id ?? new MongoId());
+        return RecordManager!.GetAccount(profileHelper.GetPmcProfile(sessionId)?.Id ?? new MongoId());
     }
 
     public List<RaidArchive> GetArchivesBySession(string sessionId)
@@ -131,7 +131,7 @@ public class CmdUtil(
         List<RaidArchive> result = [];
         MongoId? account = GetAccountBySession(sessionId);
         if (account == null) return result;
-        EFTCombatRecord records = RecordCacheManager!.GetRecord(account.Value);
+        EFTCombatRecord records = RecordManager!.GetRecord(account.Value);
         foreach (RaidDataWrapper record in records.Records)
         {
             if (record.IsArchive)

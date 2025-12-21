@@ -1,18 +1,4 @@
 {
-  "translations": {
-    "SURVIVED": "Survived",
-    "KILLED": "Killed",
-    "LEFT": "Left",
-    "RUNNER": "Runner",
-    "MISSINGINACTION": "Missing in action",
-    "TRANSIT": "Transit"
-  },
-  "serverMessage": {
-    "Localization-已加载语言信息": "Languages loaded: {{AvailableLanguages}}, Current language: {{CurrentLanguage}}",
-    "Localization-Warn.撤离点名称不存在": "Warning: Extraction point {{ExitName}} does not exist in the SPT localization dictionary\n",
-    "Localization-Warn.重复添加撤离点": "Warning: Extraction point {{ExitName}} already exists in map {{MapName}} data, addition failed\n",
-    "Localization-Info.撤离点数据加载完毕": "Extraction point data loading complete (Total {{MapCount}} maps, {{ExitCount}} extraction points)"
-  },
   "armorZone": {
     "Chest": "Thorax",
     "Head": "Head",
@@ -70,5 +56,22 @@
     "pmcBot": "PMC Bot",
     "pmcBEAR": "PMC Bear",
     "pmcUSER": "PMC Usec"
+  },
+  "serverMessage": {
+    "Localization-已加载语言信息": "Languages loaded: {{AvailableLanguages}}, Current language: {{CurrentLanguage}}",
+    "Localization-Warn.撤离点名称不存在": "Warning: Extraction point {{ExitName}} does not exist in the SPT localization dictionary\n",
+    "Localization-Warn.重复添加撤离点": "Warning: Extraction point {{ExitName}} already exists in map {{MapName}} data, addition failed\n",
+    "Localization-Info.撤离点数据加载完毕": "Extraction point data loading complete (Total {{MapCount}} maps, {{ExitCount}} extraction points)",
+    "MainMod-Info.成功注册ChatBot": "Successfully registered ChatBot: {{ChatBotId}}",
+    "RecordManager-Debug.从SPT加载账户数据.标题": "Loading account data from SPT: ",
+    "RecordManager-Debug.从SPT加载账户数据.内容": "\n\tAccount ID: {{Account}}, PMC ID: {{PmcId}}, Scav ID: {{ScavId}}"
+  },
+  "translations": {
+    "SURVIVED": "Survived",
+    "KILLED": "Killed",
+    "LEFT": "Left",
+    "RUNNER": "Runner",
+    "MISSINGINACTION": "Missing in action",
+    "TRANSIT": "Transit"
   }
 }

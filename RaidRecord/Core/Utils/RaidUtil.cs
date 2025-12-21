@@ -14,7 +14,7 @@ namespace RaidRecord.Core.Utils;
 public class RaidUtil(
     ItemHelper itemHelper,
     ProfileHelper profileHelper,
-    RecordCacheManager recordCacheManager)
+    RecordManager recordCacheManager)
 {
     /// <summary>
     /// 根据开局请求初始化数据

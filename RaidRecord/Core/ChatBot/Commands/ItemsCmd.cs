@@ -49,7 +49,7 @@ public class ItemsCmd: CommandBase
         string serverId = archive.ServerId;
         string playerId = archive.PlayerId;
 
-        PmcData playerData = _cmdUtil.RecordCacheManager!.GetPmcDataByPlayerId(playerId);
+        PmcData playerData = _cmdUtil.RecordManager!.GetPmcDataByPlayerId(playerId);
 
         // 本次对局元数据
         string timeString = _cmdUtil.DateFormatterFull(archive.CreateTime);
