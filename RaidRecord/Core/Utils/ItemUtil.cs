@@ -1,3 +1,5 @@
+using RaidRecord.Core.Systems;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
@@ -6,57 +8,29 @@ using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 
 namespace RaidRecord.Core.Utils;
 
-public static class ItemUtil
+[Injectable(InjectionType.Singleton)]
+public class ItemUtil(ItemHelper itemHelper, PriceSystem priceSystem)
 {
     /// <summary>
-    /// 获取物品价值(排除默认物品栏的容器, 如安全箱)
+    /// 获取物资列表内所有物资的总价值(求和后再转long, 降低误差)
     /// </summary>
-    public static long GetItemValue(Item item, ItemHelper itemHelper)
+    public long GetItemsValueAll(Item[] items)
     {
-        // TODO: 更完善的无效物品判断
-        // 刀, 安全箱(安全箱不能用parentId, 因为那个是所有容器的基类), 口袋可能很贵, 会影响入场价值
-        if (item.SlotId is "SecuredContainer" or "Scabbard" or "Dogtag") return 0;
-        // 父类是口袋的所有口袋
-        HashSet<string> parentIds =
-        [
-            "557596e64bdc2dc2118b4571" // 口袋基类
-        ];
-        if (parentIds.Contains(item.ParentId ?? "")) return 0;
-
-        double? price = itemHelper.GetItemPrice(item.Template);
-        if (price == null)
-        {
-            Console.WriteLine($"[RaidRecord] Warning: {item.Template}没有价格");
-            return 0;
-        }
-        // Console.WriteLine($"\t{item.Template}价格: {price.Value} "
-        //                   + $"修正: {itemHelper.GetItemQualityModifier(item)} "
-        //                   + $"返回值: {Convert.ToInt64(Math.Max(0.0, itemHelper.GetItemQualityModifier(item) * price.Value))}");
-        // 修复了错误计算护甲值为0的物品的价值的问题
-        return Convert.ToInt64(Math.Max(0.0, itemHelper.GetItemQualityModifier(item) * price.Value));
-    }
-
-    /// <summary>
-    /// 获取物资列表内所有物资的总价值
-    /// </summary>
-    public static long GetItemsValueAll(Item[] items, ItemHelper itemHelper)
-    {
-        long value = 0;
+        double value = 0;
         foreach (Item item in items.Where(i => i.ParentId != "68e2c9a23d4d3dc9e403545f"))
         {
-            value += GetItemValue(item, itemHelper);
+            value += priceSystem.GetItemValue(item);
         }
-        return value;
+        return Convert.ToInt64(value);
     }
 
     /// <summary>
     /// 计算库存inventory中所有id处于filter中物品价格
     /// </summary>
-    public static long CalculateInventoryValue(Dictionary<MongoId, Item> inventory, MongoId[] filter, ItemHelper itemHelper)
+    public long CalculateInventoryValue(Dictionary<MongoId, Item> inventory, MongoId[] filter)
     {
         return GetItemsValueAll(
-            inventory.Values.Where(x => filter.Contains(x.Id)).ToArray(),
-            itemHelper);
+            inventory.Values.Where(x => filter.Contains(x.Id)).ToArray());
     }
 
     /// <summary>
@@ -64,12 +38,11 @@ public static class ItemUtil
     /// </summary>
     /// <param name="items">物品列表</param>
     /// <param name="baseClasses">基类列表</param>
-    /// <param name="itemHelper">物品助手</param>
     /// <returns>物品价值</returns>
-    public static long GetItemsValueWithBaseClasses(Item[] items, IEnumerable<MongoId> baseClasses, ItemHelper itemHelper)
+    public long GetItemsValueWithBaseClasses(Item[] items, IEnumerable<MongoId> baseClasses)
     {
         Item[] filteredItems = items.Where(x => itemHelper.IsOfBaseclasses(x.Template, baseClasses)).ToArray();
-        return Convert.ToInt64(GetItemsValueAll(filteredItems, itemHelper));
+        return Convert.ToInt64(GetItemsValueAll(filteredItems));
     }
 
     /// <summary>
@@ -78,7 +51,7 @@ public static class ItemUtil
     /// <param name="desiredContainerSlotId">所希望的容器槽ID</param>
     /// <param name="items">物品列表</param>
     /// <returns>指定容器槽内的所有物品</returns>
-    public static Item[] GetAllItemsInContainer(string desiredContainerSlotId, Item[] items)
+    public Item[] GetAllItemsInContainer(string desiredContainerSlotId, Item[] items)
     {
         List<Item> containerItems = [];
         var pushTag = new HashSet<string>();
@@ -118,7 +91,7 @@ public static class ItemUtil
     /// <summary>
     /// 根据进入/离开突袭前后的仓库, 返回所有物品
     /// </summary>
-    public static Dictionary<MongoId, Item> GetInventoryInfo(PmcData pmcData, ItemHelper itemHelper)
+    public Dictionary<MongoId, Item> GetInventoryInfo(PmcData pmcData)
     {
         var result = new Dictionary<MongoId, Item>();
         if (pmcData.Inventory == null || pmcData.Inventory.Equipment == null || pmcData.Inventory.Items == null) return result;

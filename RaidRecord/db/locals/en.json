@@ -74,6 +74,7 @@
     "Localization-Warn.重复添加撤离点": "Warning: Extraction point {{ExitName}} already exists in map {{MapName}} data, addition failed\n",
     "Localization-已加载语言信息": "Languages loaded: {{AvailableLanguages}}, Current language: {{CurrentLanguage}}",
     "MainMod-Info.成功注册ChatBot": "Successfully registered ChatBot: {{ChatBotId}}",
+    "PriceSystem-Warn.ItemHelper.GetItemPrice.无法获取到价格": "Unable to obtain the handbook/prices.json price for {{ItemId}}",
     "RecordManager-Debug.从SPT加载账户数据.内容": "\n\tAccount ID: {{Account}}, PMC ID: {{PmcId}}, Scav ID: {{ScavId}}",
     "RecordManager-Debug.从SPT加载账户数据.标题": "Loading account data from SPT: ",
     "RecordManager-Error.保存记录数据库时账户Id未找到": "Account ID {{AccountId}} not found when saving record database, please ensure the account record has been saved before",

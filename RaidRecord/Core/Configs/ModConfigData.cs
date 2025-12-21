@@ -20,4 +20,9 @@ public record ModConfigData
     /// </summary>
     [JsonPropertyName("autoUnloadOtherLanguages")]
     public bool AutoUnloadOtherLanguages { get; set; } = true;
+    /// <summary>
+    /// 价格缓存更新的最低时间
+    /// </summary>
+    [JsonPropertyName("priceCacheUpdateMinTime")]
+    public long PriceCacheUpdateMinTime { get; set; } = 6 * 60 * 1000;
 }

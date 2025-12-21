@@ -12,7 +12,7 @@ using SPTarkov.Server.Core.Models.Enums;
 
 namespace RaidRecord.Core.Utils;
 
-[Injectable]
+[Injectable(InjectionType.Singleton)]
 public class CmdUtil(
     ProfileHelper profileHelper,
     LocalizationManager localizationManager,

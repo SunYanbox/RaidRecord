@@ -10,8 +10,10 @@ using SPTarkov.Server.Core.Models.Eft.Match;
 
 namespace RaidRecord.Core.Utils;
 
-[Injectable]
+[Injectable(InjectionType.Singleton)]
 public class RaidUtil(
+    ItemUtil itemUtil,
+    PriceSystem priceSystem,
     ItemHelper itemHelper,
     ProfileHelper profileHelper,
     RecordManager recordCacheManager)
@@ -35,7 +37,7 @@ public class RaidUtil(
         };
         raidInfo.PlayerId = (isPmc ? pmcProfile?.Id : scavProfile?.Id) ?? throw new Exception("获取到的PMC或SCAV存档的Id为null; 这可能是session已失效, 存档文件损坏或者存档数据库被意外修改!!!");
         raidInfo.CreateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
-        raidInfo.ItemsTakeIn = ItemUtil.GetInventoryInfo(raidProfile, itemHelper);
+        raidInfo.ItemsTakeIn = itemUtil.GetInventoryInfo(raidProfile);
         // Console.WriteLine($"获取到的物品:");
         // foreach (var item in ItemsTakeIn.Values)
         // {
@@ -43,9 +45,9 @@ public class RaidUtil(
         // }
 
         Item[] itemsTakeIn = raidInfo.ItemsTakeIn.Values.ToArray();
-        raidInfo.PreRaidValue = ItemUtil.GetItemsValueAll(itemsTakeIn, itemHelper);
-        raidInfo.EquipmentValue = ItemUtil.GetItemsValueWithBaseClasses(itemsTakeIn, Equipments, itemHelper);
-        raidInfo.SecuredValue = ItemUtil.GetItemsValueAll(ItemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn), itemHelper);
+        raidInfo.PreRaidValue = itemUtil.GetItemsValueAll(itemsTakeIn);
+        raidInfo.EquipmentValue = itemUtil.GetItemsValueWithBaseClasses(itemsTakeIn, Equipments);
+        raidInfo.SecuredValue = itemUtil.GetItemsValueAll(itemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn));
         // Console.WriteLine($"itemsTakeIn.Length: {itemsTakeIn.Length}\n\tPreRaidValue: {PreRaidValue}\n\tEquipmentValue: {EquipmentValue}\n\tSecuredValue: {SecuredValue}");
     }
 
@@ -76,14 +78,14 @@ public class RaidUtil(
 
         if (isPmc)
         {
-            raidInfo.ItemsTakeOut = ItemUtil.GetInventoryInfo(pmcProfile, itemHelper);
+            raidInfo.ItemsTakeOut = itemUtil.GetInventoryInfo(pmcProfile);
         }
         else
         {
             // Scav模式
             PmcData postRaidProfile = request.Results.Profile!;
 
-            raidInfo.ItemsTakeOut = ItemUtil.GetInventoryInfo(postRaidProfile, itemHelper);
+            raidInfo.ItemsTakeOut = itemUtil.GetInventoryInfo(postRaidProfile);
 
             if (isDead)
             {
@@ -189,16 +191,18 @@ public class RaidUtil(
             raidInfo.ItemsTakeOut
         );
         // 收益, 战损记录
-        raidInfo.GrossProfit = ItemUtil.CalculateInventoryValue(raidInfo.ItemsTakeOut, raidInfo.Addition.ToArray(), itemHelper);
-        raidInfo.CombatLosses = ItemUtil.CalculateInventoryValue(raidInfo.ItemsTakeIn, raidInfo.Remove.ToArray(), itemHelper);
+        raidInfo.GrossProfit = itemUtil.CalculateInventoryValue(raidInfo.ItemsTakeOut, raidInfo.Addition.ToArray());
+        raidInfo.CombatLosses = itemUtil.CalculateInventoryValue(raidInfo.ItemsTakeIn, raidInfo.Remove.ToArray());
         foreach ((MongoId itemId, Item oldItem) in DataUtil.GetSubDict(raidInfo.ItemsTakeIn, raidInfo.Changed))
         {
-            long oldValue = ItemUtil.GetItemValue(oldItem, itemHelper);
+            double oldValue = priceSystem.GetItemValue(oldItem);
             if (raidInfo.ItemsTakeOut.TryGetValue(itemId, out Item? newItem))
             {
-                long newValue = ItemUtil.GetItemValue(newItem, itemHelper);
-                if (newValue > oldValue) raidInfo.GrossProfit += newValue - oldValue;
-                else raidInfo.CombatLosses += oldValue - newValue;
+                double newValue = priceSystem.GetItemValue(newItem);
+                if (Math.Abs(newValue - oldValue) > Constants.ArchiveCheckJudgeError) 
+                    raidInfo.GrossProfit += Convert.ToInt64(newValue - oldValue);
+                else 
+                    raidInfo.CombatLosses += Convert.ToInt64(oldValue - newValue);
             }
             else
             {

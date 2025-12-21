@@ -74,6 +74,7 @@
     "Localization-Warn.重复添加撤离点": "警告: 地图 {{MapName}} 的数据中已存在撤离点 {{ExitName}}，添加失败\n",
     "Localization-已加载语言信息": "已加载语言: {{AvailableLanguages}}, 当前语言: {{CurrentLanguage}}",
     "MainMod-Info.成功注册ChatBot": "成功注册ChatBot: {{ChatBotId}}",
+    "PriceSystem-Warn.ItemHelper.GetItemPrice.无法获取到价格": "无法获取到{{ItemId}}的手册/prices.json价格",
     "RecordManager-Debug.从SPT加载账户数据.内容": "\n\t账户Id: {{Account}}, PmcId: {{PmcId}}, ScavId: {{ScavId}}",
     "RecordManager-Debug.从SPT加载账户数据.标题": "从SPT加载账户数据: ",
     "RecordManager-Error.保存记录数据库时账户Id未找到": "保存记录数据库时账户Id: {{AccountId}}未找到, 请确保已保存过该账户的记录",
