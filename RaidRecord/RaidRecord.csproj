@@ -20,9 +20,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="db\**">
+        <DatabasePath Include="db\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+        </DatabasePath>
     </ItemGroup>
 
     <PropertyGroup>
@@ -39,8 +39,8 @@
       -->
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(BeforeZipPath)"/>
-        <Copy SourceFiles="@(Content)"
-              DestinationFiles="@(Content->'$(BeforeZipPath)%(RelativeDir)%(Filename)%(Extension)')"
+        <Copy SourceFiles="@(DatabasePath)"
+              DestinationFiles="@(DatabasePath->'$(BeforeZipPath)%(RelativeDir)%(Filename)%(Extension)')"
               Condition="'%(Extension)' != ''"/>
         <Exec WorkingDirectory="$(OutputPath)" Command="$(ZipToolPath) a -tzip -mx=9 $(AssemblyName)-$(Version).zip SPT\"/>
         <Exec WorkingDirectory="$(OutputPath)" Command="$(ZipToolPath) a -tzip -mx=9 $(AssemblyName)-$(Version).7z SPT\"/>
@@ -62,6 +62,9 @@
             <FilesToCopy Include="$(OutputPath)$(TargetName).dll"/>
             <FilesToCopy Include="$(OutputPath)$(TargetName).pdb"/>
         </ItemGroup>
+        <Copy SourceFiles="@(DatabasePath)"
+              DestinationFiles="@(DatabasePath->'$(SPTPath)$(ModsDirectoryPath)%(RelativeDir)%(Filename)%(Extension)')"
+              Condition="'%(Extension)' != ''"/>
         <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(SPTPath)$(ModsDirectoryPath)" ContinueOnError="false"/>
         <Message Text="所有模组文件拷贝完成"/>
     </Target>
