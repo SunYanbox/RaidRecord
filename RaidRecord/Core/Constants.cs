@@ -1,5 +1,3 @@
-using SPTarkov.Server.Core.Models.Enums;
-
 namespace RaidRecord.Core;
 
 /// <summary>

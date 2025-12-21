@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using SPTarkov.Common.Extensions;
 // ReSharper disable CollectionNeverUpdated.Global
 // ReSharper disable once ClassNeverInstantiated.Global
 

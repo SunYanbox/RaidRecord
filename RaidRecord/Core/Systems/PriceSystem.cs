@@ -22,11 +22,13 @@ public class PriceSystem(
     ItemHelper itemHelper)
 {
     private readonly Dictionary<MongoId, PriceCache> _priceCache = new();
+
     /// <summary> 物品价值缓存 </summary>
     private class PriceCache
     {
         /// <summary> 物品价值 </summary>
         public double Price;
+
         /// <summary> 物品价值更新时间 / ms </summary>
         public long UpdateTime;
     }
@@ -40,10 +42,10 @@ public class PriceSystem(
         modConfig.Warn(localizationManager.GetText(
             "PriceSystem-Warn.ItemHelper.GetItemPrice.无法获取到价格",
             new { ItemId = itemId }));
-        
+
         return 0;
     }
-    
+
     /// <summary>
     /// 获取物品最新价值 | 报价中剔除异常值的三均值
     /// <br />
@@ -55,10 +57,13 @@ public class PriceSystem(
         IEnumerable<RagfairOffer> ragfairOffers = offers as RagfairOffer[] ?? (offers ?? []).ToArray();
         if (offers == null || !ragfairOffers.Any()) return GetItemPrice(itemId);
         // 筛选可计数的报价
-        List<RagfairOffer> countableOffers = [.. ragfairOffers
-            .Where(x => x.Requirements!.All(req => paymentHelper.IsMoneyTpl(req.TemplateId)) // 仅货币需求
-                        && !x.IsTraderOffer()    // 排除商人报价
-                        && !x.IsPlayerOffer())]; // 排除玩家报价
+        List<RagfairOffer> countableOffers =
+        [
+            .. ragfairOffers
+                .Where(x => x.Requirements!.All(req => paymentHelper.IsMoneyTpl(req.TemplateId)) // 仅货币需求
+                            && !x.IsTraderOffer() // 排除商人报价
+                            && !x.IsPlayerOffer())
+        ]; // 排除玩家报价
 
         if (countableOffers.Count <= 0) return GetItemPrice(itemId);
         List<double> offerPrices = [];
@@ -69,7 +74,8 @@ public class PriceSystem(
             // 计算单件物品数量
             double itemCount = ragfairOffer.SellInOnePiece.GetValueOrDefault(false)
                 ? firstItem.Upd?.StackObjectsCount
-                  ?? 1 : 1;
+                  ?? 1
+                : 1;
 
             // 计算单件价格
             double? perItemPrice = ragfairOffer.RequirementsCost / itemCount;
@@ -81,7 +87,7 @@ public class PriceSystem(
 
         return ProcessWithTrimmedTriMean(offerPrices.ToArray());
     }
-    
+
     public double GetItemValue(MongoId itemId)
     {
         long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -89,7 +95,7 @@ public class PriceSystem(
         {
             if (now - priceCache.UpdateTime <= modConfig.Configs.PriceCacheUpdateMinTime)
                 return priceCache.Price;
-            
+
             priceCache.Price = GetNewestPrice(itemId);
             priceCache.UpdateTime = now;
             return priceCache.Price;
@@ -100,12 +106,12 @@ public class PriceSystem(
             Price = GetNewestPrice(itemId),
             UpdateTime = now
         };
-        
+
         _priceCache.Add(itemId, newPriceCache);
 
         return newPriceCache.Price;
     }
-    
+
     /// <summary>
     /// 获取物品价值(排除默认物品栏的容器, 如安全箱)
     /// </summary>
@@ -126,7 +132,7 @@ public class PriceSystem(
         // 修复了错误计算护甲值为0的物品的价值的问题
         return Convert.ToInt64(Math.Max(0.0, itemHelper.GetItemQualityModifier(item) * price));
     }
-    
+
     /// <summary>
     /// 去除异常值, 并计算三均值
     /// </summary>
@@ -158,7 +164,7 @@ public class PriceSystem(
         double triMean = (newQ1 + 2 * newMedian + newQ3) / 4.0;
         return triMean;
     }
-    
+
     /// <summary>
     /// 辅助方法：计算任意分位数（0~1）
     /// </summary>

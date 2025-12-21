@@ -47,9 +47,9 @@ public class RaidRecordManagerChat(
         {
             modConfig.Error(
                 localizationManager.GetText(
-                        "Chatbot-Error.指令处理失败",
-                        new { SessionId = sessionId }
-                    ), e);
+                    "Chatbot-Error.指令处理失败",
+                    new { SessionId = sessionId }
+                ), e);
             // modConfig.Error($"用户{sessionId}输入的指令处理失败: ", e);
             SendMessage(sessionId, localizationManager.GetText(
                 "Chatbot-Mail.发送指令处理失败信息",
@@ -76,7 +76,7 @@ public class RaidRecordManagerChat(
             modConfig.Warn(localizationManager.GetText(
                 "Chatbot-Warn.无法从DI解析命令实例",
                 new { CommandType = typeof(T).Name }
-                ));
+            ));
             // modConfig.Warn($"{typeof(T).Name} 无法从IServiceProvider获取");
         }
     }
@@ -95,7 +95,7 @@ public class RaidRecordManagerChat(
             modConfig.Info(localizationManager.GetText(
                 "Chatbot-Info.命令初始化完毕",
                 new { WhichCommandsRegister = string.Join(", ", Commands.Keys.ToArray()) }
-                ));
+            ));
             // logger.Info($"[RaidRecord] 对局战绩管理命令({string.Join(", ", Commands.Keys.ToArray())})已注册");
         }
         catch (Exception e)
@@ -165,7 +165,7 @@ public class RaidRecordManagerChat(
             modConfig.Error(localizationManager.GetText(
                 "Chatbot-Error.命令执行失败",
                 new { Command = iCmd.GetType().Name, ErrorMessage = e.Message }
-                ), e);
+            ), e);
             modConfig.Error($"RaidRecordManagerChat.HandleCommand中{iCmd.GetType().Name}执行时出现错误: ", e);
         }
         // 垃圾回收 低效 未来再优化

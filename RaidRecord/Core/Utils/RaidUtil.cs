@@ -199,9 +199,9 @@ public class RaidUtil(
             if (raidInfo.ItemsTakeOut.TryGetValue(itemId, out Item? newItem))
             {
                 double newValue = priceSystem.GetItemValue(newItem);
-                if (Math.Abs(newValue - oldValue) > Constants.ArchiveCheckJudgeError) 
+                if (Math.Abs(newValue - oldValue) > Constants.ArchiveCheckJudgeError)
                     raidInfo.GrossProfit += Convert.ToInt64(newValue - oldValue);
-                else 
+                else
                     raidInfo.CombatLosses += Convert.ToInt64(oldValue - newValue);
             }
             else

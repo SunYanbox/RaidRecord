@@ -27,6 +27,92 @@ public class CmdUtil(
     public readonly ParaInfoBuilder ParaInfoBuilder = new();
     #endregion
 
+    public string GetPlayerGroupOfServerId(string serverId)
+    {
+        var group = PlayerGroup.Pmc; // 默认
+        if (!string.IsNullOrEmpty(serverId))
+        {
+            string[] parts = serverId.Split('.');
+            if (parts.Length > 1)
+            {
+                string side = parts[1].ToLowerInvariant();
+                group = side.Contains("pmc") ? PlayerGroup.Pmc : PlayerGroup.Scav;
+            }
+        }
+        return group.ToString();
+    }
+
+    public string GetArchiveMetadata(RaidArchive archive)
+    {
+        string msg = "";
+        string serverId = archive.ServerId;
+        string playerId = archive.PlayerId;
+        string timeString = DateFormatterFull(archive.CreateTime);
+        string mapName = serverId[..serverId.IndexOf('.')].ToLower();
+        PmcData playerData = RecordManager!.GetPmcDataByPlayerId(playerId);
+
+        // "Record-元数据.Id与玩家信息": "{{TimeFormat}}} 对局ID: {{ServerId}}} 玩家信息: {{Nickname}}}(Level={{Level}}}, id={{PlayerId}}})"
+        msg += LocalizationManager!.GetText(
+            "Record-元数据.Id与玩家信息",
+            new
+            {
+                TimeFormat = timeString,
+                ServerId = serverId,
+                playerData.Info?.Nickname,
+                playerData.Info?.Level,
+                PlayerId = playerId
+            }
+        );
+        //"Record-元数据.地图与存活时间": "\n地图: {{MapName}}} 生存时间: {{PlayTime}}}",
+        msg += LocalizationManager!.GetText(
+            "Record-元数据.地图与存活时间",
+            new
+            {
+                MapName = mapName,
+                PlayTime = StringUtil.TimeString(archive.Results?.PlayTime ?? 0)
+            }
+        );
+        // "Record-元数据.入场信息": "\n入局战备: {{EquipmentValue}}}rub, 安全箱物资价值: {{SecuredValue}}}rub, 总带入价值: {{PreRaidValue}}}rub",
+        msg += LocalizationManager!.GetText(
+            "Record-元数据.入场信息",
+            new
+            {
+                EquipmentValue = (int)archive.EquipmentValue,
+                SecuredValue = (int)archive.SecuredValue,
+                PreRaidValue = (int)archive.PreRaidValue
+            }
+        );
+
+        // "Record-元数据.退出信息": "\n带出价值: {{GrossProfit}}}rub, 战损{{CombatLosses}}}rub, 净利润{{NetProfit}}rub",
+        msg += LocalizationManager!.GetText(
+            "Record-元数据.退出信息",
+            new
+            {
+                GrossProfit = (int)archive.GrossProfit,
+                CombatLosses = (int)archive.CombatLosses,
+                NetProfit = (int)(archive.GrossProfit - archive.CombatLosses)
+            }
+        );
+
+        string result = LocalizationManager.GetText("UnknownResult");
+
+        if (archive.Results?.Result != null)
+        {
+            result = LocalizationManager.GetText(archive.Results.Result.Value.ToString());
+        }
+        // "Record-元数据.对局结果": "\n对局结果: {{Result}}} 撤离点: {{ExitName}}} 游戏风格: {{SurvivorClass}}",
+        msg += LocalizationManager.GetText(
+            "Record-元数据.对局结果",
+            new
+            {
+                Result = result,
+                ExitName = LocalizationManager.GetExitName(mapName, archive.Results?.ExitName ?? LocalizationManager.GetText("Unknown")),
+                SurvivorClass = archive.EftStats?.SurvivorClass ?? LocalizationManager.GetText("Unknown")
+            }
+        );
+        return msg;
+    }
+
     /// <summary>
     /// 从解析的参数字典中获取指定类型的参数的值
     /// </summary>

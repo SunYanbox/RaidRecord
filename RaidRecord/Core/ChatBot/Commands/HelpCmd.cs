@@ -1,4 +1,5 @@
 using RaidRecord.Core.ChatBot.Models;
+using RaidRecord.Core.Locals;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 
@@ -8,12 +9,14 @@ namespace RaidRecord.Core.ChatBot.Commands;
 public class HelpCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
+    private readonly string _displayMessage;
 
-    public HelpCmd(CmdUtil cmdUtil)
+    public HelpCmd(CmdUtil cmdUtil, LocalizationManager local)
     {
         _cmdUtil = cmdUtil;
         Key = "help";
-        Desc = "获取所有命令的帮助信息, 使用方式: \n";
+        Desc = local.GetText("Cmd-Help.Desc");
+        _displayMessage = local.GetText("Cmd-Help.显示文本");
     }
 
     public override string Execute(Parametric parametric)
@@ -22,7 +25,7 @@ public class HelpCmd: CommandBase
         if (verify != null) return verify;
 
         // "帮助信息(参数需要按键值对写, 例如\"list index 1\"; 中括号表示可选参数; 指令与参数不区分大小写):"
-        string msg = "帮助信息(参数需要按键值对写, 例如\"list index 1\"; 中括号表示可选参数; 指令与参数不区分大小写):";
+        string msg = _displayMessage;
         if (parametric.ManagerChat == null)
         {
             _cmdUtil.ModConfig!.LogError(

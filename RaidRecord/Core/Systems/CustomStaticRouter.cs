@@ -99,9 +99,9 @@ public class CustomStaticRouter: StaticRouter
                     new
                     {
                         DataType = _injectableClasses.GetType(),
-                        DataProperties = _injectableClasses.GetType().GetProperties().Select(p => p.Name).ToList(),
+                        DataProperties = _injectableClasses.GetType().GetProperties().Select(p => p.Name).ToList()
                     }
-                    ));
+                ));
                 // errors.Add("RecordManager is null"
                 //            + $"data type: {_injectableClasses.GetType()}"
                 //            + $"data properties: {string.Join(", ", _injectableClasses.GetType().GetProperties().Select(p => p.Name))}");
@@ -112,13 +112,13 @@ public class CustomStaticRouter: StaticRouter
             }
             if (logger == null)
             {
-                Console.WriteLine("[RaidRecord] " 
+                Console.WriteLine("[RaidRecord] "
                                   + localizationManager.GetText(
                                       "CustomStaticRouter-Error.InjectableClasses未正确注入ModConfig属性"));
                 // Console.WriteLine("[RaidRecord] ModConfig未正确注入InjectableClasses");
                 if (errors.Count > 0)
                 {
-                    Console.WriteLine("[RaidRecord]" 
+                    Console.WriteLine("[RaidRecord]"
                                       + localizationManager
                                           .GetText("CustomStaticRouter-Error.对局开始.其他错误",
                                               new { Errors = string.Join(", ", errors) }));
@@ -224,8 +224,8 @@ public class CustomStaticRouter: StaticRouter
                         LocationTransit = jsonUtil?.Serialize(request.LocationTransit),
                         ItemsTakeOutCount = itemsTakeOutCount
                     }
-                    )
-                );
+                )
+            );
             // _injectableClasses.ModConfig?.Info($"已记录对局结束: {request.ServerId}, "
             //                                    + $"Session: {jsonUtil?.Serialize(sessionId)}, "
             //                                    + $"Results: {{ Result: {request.Results!.Result}, ExitName: {request.Results.ExitName}, PlayTime: {request.Results.PlayTime} }}, " // EndRaidResult对象太大了
