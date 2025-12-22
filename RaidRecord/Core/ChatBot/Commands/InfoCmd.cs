@@ -74,7 +74,7 @@ public class InfoCmd: CommandBase
                     "Cmd-Info.本局击杀信息",
                     new
                     {
-                        VictimTime = victim.Time,
+                        VictimTime = victim.Time?[..13],
                         WeaponName = weapon,
                         BodyPart = _cmdUtil.LocalizationManager.GetArmorZoneName(victim.BodyPart ?? ""),
                         VictimDistance = (int)(victim.Distance ?? 0),

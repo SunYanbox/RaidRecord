@@ -7,6 +7,7 @@ using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Enums;
 
@@ -20,6 +21,7 @@ public class CmdUtil(
     ModConfig modConfig
 )
 {
+    public readonly string[] HeadshotBodyPart = ["Head", "Ears", "Eyes"];
     #region 提供依赖给工具调用 | 只放大部分命令需要的依赖
     public readonly LocalizationManager? LocalizationManager = localizationManager;
     public readonly RecordManager? RecordManager = recordCacheManager;
@@ -27,7 +29,16 @@ public class CmdUtil(
     public readonly ParaInfoBuilder ParaInfoBuilder = new();
     #endregion
 
-    public string GetPlayerGroupOfServerId(string serverId)
+    /// <summary>
+    /// 判断命中区域是否为爆头击杀
+    /// </summary>
+    public bool IsBodyPartHeadshotKill(string? bodyPart)
+    {
+        return !string.IsNullOrEmpty(bodyPart) && HeadshotBodyPart.Any(bodyPart.Contains);
+
+    }
+
+    public static string GetPlayerGroupOfServerId(string serverId)
     {
         var group = PlayerGroup.Pmc; // 默认
         if (!string.IsNullOrEmpty(serverId))
@@ -51,7 +62,7 @@ public class CmdUtil(
         string mapName = serverId[..serverId.IndexOf('.')].ToLower();
         PmcData playerData = RecordManager!.GetPmcDataByPlayerId(playerId);
 
-        // "Record-元数据.Id与玩家信息": "{{TimeFormat}}} 对局ID: {{ServerId}}} 玩家信息: {{Nickname}}}(Level={{Level}}}, id={{PlayerId}}})"
+        // "Record-元数据.Id与玩家信息": "{{TimeFormat}} 对局ID: {{ServerId}} 玩家信息: {{Nickname}}(Level={{Level}}, id={{PlayerId}})"
         msg += LocalizationManager!.GetText(
             "Record-元数据.Id与玩家信息",
             new
@@ -63,16 +74,21 @@ public class CmdUtil(
                 PlayerId = playerId
             }
         );
-        //"Record-元数据.地图与存活时间": "\n地图: {{MapName}}} 生存时间: {{PlayTime}}}",
+        List<Victim> victims = archive.EftStats?.Victims?.ToList() ?? [];
+        int killCount = victims.Count;
+        int headshotKillCount = victims.Count(x => IsBodyPartHeadshotKill(x.BodyPart));
+        //"Record-元数据.地图与存活时间": "\n地图: {{MapName}} 生存时间: {{PlayTime}} 击杀数量: {{KillCount}} 爆头击杀率: {{HeadshotKillRate}}",
         msg += LocalizationManager!.GetText(
             "Record-元数据.地图与存活时间",
             new
             {
                 MapName = mapName,
-                PlayTime = StringUtil.TimeString(archive.Results?.PlayTime ?? 0)
+                PlayTime = StringUtil.TimeString(archive.Results?.PlayTime ?? 0),
+                KillCount = killCount,
+                HeadshotKillRate = killCount == 0 ? "N/A" : $"{headshotKillCount / Math.Max((double)killCount, 1):P2}"
             }
         );
-        // "Record-元数据.入场信息": "\n入局战备: {{EquipmentValue}}}rub, 安全箱物资价值: {{SecuredValue}}}rub, 总带入价值: {{PreRaidValue}}}rub",
+        // "Record-元数据.入场信息": "\n入局战备: {{EquipmentValue}}rub, 安全箱物资价值: {{SecuredValue}}rub, 总带入价值: {{PreRaidValue}}rub",
         msg += LocalizationManager!.GetText(
             "Record-元数据.入场信息",
             new
@@ -83,7 +99,7 @@ public class CmdUtil(
             }
         );
 
-        // "Record-元数据.退出信息": "\n带出价值: {{GrossProfit}}}rub, 战损{{CombatLosses}}}rub, 净利润{{NetProfit}}rub",
+        // "Record-元数据.退出信息": "\n带出价值: {{GrossProfit}}rub, 战损{{CombatLosses}}rub, 净利润{{NetProfit}}rub",
         msg += LocalizationManager!.GetText(
             "Record-元数据.退出信息",
             new
@@ -100,7 +116,7 @@ public class CmdUtil(
         {
             result = LocalizationManager.GetText(archive.Results.Result.Value.ToString());
         }
-        // "Record-元数据.对局结果": "\n对局结果: {{Result}}} 撤离点: {{ExitName}}} 游戏风格: {{SurvivorClass}}",
+        // "Record-元数据.对局结果": "\n对局结果: {{Result}} 撤离点: {{ExitName}} 游戏风格: {{SurvivorClass}}",
         msg += LocalizationManager.GetText(
             "Record-元数据.对局结果",
             new
