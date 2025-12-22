@@ -1,6 +1,7 @@
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Spt.Mod;
+#pragma warning disable CS8764 // 返回类型的为 Null 性与重写成员不匹配(可能是由于为 Null 性特性)。
 
 namespace RaidRecord.Core;
 

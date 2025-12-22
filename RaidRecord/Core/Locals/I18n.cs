@@ -17,15 +17,15 @@ namespace RaidRecord.Core.Locals;
 /// 初始化本地数据
 /// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
-public class LocalizationManager(
-    ISptLogger<LocalizationManager> logger,
+public class I18N(
+    ISptLogger<I18N> logger,
     ModHelper modHelper,
     ModConfig modConfig,
     DatabaseServer databaseServer): IOnLoad
 {
     public readonly Dictionary<string, string> MapNames = new();
     public readonly Dictionary<string, Dictionary<string, string>> ExitNames = new();
-    private readonly Dictionary<string, LocalizationData> _allLocalizations = new();
+    private readonly Dictionary<string, I18NData> _allTrans = new();
 
     private string _currentLanguage = "ch"; // 默认语言
 
@@ -70,7 +70,7 @@ public class LocalizationManager(
                 // logger.Info($"> {fileName}成功加载");
                 try
                 {
-                    _allLocalizations[fileName] = modHelper.GetJsonDataFromFile<LocalizationData>(localsDir, $"{fileName}.json");
+                    _allTrans[fileName] = modHelper.GetJsonDataFromFile<I18NData>(localsDir, $"{fileName}.json");
                 }
                 catch (Exception e)
                 {
@@ -78,7 +78,7 @@ public class LocalizationManager(
                 }
             }
             // 从这里加载完毕
-            modConfig.Info(GetText("Localization-已加载语言信息", new
+            modConfig.Info(GetText("I18N-Info.已加载语言信息", new
             {
                 AvailableLanguages = string.Join(", ", AvailableLanguages),
                 CurrentLanguage
@@ -97,17 +97,17 @@ public class LocalizationManager(
         if (modConfig.Configs.AutoUnloadOtherLanguages)
         {
             // 卸载不用的语言内存
-            foreach (string language in _allLocalizations.Keys.ToArray())
+            foreach (string language in _allTrans.Keys.ToArray())
             {
                 if (language != "ch" && language != CurrentLanguage)
                 {
-                    _allLocalizations.Remove(language);
+                    _allTrans.Remove(language);
                 }
             }
         }
 
         DatabaseTables tables = databaseServer.GetTables();
-        InitLocalization(tables.Locations, tables.Locales);
+        InitI18N(tables.Locations, tables.Locales);
         return Task.CompletedTask;
     }
 
@@ -119,21 +119,21 @@ public class LocalizationManager(
     {
         string errorKey = $"[Error {key}]";
         // 获取当前区域的本地化字典
-        if (!_allLocalizations.TryGetValue(CurrentLanguage, out LocalizationData? locales))
+        if (!_allTrans.TryGetValue(CurrentLanguage, out I18NData? locales))
         {
-            return !_allLocalizations.TryGetValue("ch", out LocalizationData? defaults1)
+            return !_allTrans.TryGetValue("ch", out I18NData? defaults1)
                 ? errorKey
                 : // 区域未加载，返回键本身
-                defaults1.AllLocalizations.GetValueOrDefault(key, errorKey); // 区域未加载，返回键本身
+                defaults1.AllTrans.GetValueOrDefault(key, errorKey); // 区域未加载，返回键本身
         }
-        if (locales.AllLocalizations.TryGetValue(key, out string? value))
+        if (locales.AllTrans.TryGetValue(key, out string? value))
         {
             return value;
         }
-        return !_allLocalizations.TryGetValue("ch", out LocalizationData? defaults2)
+        return !_allTrans.TryGetValue("ch", out I18NData? defaults2)
             ? errorKey
             : // 区域未加载，返回键本身
-            defaults2.AllLocalizations.GetValueOrDefault(key, errorKey); // 区域未加载，返回键本身
+            defaults2.AllTrans.GetValueOrDefault(key, errorKey); // 区域未加载，返回键本身
     }
 
     /// <summary>
@@ -182,7 +182,7 @@ public class LocalizationManager(
         return mapName.Replace("_", "").ToLower();
     }
 
-    protected void InitLocalization(Locations locations, LocaleBase locales)
+    protected void InitI18N(Locations locations, LocaleBase locales)
     {
         Dictionary<string, string>? localesMap = locales.Global[CurrentLanguage].Value;
         string warnMsg = "";
@@ -214,7 +214,7 @@ public class LocalizationManager(
                 if (exit.Name == null) continue;
                 if (localesMap != null && !localesMap.ContainsKey(exit.Name))
                 {
-                    warnMsg += GetText("Localization-Warn.撤离点名称不存在", new
+                    warnMsg += GetText("I18N-Warn.撤离点名称不存在", new
                     {
                         ExitName = exit.Name
                     });
@@ -224,7 +224,7 @@ public class LocalizationManager(
 
                 if (ExitNames[mapKey].ContainsKey(exit.Name))
                 {
-                    warnMsg += GetText("Localization-Warn.重复添加撤离点", new
+                    warnMsg += GetText("I18N-Warn.重复添加撤离点", new
                     {
                         ExitName = exit.Name,
                         MapName = mapName
@@ -239,7 +239,7 @@ public class LocalizationManager(
 
         if (!string.IsNullOrEmpty(warnMsg)) modConfig.Log("Warn", warnMsg);
         // modConfig.Info("已成功加载各个地图撤离点数据");
-        modConfig.Info(GetText("Localization-Info.撤离点数据加载完毕", new
+        modConfig.Info(GetText("I18N-Info.撤离点数据加载完毕", new
         {
             MapCount = MapNames.Count,
             ExitCount = ExitNames.Sum(x => x.Value.Count)
@@ -251,7 +251,7 @@ public class LocalizationManager(
         get => _currentLanguage;
         set
         {
-            if (_allLocalizations.ContainsKey(value))
+            if (_allTrans.ContainsKey(value))
                 _currentLanguage = value;
         }
     }
@@ -277,7 +277,7 @@ public class LocalizationManager(
     /// </summary>
     public string GetArmorZoneName(string key)
     {
-        return _allLocalizations[CurrentLanguage].ArmorZone.GetValueOrDefault(key, key);
+        return _allTrans[CurrentLanguage].ArmorZone.GetValueOrDefault(key, key);
     }
 
     /// <summary>
@@ -285,9 +285,9 @@ public class LocalizationManager(
     /// </summary>
     public string GetRoleName(string key)
     {
-        return _allLocalizations[CurrentLanguage].RoleNames.GetValueOrDefault(key, key);
+        return _allTrans[CurrentLanguage].RoleNames.GetValueOrDefault(key, key);
     }
 
     // 只读属性, 查看支持的语言
-    public List<string> AvailableLanguages => _allLocalizations.Keys.ToList();
+    public List<string> AvailableLanguages => _allTrans.Keys.ToList();
 }

@@ -7,7 +7,7 @@ namespace RaidRecord.Core.Locals;
 /// <summary>
 /// 主本地化数据类
 /// </summary>
-public class LocalizationData
+public class I18NData
 {
     /// <summary>
     /// 负责服务端日志的本地化
@@ -31,35 +31,35 @@ public class LocalizationData
     public Dictionary<string, string> RoleNames { get; set; } = new();
 
     [JsonIgnore]
-    private Dictionary<string, string>? _allLocalizationsCache;
+    private Dictionary<string, string>? _allTransCache;
 
     /// <summary>
     /// 所有本地化的缓存
     /// </summary>
     [JsonIgnore]
-    public Dictionary<string, string> AllLocalizations
+    public Dictionary<string, string> AllTrans
     {
         get
         {
-            if (_allLocalizationsCache != null) return _allLocalizationsCache;
-            _allLocalizationsCache = new Dictionary<string, string>();
+            if (_allTransCache != null) return _allTransCache;
+            _allTransCache = new Dictionary<string, string>();
             foreach ((string key, string value) in Translations)
             {
-                _allLocalizationsCache.Add(key, value);
+                _allTransCache.Add(key, value);
             }
             foreach ((string key, string value) in ServerMessage)
             {
-                _allLocalizationsCache.Add(key, value);
+                _allTransCache.Add(key, value);
             }
             foreach ((string key, string value) in ArmorZone)
             {
-                _allLocalizationsCache.Add(key, value);
+                _allTransCache.Add(key, value);
             }
             foreach ((string key, string value) in RoleNames)
             {
-                _allLocalizationsCache.Add(key, value);
+                _allTransCache.Add(key, value);
             }
-            return _allLocalizationsCache;
+            return _allTransCache;
         }
     }
 }

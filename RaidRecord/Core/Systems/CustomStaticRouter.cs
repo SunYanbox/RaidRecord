@@ -10,6 +10,7 @@ using SPTarkov.Server.Core.Models.Eft.HttpResponse;
 using SPTarkov.Server.Core.Models.Eft.Match;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Utils;
+// ReSharper disable UnusedType.Global
 
 namespace RaidRecord.Core.Systems;
 
@@ -88,13 +89,13 @@ public class CustomStaticRouter: StaticRouter
             MongoId playerId = notSurePlayerId.Value;
             MongoId? account = _injectableClasses.RecordManager!.GetAccount(sessionId);
             ModConfig? logger = _injectableClasses.ModConfig;
-            LocalizationManager localizationManager = _injectableClasses.LocalizationManager!;
+            I18N i18N = _injectableClasses.I18N!;
 
             List<string> errors = [];
 
             if (_injectableClasses.RecordManager == null)
             {
-                errors.Add(localizationManager.GetText(
+                errors.Add(i18N.GetText(
                     "CustomStaticRouter-Error.RecordManager为null",
                     new
                     {
@@ -108,18 +109,18 @@ public class CustomStaticRouter: StaticRouter
             }
             if (account == null)
             {
-                errors.Add(localizationManager.GetText("CustomStaticRouter-Error.无法通过PlayerId获取玩家账户"));
+                errors.Add(i18N.GetText("CustomStaticRouter-Error.无法通过PlayerId获取玩家账户"));
             }
             if (logger == null)
             {
                 Console.WriteLine("[RaidRecord] "
-                                  + localizationManager.GetText(
+                                  + i18N.GetText(
                                       "CustomStaticRouter-Error.InjectableClasses未正确注入ModConfig属性"));
                 // Console.WriteLine("[RaidRecord] ModConfig未正确注入InjectableClasses");
                 if (errors.Count > 0)
                 {
                     Console.WriteLine("[RaidRecord]"
-                                      + localizationManager
+                                      + i18N
                                           .GetText("CustomStaticRouter-Error.对局开始.其他错误",
                                               new { Errors = string.Join(", ", errors) }));
                     // Console.WriteLine($"[RaidRecord] 其他错误: {string.Join(", ", errors)}");
@@ -150,7 +151,7 @@ public class CustomStaticRouter: StaticRouter
             if (response?.Data == null)
             {
                 logger.Error(
-                    localizationManager
+                    i18N
                         .GetText("CustomStaticRouter-Error.对局开始.响应解析失败"));
                 // logger.Error("response.Data为null, 无法正确解析回合开始的数据");
                 return;
@@ -159,7 +160,7 @@ public class CustomStaticRouter: StaticRouter
                 _raidUtil?.HandleRaidStart(recordWrapper.Info, serverId, sessionId);
             // recordWrapper.Info.ItemsTakeIn = Utils.GetInventoryInfo(pmcData, data.ItemHelper);
             _injectableClasses.RecordManager.SaveEFTRecord(account!.Value);
-            logger.Info(localizationManager
+            logger.Info(i18N
                 .GetText("CustomStaticRouter-Info.对局开始.已记录",
                     new
                     {
@@ -190,16 +191,16 @@ public class CustomStaticRouter: StaticRouter
             MongoId playerId = notSurePlayerId.Value;
 
             JsonUtil? jsonUtil = _injectableClasses.JsonUtil;
-            LocalizationManager localizationManager = _injectableClasses.LocalizationManager!;
+            I18N i18N = _injectableClasses.I18N!;
             MongoId? accountId = _injectableClasses.RecordManager!.GetAccount(playerId);
 
             if (accountId == null)
-                throw new Exception(localizationManager.GetText("RecordManager-Error.指定的玩家账号不存在", new { PlayerId = playerId }));
+                throw new Exception(i18N.GetText("RecordManager-Error.指定的玩家账号不存在", new { PlayerId = playerId }));
 
             EFTCombatRecord records = _injectableClasses.RecordManager!.GetRecord(accountId.Value);
 
             if (records.Records.Count == 0 || records.InfoRecordCache == null)
-                throw new Exception(localizationManager.GetText("CustomStaticRouter-Error.对局结束.没有有效开局数据"));
+                throw new Exception(i18N.GetText("CustomStaticRouter-Error.对局结束.没有有效开局数据"));
 
             if (request == null) throw new Exception("\nHandleRaidEnd的参数info为空, 这可能是SPT更改了服务端传递的参数; 在没有其他服务端模组影响的条件下, 该报错理论上很难发生!!!\n");
             // Console.WriteLine($"\n\n info直接print: {info} \n\n info序列化: {data.JsonUtil.Serialize(info)}");
@@ -212,7 +213,7 @@ public class CustomStaticRouter: StaticRouter
             _injectableClasses.RecordManager.ZipAccount(playerId);
             _injectableClasses.RecordManager.SaveEFTRecord(accountId.Value);
             _injectableClasses.ModConfig?.Info(
-                localizationManager.GetText(
+                i18N.GetText(
                     "CustomStaticRouter-Info.对局结束.已记录",
                     new
                     {

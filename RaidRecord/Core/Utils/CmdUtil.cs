@@ -16,14 +16,14 @@ namespace RaidRecord.Core.Utils;
 [Injectable(InjectionType.Singleton)]
 public class CmdUtil(
     ProfileHelper profileHelper,
-    LocalizationManager localizationManager,
+    I18N i18N,
     RecordManager recordCacheManager,
     ModConfig modConfig
 )
 {
     public readonly string[] HeadshotBodyPart = ["Head", "Ears", "Eyes"];
     #region 提供依赖给工具调用 | 只放大部分命令需要的依赖
-    public readonly LocalizationManager? LocalizationManager = localizationManager;
+    public readonly I18N? I18N = i18N;
     public readonly RecordManager? RecordManager = recordCacheManager;
     public readonly ModConfig? ModConfig = modConfig;
     public readonly ParaInfoBuilder ParaInfoBuilder = new();
@@ -41,15 +41,11 @@ public class CmdUtil(
     public static string GetPlayerGroupOfServerId(string serverId)
     {
         var group = PlayerGroup.Pmc; // 默认
-        if (!string.IsNullOrEmpty(serverId))
-        {
-            string[] parts = serverId.Split('.');
-            if (parts.Length > 1)
-            {
-                string side = parts[1].ToLowerInvariant();
-                group = side.Contains("pmc") ? PlayerGroup.Pmc : PlayerGroup.Scav;
-            }
-        }
+        if (string.IsNullOrEmpty(serverId)) return group.ToString();
+        string[] parts = serverId.Split('.');
+        if (parts.Length <= 1) return group.ToString();
+        string side = parts[1].ToLowerInvariant();
+        group = side.Contains("pmc") ? PlayerGroup.Pmc : PlayerGroup.Scav;
         return group.ToString();
     }
 
@@ -63,7 +59,7 @@ public class CmdUtil(
         PmcData playerData = RecordManager!.GetPmcDataByPlayerId(playerId);
 
         // "Record-元数据.Id与玩家信息": "{{TimeFormat}} 对局ID: {{ServerId}} 玩家信息: {{Nickname}}(Level={{Level}}, id={{PlayerId}})"
-        msg += LocalizationManager!.GetText(
+        msg += I18N!.GetText(
             "Record-元数据.Id与玩家信息",
             new
             {
@@ -78,7 +74,7 @@ public class CmdUtil(
         int killCount = victims.Count;
         int headshotKillCount = victims.Count(x => IsBodyPartHeadshotKill(x.BodyPart));
         //"Record-元数据.地图与存活时间": "\n地图: {{MapName}} 生存时间: {{PlayTime}} 击杀数量: {{KillCount}} 爆头击杀率: {{HeadshotKillRate}}",
-        msg += LocalizationManager!.GetText(
+        msg += I18N!.GetText(
             "Record-元数据.地图与存活时间",
             new
             {
@@ -89,7 +85,7 @@ public class CmdUtil(
             }
         );
         // "Record-元数据.入场信息": "\n入局战备: {{EquipmentValue}}rub, 安全箱物资价值: {{SecuredValue}}rub, 总带入价值: {{PreRaidValue}}rub",
-        msg += LocalizationManager!.GetText(
+        msg += I18N!.GetText(
             "Record-元数据.入场信息",
             new
             {
@@ -100,7 +96,7 @@ public class CmdUtil(
         );
 
         // "Record-元数据.退出信息": "\n带出价值: {{GrossProfit}}rub, 战损{{CombatLosses}}rub, 净利润{{NetProfit}}rub",
-        msg += LocalizationManager!.GetText(
+        msg += I18N!.GetText(
             "Record-元数据.退出信息",
             new
             {
@@ -110,20 +106,20 @@ public class CmdUtil(
             }
         );
 
-        string result = LocalizationManager.GetText("UnknownResult");
+        string result = I18N.GetText("UnknownResult");
 
         if (archive.Results?.Result != null)
         {
-            result = LocalizationManager.GetText(archive.Results.Result.Value.ToString());
+            result = I18N.GetText(archive.Results.Result.Value.ToString());
         }
         // "Record-元数据.对局结果": "\n对局结果: {{Result}} 撤离点: {{ExitName}} 游戏风格: {{SurvivorClass}}",
-        msg += LocalizationManager.GetText(
+        msg += I18N.GetText(
             "Record-元数据.对局结果",
             new
             {
                 Result = result,
-                ExitName = LocalizationManager.GetExitName(mapName, archive.Results?.ExitName ?? LocalizationManager.GetText("Unknown")),
-                SurvivorClass = archive.EftStats?.SurvivorClass ?? LocalizationManager.GetText("Unknown")
+                ExitName = I18N.GetExitName(mapName, archive.Results?.ExitName ?? I18N.GetText("Unknown")),
+                SurvivorClass = archive.EftStats?.SurvivorClass ?? I18N.GetText("Unknown")
             }
         );
         return msg;
@@ -145,7 +141,7 @@ public class CmdUtil(
         ArgumentNullException.ThrowIfNull(parameters);
 
         if (string.IsNullOrEmpty(key))
-            throw new ArgumentException(LocalizationManager!.GetText("CmdUtil-Error.参数键为空", new { KeyName = nameof(key) }));
+            throw new ArgumentException(I18N!.GetText("CmdUtil-Error.参数键为空", new { KeyName = nameof(key) }));
         // throw new ArgumentException("Para key cannot be null or empty", nameof(key));
 
         // 如果字典中不存在该键，返回默认值
@@ -177,7 +173,7 @@ public class CmdUtil(
             Aid = 8100860,
             Info = new UserDialogDetails
             {
-                Nickname = LocalizationManager!.GetText("ChatBotName"),
+                Nickname = I18N!.GetText("ChatBotName"),
                 Side = "Usec",
                 Level = 69,
                 MemberCategory = MemberCategory.Sherpa,
@@ -194,7 +190,7 @@ public class CmdUtil(
         int month = date.Month;
         int day = date.Day;
         string time = date.ToShortTimeString();
-        return LocalizationManager!.GetText("CmdUtil-日期时间格式化", new
+        return I18N!.GetText("CmdUtil-日期时间格式化", new
         {
             Year = year,
             Month = month,
@@ -209,7 +205,7 @@ public class CmdUtil(
     {
         if (string.IsNullOrEmpty(parametric.SessionId))
         {
-            return LocalizationManager!.GetText("CmdUtil-Error.参数验证.Value为空",
+            return I18N!.GetText("CmdUtil-Error.参数验证.Value为空",
                 new { ValueName = nameof(parametric.SessionId) });
             // return "未输入session参数或session为空";
         }
@@ -219,7 +215,7 @@ public class CmdUtil(
             PmcData? pmcData = profileHelper.GetPmcProfile(parametric.SessionId!);
             if (pmcData?.Id == null)
             {
-                throw new NullReferenceException(LocalizationManager!.GetText(
+                throw new NullReferenceException(I18N!.GetText(
                     "CmdUtil-Error.PmcData为空或PmcData.Id为空"
                 ));
                 // throw new NullReferenceException($"{nameof(pmcData)} or {nameof(pmcData.Id)}");
@@ -228,20 +224,20 @@ public class CmdUtil(
             // if (string.IsNullOrEmpty(playerId)) throw new Exception("playerId为null或为空");
             if (string.IsNullOrEmpty(playerId))
             {
-                throw new Exception(LocalizationManager!.GetText("CmdUtil-Error.参数验证.Value为空",
+                throw new Exception(I18N!.GetText("CmdUtil-Error.参数验证.Value为空",
                     new { ValueName = nameof(playerId) }));
             }
         }
         catch (Exception e)
         {
-            string errorMsg = LocalizationManager!.GetText("CmdUtil-Error.用户未注册或者Session已失效",
+            string errorMsg = I18N!.GetText("CmdUtil-Error.用户未注册或者Session已失效",
                 new { ErrorMessage = e.Message });
             ModConfig?.LogError(e, "RaidRecordManagerChat.VerifyIParametric", errorMsg);
             return errorMsg;
         }
 
         return parametric.ManagerChat == null
-            ? LocalizationManager!.GetText("CmdUtil-Error.参数验证.属性ManagerChat为空")
+            ? I18N!.GetText("CmdUtil-Error.参数验证.属性ManagerChat为空")
             : null;
         // return parametric.ManagerChat == null ? "实例未正确初始化: 缺少managerChat属性" : null;
     }
@@ -287,7 +283,7 @@ public class CmdUtil(
         List<RaidArchive> records = GetArchivesBySession(sessionId);
         if (index >= records.Count || index < 0)
         {
-            throw new IndexOutOfRangeException(LocalizationManager!.GetText(
+            throw new IndexOutOfRangeException(I18N!.GetText(
                 "CmdUtil-Error.索引超出记录数量范围",
                 new
                 {

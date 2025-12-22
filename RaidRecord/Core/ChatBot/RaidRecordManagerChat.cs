@@ -20,7 +20,7 @@ namespace RaidRecord.Core.ChatBot;
 public class RaidRecordManagerChat(
     MailSendService mailSendService,
     ModConfig modConfig,
-    LocalizationManager localizationManager,
+    I18N i18N,
     IServiceProvider serviceProvider,
     CmdUtil cmdUtil): IDialogueChatBot, IOnLoad
 {
@@ -46,12 +46,12 @@ public class RaidRecordManagerChat(
         catch (Exception e)
         {
             modConfig.Error(
-                localizationManager.GetText(
+                i18N.GetText(
                     "Chatbot-Error.指令处理失败",
                     new { SessionId = sessionId }
                 ), e);
             // modConfig.Error($"用户{sessionId}输入的指令处理失败: ", e);
-            SendMessage(sessionId, localizationManager.GetText(
+            SendMessage(sessionId, i18N.GetText(
                 "Chatbot-Mail.发送指令处理失败信息",
                 new
                 {
@@ -73,7 +73,7 @@ public class RaidRecordManagerChat(
         }
         else
         {
-            modConfig.Warn(localizationManager.GetText(
+            modConfig.Warn(i18N.GetText(
                 "Chatbot-Warn.无法从DI解析命令实例",
                 new { CommandType = typeof(T).Name }
             ));
@@ -92,7 +92,7 @@ public class RaidRecordManagerChat(
             RegisterCommand<ListCmd>();
             RegisterCommand<ItemsCmd>();
 
-            modConfig.Info(localizationManager.GetText(
+            modConfig.Info(i18N.GetText(
                 "Chatbot-Info.命令初始化完毕",
                 new { WhichCommandsRegister = string.Join(", ", Commands.Keys.ToArray()) }
             ));
@@ -100,7 +100,7 @@ public class RaidRecordManagerChat(
         }
         catch (Exception e)
         {
-            modConfig.Error(localizationManager.GetText(
+            modConfig.Error(i18N.GetText(
                 "Chatbot-Error.命令初始化失败",
                 new { ErrorMessage = e.Message }
             ), e);
@@ -114,7 +114,7 @@ public class RaidRecordManagerChat(
         DataUtil.UpdateCommandDesc(commandBase);
         if (commandBase.Key == null)
         {
-            modConfig.Error(localizationManager.GetText(
+            modConfig.Error(i18N.GetText(
                 "Chatbot-Error.添加命令失败.缺少键",
                 new { CommandType = commandBase.GetType().Name }
             ));
@@ -129,13 +129,13 @@ public class RaidRecordManagerChat(
         string[] data = StringUtil.SplitCommand(command.ToLower());
         if (data.Length <= 0)
         {
-            return localizationManager.GetText("Chatbot-Error.未输入任何命令");
+            return i18N.GetText("Chatbot-Error.未输入任何命令");
         }
 
         // logger.Info($"全部命令: {string.Join(", ", _commands.Keys.ToArray())}, 输入的指令: \"{command}\", 检测出的指令: {data[0]}");
         if (!Commands.TryGetValue(data[0], out CommandBase? iCmd))
         {
-            return localizationManager.GetText(
+            return i18N.GetText(
                 "Chatbot-Error.未知的命令",
                 new { Command = data[0], AvailableCommands = string.Join(",", Commands.Keys.ToArray()) }
             );
@@ -162,7 +162,7 @@ public class RaidRecordManagerChat(
         catch (Exception e)
         {
             result += e.Message;
-            modConfig.Error(localizationManager.GetText(
+            modConfig.Error(i18N.GetText(
                 "Chatbot-Error.命令执行失败",
                 new { Command = iCmd.GetType().Name, ErrorMessage = e.Message }
             ), e);

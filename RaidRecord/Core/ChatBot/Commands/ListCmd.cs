@@ -10,19 +10,19 @@ namespace RaidRecord.Core.ChatBot.Commands;
 public class ListCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
-    private readonly LocalizationManager _local;
+    private readonly I18N _i18N;
 
-    public ListCmd(CmdUtil cmdUtil, LocalizationManager local)
+    public ListCmd(CmdUtil cmdUtil, I18N i18N)
     {
         _cmdUtil = cmdUtil;
         Key = "list";
-        Desc = local.GetText("Cmd-List.Desc");
+        Desc = i18N.GetText("Cmd-List.Desc");
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("limit", "int", local.GetText("Cmd-参数化简述.limit"))
-            .AddParam("page", "int", local.GetText("Cmd-参数化简述.page"))
+            .AddParam("limit", "int", i18N.GetText("Cmd-参数化简述.limit"))
+            .AddParam("page", "int", i18N.GetText("Cmd-参数化简述.page"))
             .SetOptional(["limit", "page"])
             .Build();
-        _local = local;
+        _i18N = i18N;
     }
 
     public override string Execute(Parametric parametric)
@@ -39,7 +39,7 @@ public class ListCmd: CommandBase
         int totalCount = records.Count;
         int indexLeft = Math.Max(numberLimit * (page - 1), 0);
         int indexRight = Math.Min(numberLimit * page, totalCount);
-        if (totalCount <= 0) return _local.GetText("Cmd-List.没有任何历史战绩");
+        if (totalCount <= 0) return _i18N.GetText("Cmd-List.没有任何历史战绩");
         // if (totalCount <= 0) return "您没有任何历史战绩, 请至少对局一次后再来查询吧";
         List<RaidArchive> results = [];
         for (int i = indexLeft; i < indexRight; i++)
@@ -49,7 +49,7 @@ public class ListCmd: CommandBase
         int countBeforeCheck = results.Count;
         if (countBeforeCheck <= 0)
         {
-            return _local.GetText("Cmd-List.没有找到指定页的记录",
+            return _i18N.GetText("Cmd-List.没有找到指定页的记录",
                 new
                 {
                     StartIndex = indexLeft + 1,
@@ -58,11 +58,11 @@ public class ListCmd: CommandBase
                 });
         }
         // if (countBeforeCheck <= 0) return $"未查询到您第{indexLeft + 1}到{indexRight}条历史战绩";
-        
+
         results.RemoveAll(x => string.IsNullOrEmpty(x.ServerId));
         int countAfterCheck = results.Count;
 
-        string msg = _local.GetText("Cmd-List.历史战绩.统计表头", new
+        string msg = _i18N.GetText("Cmd-List.历史战绩.统计表头", new
         {
             ResultCount = countAfterCheck,
             TotalCount = totalCount,
@@ -70,7 +70,7 @@ public class ListCmd: CommandBase
             PageTotal = (int)Math.Ceiling((double)totalCount / numberLimit)
         });
         // string msg = $"历史战绩(共{countAfterCheck}/{totalCount}条, 第{page}页/共{(int)Math.Ceiling((double)totalCount / numberLimit)}页):\n";
-        
+
         int jump = countBeforeCheck - countAfterCheck;
 
         // 字段宽度数组（9列）
@@ -78,14 +78,14 @@ public class ListCmd: CommandBase
         [
             3, 7, 10, 10, 10, 10, 16, 4, 4
         ];
-        
+
         // 计算字符串宽度
         // 遍历所有数据行，更新每列最大宽度
         for (int k = 0; k < countAfterCheck; k++)
         {
             RaidArchive row = results[k];
 
-            string result = _local.GetText("UnknownResult");
+            string result = _i18N.GetText("UnknownResult");
             RaidResultData? raidResultData = row.Results;
             try
             {
@@ -93,19 +93,19 @@ public class ListCmd: CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                result = _cmdUtil.LocalizationManager!.GetText(raidResultData.Result.Value.ToString());
+                result = _cmdUtil.I18N!.GetText(raidResultData.Result.Value.ToString());
             }
             catch (Exception e)
             {
                 _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand",
-                    _local.GetText("Cmd-List.获取对局结果信息时出错"));
+                    _i18N.GetText("Cmd-List.获取对局结果信息时出错"));
             }
-            
+
             string[] values =
             [
                 k.ToString(),
                 CmdUtil.GetPlayerGroupOfServerId(row.ServerId),
-                _cmdUtil.LocalizationManager!.GetMapName(row.ServerId[..row.ServerId.IndexOf('.')].ToLower()),
+                _cmdUtil.I18N!.GetMapName(row.ServerId[..row.ServerId.IndexOf('.')].ToLower()),
                 row.PreRaidValue.ToString(),
                 row.GrossProfit.ToString(),
                 row.CombatLosses.ToString(),
@@ -120,8 +120,8 @@ public class ListCmd: CommandBase
                 colWidths[i] = Math.Max(colWidths[i], values[i].Length + 3);
             }
         }
-        
-        string header = _local.GetText("Cmd-List.历史战绩.表头").Replace("\n", "");
+
+        string header = _i18N.GetText("Cmd-List.历史战绩.表头").Replace("\n", "");
         string[] coreHeader = header.Split('|');
 
         int colCount = Math.Min(colWidths.Length, coreHeader.Length);
@@ -129,26 +129,26 @@ public class ListCmd: CommandBase
         if (colCount != colWidths.Length || colCount != coreHeader.Length)
         {
             _cmdUtil.ModConfig!.Warn(
-                    _local.GetText(
-                            "Cmd-List.历史战绩.表头长度不一致",
-                            new
-                            {
-                                // 理论列数
-                                TheoreticalColCount = colWidths.Length,
-                                // 实际列数
-                                ActualColCount = coreHeader.Length
-                            }
-                        )
-                );
+                _i18N.GetText(
+                    "Cmd-List.历史战绩.表头长度不一致",
+                    new
+                    {
+                        // 理论列数
+                        TheoreticalColCount = colWidths.Length,
+                        // 实际列数
+                        ActualColCount = coreHeader.Length
+                    }
+                )
+            );
         }
-        
+
         for (int i = 0; i < colCount; i++)
         {
             msg += coreHeader[i].PadRight(colWidths[i]);
         }
-        
+
         msg += "\n";
-        
+
         // msg += " - serverId                 序号 地图 入场总价值 带出收益 战损 游戏时间 本局击杀数 结果\n";
 
         // 显示文本
@@ -156,7 +156,7 @@ public class ListCmd: CommandBase
         {
             RaidArchive archive = results[i];
 
-            string result = _local.GetText("UnknownResult");
+            string result = _i18N.GetText("UnknownResult");
             RaidResultData? raidResultData = archive.Results;
             try
             {
@@ -164,12 +164,12 @@ public class ListCmd: CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                result = _cmdUtil.LocalizationManager!.GetText(raidResultData.Result.Value.ToString());
+                result = _cmdUtil.I18N!.GetText(raidResultData.Result.Value.ToString());
             }
             catch (Exception e)
             {
                 _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand",
-                    _local.GetText("Cmd-List.获取对局结果信息时出错"));
+                    _i18N.GetText("Cmd-List.获取对局结果信息时出错"));
                 // _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand", "尝试从本地数据库获取对局结果信息时出错");
             }
 
@@ -177,7 +177,7 @@ public class ListCmd: CommandBase
             [
                 i.ToString(),
                 CmdUtil.GetPlayerGroupOfServerId(archive.ServerId),
-                _cmdUtil.LocalizationManager!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower()),
+                _cmdUtil.I18N!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower()),
                 archive.PreRaidValue.ToString(),
                 archive.GrossProfit.ToString(),
                 archive.CombatLosses.ToString(),
@@ -194,7 +194,7 @@ public class ListCmd: CommandBase
                 }
             }
 
-            msg += _local.GetText("Cmd-List.历史战绩.表行", new
+            msg += _i18N.GetText("Cmd-List.历史战绩.表行", new
             {
                 Index = values[0],
                 PlayerGroup = values[1],
@@ -208,12 +208,12 @@ public class ListCmd: CommandBase
             }).Replace("|", "");
 
             // msg += $" - {archive.ServerId} {indexLeft + i} "
-            //        + $"{_cmdUtil.LocalizationManager!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower())} "
+            //        + $"{_cmdUtil.I18n!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower())} "
             //        + $"{archive.PreRaidValue} {archive.GrossProfit} {archive.CombatLosses} "
             //        + $"{StringUtil.TimeString(archive.Results?.PlayTime ?? 0)} {result}\n";
         }
         // if (jump > 0) msg += $"跳过{jump}条无效数据";
-        if (jump > 0) msg += _local.GetText("Cmd-List.历史战绩.跳过无效数据", new { JumpCount = jump });
+        if (jump > 0) msg += _i18N.GetText("Cmd-List.历史战绩.跳过无效数据", new { JumpCount = jump });
         return msg;
     }
 }

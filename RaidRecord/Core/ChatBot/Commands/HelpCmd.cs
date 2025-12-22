@@ -11,12 +11,12 @@ public class HelpCmd: CommandBase
     private readonly CmdUtil _cmdUtil;
     private readonly string _displayMessage;
 
-    public HelpCmd(CmdUtil cmdUtil, LocalizationManager local)
+    public HelpCmd(CmdUtil cmdUtil, I18N i18N)
     {
         _cmdUtil = cmdUtil;
         Key = "help";
-        Desc = local.GetText("Cmd-Help.Desc");
-        _displayMessage = local.GetText("Cmd-Help.显示文本");
+        Desc = i18N.GetText("Cmd-Help.Desc");
+        _displayMessage = i18N.GetText("Cmd-Help.显示文本");
     }
 
     public override string Execute(Parametric parametric)

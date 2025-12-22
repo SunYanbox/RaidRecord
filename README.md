@@ -19,6 +19,8 @@
 - 将ItemUtil从静态类改为依赖注入类, 降低其函数参数对ItemHelper的依赖
 - 将RecordCacheManager更名为RecordManager
 - 提取info与items指令共有的部分为对局元数据信息
+- 将LocalizationManager类重命名为I18N
+> 因为写`LocalizationManager`写的我难受, 专门搜了个短的表示国际化的词代替
 
 优化
 - 优化了价格计算与缓存逻辑, 默认每条价格缓存6min
@@ -26,6 +28,7 @@
 - 优化了本地语言包多了后对内存的占用
 - 优化了list命令显示的文本
 - 优化了info显示的信息
+- SPT相关的数据库, 获取后的变量名称附带`spt`前缀
 
 修复
 - `info`与`items`命令移除使用`ServerId`获取对局的方式, 命令中index依然是可选参数, 但不输入默认为-1

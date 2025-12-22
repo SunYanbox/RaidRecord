@@ -15,7 +15,7 @@ namespace RaidRecord;
 internal class RaidRecordMod(
     ISptLogger<RaidRecordMod> logger,
     ConfigServer configServer,
-    LocalizationManager localManager,
+    I18N i18N,
     RaidRecordManagerChat raidRecordManagerChat
 ): IOnLoad
 {
@@ -30,10 +30,10 @@ internal class RaidRecordMod(
     {
         UserDialogInfo chatbot = raidRecordManagerChat.GetChatBot();
         var coreConfig = configServer.GetConfig<CoreConfig>();
-        coreConfig.Features.ChatbotFeatures.Ids[chatbot.Info.Nickname] = chatbot.Id;
+        coreConfig.Features.ChatbotFeatures.Ids[chatbot.Info!.Nickname!] = chatbot.Id;
         coreConfig.Features.ChatbotFeatures.EnabledBots[chatbot.Id] = true;
         // logger.Info($"[RaidRecord] 已经成功注册ChatBot: {chatbot.Id}");
-        logger.Info(localManager.GetText("MainMod-Info.成功注册ChatBot", new
+        logger.Info(i18N.GetText("MainMod-Info.成功注册ChatBot", new
         {
             ChatBotId = chatbot.Id
         }));

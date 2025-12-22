@@ -59,7 +59,7 @@ public class RaidUtil(
         if (request == null) throw new NullReferenceException("HandleRaidEnd的EndLocalRaidRequestData类型参数data意外为null");
         if (request.Results == null)
         {
-            throw new NullReferenceException($"获取到的结束请求数据的结果为null, 忽略此请求");
+            throw new NullReferenceException("获取到的结束请求数据的结果为null, 忽略此请求");
         }
 
         // 不能参考InRaidHelper和LocationLifecycleService处理对局结束的存档!!!

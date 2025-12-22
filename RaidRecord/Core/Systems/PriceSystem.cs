@@ -17,7 +17,7 @@ namespace RaidRecord.Core.Systems;
 public class PriceSystem(
     ModConfig modConfig,
     RagfairOfferService ragfairOfferService,
-    LocalizationManager localizationManager,
+    I18N i18N,
     PaymentHelper paymentHelper,
     ItemHelper itemHelper)
 {
@@ -39,7 +39,7 @@ public class PriceSystem(
 
         if (price is > double.Epsilon) return price.Value;
 
-        modConfig.Warn(localizationManager.GetText(
+        modConfig.Warn(i18N.GetText(
             "PriceSystem-Warn.ItemHelper.GetItemPrice.无法获取到价格",
             new { ItemId = itemId }));
 

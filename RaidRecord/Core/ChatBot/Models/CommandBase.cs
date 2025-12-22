@@ -1,3 +1,5 @@
+// ReSharper disable MemberCanBeProtected.Global
+
 namespace RaidRecord.Core.ChatBot.Models;
 
 public abstract class CommandBase

@@ -74,7 +74,7 @@ public static class DataUtil
     {
         string json = JsonSerializer.Serialize(source);
         var copy = JsonSerializer.Deserialize<T>(json);
-        return copy ?? throw new Exception($"复制数据出错");
+        return copy ?? throw new Exception("复制数据出错");
     }
 
 

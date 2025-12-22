@@ -16,7 +16,7 @@ public record ModConfigData
     [JsonPropertyName("logPath")]
     public required string LogPath { get; set; }
     /// <summary>
-    /// 在LocalizationManager加载完毕后卸载除了当前语言和ch的其他语言数据, 节省内存
+    /// 在I18NManager加载完毕后卸载除了当前语言和ch的其他语言数据, 节省内存
     /// </summary>
     [JsonPropertyName("autoUnloadOtherLanguages")]
     public bool AutoUnloadOtherLanguages { get; set; } = true;
