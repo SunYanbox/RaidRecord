@@ -1,4 +1,5 @@
 ﻿using RaidRecord.Core.ChatBot;
+using RaidRecord.Core.Configs;
 using RaidRecord.Core.Locals;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
@@ -12,12 +13,7 @@ using SPTarkov.Server.Core.Servers;
 namespace RaidRecord;
 
 [Injectable]
-internal class RaidRecordMod(
-    ISptLogger<RaidRecordMod> logger,
-    ConfigServer configServer,
-    I18N i18N,
-    RaidRecordManagerChat raidRecordManagerChat
-): IOnLoad
+internal class RaidRecordMod(ModConfig modConfig): IOnLoad
 {
     public Task OnLoad()
     {
@@ -28,15 +24,7 @@ internal class RaidRecordMod(
 
     protected void RegisterChatBot()
     {
-        UserDialogInfo chatbot = raidRecordManagerChat.GetChatBot();
-        var coreConfig = configServer.GetConfig<CoreConfig>();
-        coreConfig.Features.ChatbotFeatures.Ids[chatbot.Info!.Nickname!] = chatbot.Id;
-        coreConfig.Features.ChatbotFeatures.EnabledBots[chatbot.Id] = true;
-        // logger.Info($"[RaidRecord] 已经成功注册ChatBot: {chatbot.Id}");
-        logger.Info(i18N.GetText("MainMod-Info.成功注册ChatBot", new
-        {
-            ChatBotId = chatbot.Id
-        }));
+        modConfig.Info($"{DateTime.Now.ToLongDateString()} {DateTime.Now.ToLongTimeString()}");
     }
 }
 

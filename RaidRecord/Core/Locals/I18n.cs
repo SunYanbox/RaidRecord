@@ -182,6 +182,14 @@ public class I18N(
         return mapName.Replace("_", "").ToLower();
     }
 
+    /// <summary>
+    /// 获取Spt本地化字典
+    /// </summary>
+    public Dictionary<string, string>? GetSptLocals()
+    {
+        return databaseServer.GetTables().Locales.Global[CurrentLanguage].Value;
+    }
+
     protected void InitI18N(Locations locations, LocaleBase locales)
     {
         Dictionary<string, string>? localesMap = locales.Global[CurrentLanguage].Value;

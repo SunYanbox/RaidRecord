@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace RaidRecord.Core.Utils;
 
 /// <summary>
@@ -18,8 +20,38 @@ public static class StringUtil
     /// </summary>
     public static string[] SplitCommand(string cmd)
     {
-        // 根据指定的分隔字符和选项将字符串拆分成子串。
-        return cmd.Split([' ', '\t', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
+        if (cmd.Length > 0 && cmd.Count(c => c == '"') % 2 == 1)
+        {
+            cmd += '"';
+        }
+
+        // 提取所有引号内的内容并用标记替换
+        var markers = new Dictionary<string, string>();
+        int markerIndex = 0;
+
+        // 正则匹配成对的引号内容
+        const string pattern = "\"([^\"]*)\"";
+        string processedCmd = Regex.Replace(cmd, pattern, match =>
+        {
+            string quotedContent = match.Groups[1].Value;
+            string marker = $"__MARKER_{markerIndex++}__";
+            markers[marker] = quotedContent;
+            return marker;
+        });
+
+        // 按空白字符分割
+        string[] parts = processedCmd.Split([' ', '\t', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
+
+        // 恢复标记为原始内容
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (markers.TryGetValue(parts[i], out string? originalContent))
+            {
+                parts[i] = originalContent;
+            }
+        }
+
+        return parts;
     }
 
     /// <summary>

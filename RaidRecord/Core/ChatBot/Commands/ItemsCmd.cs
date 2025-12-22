@@ -96,7 +96,7 @@ public class ItemsCmd: CommandBase
         foreach (MongoId addTpl in add)
         {
             double modify = archive.ItemsTakeOut.GetValueOrDefault(addTpl, 0);
-            if (Math.Abs(modify) > Constants.ArchiveCheckJudgeError)
+            if (Math.Abs(modify) > Constants.Epsilon)
                 msg += $"\n + {GetItemDetails(addTpl, modify, sptLocal)}";
         }
 
@@ -105,7 +105,7 @@ public class ItemsCmd: CommandBase
         foreach (MongoId removeTpl in remove)
         {
             double modify = archive.ItemsTakeIn.GetValueOrDefault(removeTpl, 0);
-            if (Math.Abs(modify) > Constants.ArchiveCheckJudgeError)
+            if (Math.Abs(modify) > Constants.Epsilon)
                 msg += $"\n - {GetItemDetails(removeTpl, modify, sptLocal)}";
         }
 
@@ -115,7 +115,7 @@ public class ItemsCmd: CommandBase
         {
             double modify = archive.ItemsTakeOut.GetValueOrDefault(changeTpl, 0)
                             - archive.ItemsTakeIn.GetValueOrDefault(changeTpl, 0);
-            if (Math.Abs(modify) > Constants.ArchiveCheckJudgeError)
+            if (Math.Abs(modify) > Constants.Epsilon)
                 msg += $"\n ~ {GetItemDetails(changeTpl, modify, sptLocal)}";
         }
 
@@ -125,7 +125,7 @@ public class ItemsCmd: CommandBase
     private string GetItemDetails(MongoId tpl, double modify, Dictionary<string, string>? sptLocal = null)
     {
         double price = _itemHelper.GetItemPrice(tpl) ?? 0;
-        string name = sptLocal?.GetValueOrDefault($"{tpl} ShortName", tpl) ?? tpl;
+        string name = sptLocal?.GetValueOrDefault($"{tpl} Name", tpl) ?? tpl;
         string desc = sptLocal?.GetValueOrDefault($"{tpl} Description", tpl) ?? tpl;
 
         // 截断描述，最多显示 30 个字符（可调），避免撑开行高

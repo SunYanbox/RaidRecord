@@ -19,7 +19,7 @@ public class ItemUtil(ItemHelper itemHelper, PriceSystem priceSystem)
         double value = 0;
         foreach (Item item in items.Where(i => i.ParentId != "68e2c9a23d4d3dc9e403545f"))
         {
-            value += priceSystem.GetItemValue(item);
+            value += priceSystem.GetItemValueWithCache(item);
         }
         return Convert.ToInt64(value);
     }

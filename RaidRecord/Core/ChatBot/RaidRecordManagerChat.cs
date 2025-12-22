@@ -11,7 +11,9 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Dialog;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Enums;
+using SPTarkov.Server.Core.Models.Spt.Config;
 using SPTarkov.Server.Core.Models.Spt.Dialog;
+using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Services;
 
 namespace RaidRecord.Core.ChatBot;
@@ -22,6 +24,7 @@ public class RaidRecordManagerChat(
     ModConfig modConfig,
     I18N i18N,
     IServiceProvider serviceProvider,
+    ConfigServer configServer,
     CmdUtil cmdUtil): IDialogueChatBot, IOnLoad
 {
     public readonly Dictionary<string, CommandBase> Commands = new();
@@ -29,6 +32,15 @@ public class RaidRecordManagerChat(
     public Task OnLoad()
     {
         InitCommands();
+        UserDialogInfo chatbot = GetChatBot();
+        var coreConfig = configServer.GetConfig<CoreConfig>();
+        coreConfig.Features.ChatbotFeatures.Ids[chatbot.Info!.Nickname!] = chatbot.Id;
+        coreConfig.Features.ChatbotFeatures.EnabledBots[chatbot.Id] = true;
+        // logger.Info($"[RaidRecord] 已经成功注册ChatBot: {chatbot.Id}");
+        modConfig.Info(i18N.GetText("MainMod-Info.成功注册ChatBot", new
+        {
+            ChatBotId = chatbot.Id
+        }));
         return Task.CompletedTask;
     }
 
@@ -91,6 +103,7 @@ public class RaidRecordManagerChat(
             RegisterCommand<InfoCmd>();
             RegisterCommand<ListCmd>();
             RegisterCommand<ItemsCmd>();
+            RegisterCommand<PriceCmd>();
 
             modConfig.Info(i18N.GetText(
                 "Chatbot-Info.命令初始化完毕",

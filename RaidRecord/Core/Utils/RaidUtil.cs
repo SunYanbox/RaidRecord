@@ -195,11 +195,11 @@ public class RaidUtil(
         raidInfo.CombatLosses = itemUtil.CalculateInventoryValue(raidInfo.ItemsTakeIn, raidInfo.Remove.ToArray());
         foreach ((MongoId itemId, Item oldItem) in DataUtil.GetSubDict(raidInfo.ItemsTakeIn, raidInfo.Changed))
         {
-            double oldValue = priceSystem.GetItemValue(oldItem);
+            double oldValue = priceSystem.GetItemValueWithCache(oldItem);
             if (raidInfo.ItemsTakeOut.TryGetValue(itemId, out Item? newItem))
             {
-                double newValue = priceSystem.GetItemValue(newItem);
-                if (Math.Abs(newValue - oldValue) > Constants.ArchiveCheckJudgeError)
+                double newValue = priceSystem.GetItemValueWithCache(newItem);
+                if (Math.Abs(newValue - oldValue) > Constants.Epsilon)
                     raidInfo.GrossProfit += Convert.ToInt64(newValue - oldValue);
                 else
                     raidInfo.CombatLosses += Convert.ToInt64(oldValue - newValue);
@@ -231,7 +231,7 @@ public class RaidUtil(
             {
                 double modIn = itemHelper.GetItemQualityModifier(itemIn);
                 double modOut = itemHelper.GetItemQualityModifier(itemOut);
-                if (Math.Abs(modIn - modOut) < Constants.ArchiveCheckJudgeError)
+                if (Math.Abs(modIn - modOut) < Constants.Epsilon)
                     continue;
                 change.Add(itemId);
             }
@@ -267,7 +267,7 @@ public class RaidUtil(
             if (itemsTakeOut.TryGetValue(itemId, out double modOut))
             {
                 // 在带入且在带出就是改变了
-                if (Math.Abs(modIn - modOut) < Constants.ArchiveCheckJudgeError)
+                if (Math.Abs(modIn - modOut) < Constants.Epsilon)
                     continue;
                 change.Add(itemId);
             }

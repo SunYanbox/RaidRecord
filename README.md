@@ -4,6 +4,29 @@
 
 ## 更新日志
 
+### 0.6.5
+
+新增
+- 新增`price`指令, 用于搜索物品价值; 允许通过tpl精确搜索; 或者通过名字模糊搜索
+  > 如果名字中含有空格, 需要使用一对英文半角双引号双引号包含, 例如`price name "45mm SSA"`
+  > 同时最后且只有最后一个双引号允许缺省, 例如`price name "45mm SSA`
+
+修改
+- 允许的误差改为1e-9
+- 使用RagfairController中的方式重构价格计算逻辑
+- 重构了StringUtil.SplitCommand以支持在参数中包含带有空格的字符串
+- PriceSystem提供的用到缓存的函数, 已更名以使得函数名更清晰
+- 将`RaidRecord/RaidRecord.cs`中注册ChatBot的代码移动到RaidRecordManagerChat中, 从属关系更明确
+
+优化
+- 优化价格计算逻辑
+- 优化指令系统, 参数内需要包含空格时, 可以通过一对英文半角双引号包含, 例如`items name "45mm SSA"`
+
+修复
+- 修复了`items`指令使用ShortName导致一些物品显示信息不明显的问题
+- 修复了价格计算偶尔过低的问题
+- 修复了输出注册ChatBot的本地化日志时, 本地化系统还未加载的问题
+
 ### 0.6.4
 
 新增
