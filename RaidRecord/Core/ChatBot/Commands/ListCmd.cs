@@ -175,7 +175,7 @@ public class ListCmd: CommandBase
 
             string[] values =
             [
-                i.ToString(),
+                (indexLeft + i).ToString(),
                 CmdUtil.GetPlayerGroupOfServerId(archive.ServerId),
                 _cmdUtil.I18N!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower()),
                 archive.PreRaidValue.ToString(),
