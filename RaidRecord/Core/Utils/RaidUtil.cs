@@ -1,3 +1,4 @@
+using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Systems;
 using SPTarkov.DI.Annotations;
@@ -7,6 +8,7 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.Match;
+using SPTarkov.Server.Core.Utils.Cloners;
 
 namespace RaidRecord.Core.Utils;
 

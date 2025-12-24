@@ -34,6 +34,17 @@ public class ItemUtil(ItemHelper itemHelper, PriceSystem priceSystem)
     }
 
     /// <summary>
+    /// 获取具有提供的任何基类的所有物品列表
+    /// </summary>
+    /// <param name="items">物品列表</param>
+    /// <param name="baseClasses">基类列表</param>
+    /// <returns>物品列表</returns>
+    public Item[] GetItemsWithBaseClasses(Item[] items, IEnumerable<MongoId> baseClasses)
+    {
+        return items.Where(x => itemHelper.IsOfBaseclasses(x.Template, baseClasses)).ToArray();
+    }
+
+    /// <summary>
     /// 计算具有提供的任何基类的所有物品价值
     /// </summary>
     /// <param name="items">物品列表</param>
@@ -41,8 +52,7 @@ public class ItemUtil(ItemHelper itemHelper, PriceSystem priceSystem)
     /// <returns>物品价值</returns>
     public long GetItemsValueWithBaseClasses(Item[] items, IEnumerable<MongoId> baseClasses)
     {
-        Item[] filteredItems = items.Where(x => itemHelper.IsOfBaseclasses(x.Template, baseClasses)).ToArray();
-        return Convert.ToInt64(GetItemsValueAll(filteredItems));
+        return Convert.ToInt64(GetItemsValueAll(GetItemsWithBaseClasses(items, baseClasses)));
     }
 
     /// <summary>

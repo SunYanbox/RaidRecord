@@ -30,84 +30,22 @@ public record RaidArchive
     // [JsonPropertyName("remove")] public readonly Dictionary<MongoId, double> Remove = new Dictionary<MongoId, double> {};
     // // 对局结束后变化的物品
     // [JsonPropertyName("changed")] public readonly Dictionary<MongoId, double> Changed = new Dictionary<MongoId, double> {};
-    // 入场价值
+    /// <summary> 入场总价值 </summary>
     [JsonPropertyName("preRaidValue")] public long PreRaidValue { get; set; }
-    // 装备价值
+    /// <summary> 装备价值 | 战备 </summary>
     [JsonPropertyName("equipmentValue")] public long EquipmentValue { get; set; }
-    // 安全箱价值
+    /// <summary> 装备列表 | 战备 </summary>
+    [JsonPropertyName("equipmentItems")] public Item[]? EquipmentItems { get; set; }
+    /// <summary> 安全箱价值 </summary>
     [JsonPropertyName("securedValue")] public long SecuredValue { get; set; }
-    // 毛收益
+    /// <summary> 安全箱物资列表 </summary>
+    [JsonPropertyName("securedItems")] public Dictionary<MongoId, double>? SecuredItems { get; set; }
+    /// <summary> 毛收益 </summary>
     [JsonPropertyName("grossProfit")] public long GrossProfit { get; set; }
-    // 战损
+    /// <summary> 战损 </summary>
     [JsonPropertyName("combatLosses")] public long CombatLosses { get; set; }
-    // 战局结果状态(包括详细击杀数据
+    /// <summary> 战局结果状态(包括详细击杀数据) </summary>
     [JsonPropertyName("eftStats")] public EftStats? EftStats { get; set; }
-    // 突袭实际结果
+    /// <summary> 突袭实际结果 </summary>
     [JsonPropertyName("results")] public RaidResultData? Results { get; set; }
-
-    // 压缩战斗记录信息
-    public void Zip(RaidInfo raidInfo, ItemHelper itemHelper)
-    {
-        ServerId = raidInfo.ServerId;
-        PlayerId = raidInfo.PlayerId;
-        CreateTime = raidInfo.CreateTime;
-        State = raidInfo.State;
-        Side = raidInfo.Side;
-        if (raidInfo.EftStats == null)
-        {
-            State = "中途退出";
-        }
-
-        // Console.WriteLine("RaidInfo.ItemsTakeIn");
-        // foreach (var (_, item) in raidInfo.ItemsTakeIn)
-        // {
-        //     Console.WriteLine($"\t{item.Template} {item.SlotId}");
-        // }
-        // Console.WriteLine("RaidInfo.ItemsTakeOut");
-        // foreach (var (_, item) in raidInfo.ItemsTakeOut)
-        // {
-        //     Console.WriteLine($"\t{item.Template} {item.SlotId}");
-        // }
-
-        ItemsTakeIn = new Dictionary<MongoId, double>();
-        ItemsTakeOut = new Dictionary<MongoId, double>();
-        foreach ((MongoId _, Item item) in raidInfo.ItemsTakeIn)
-        {
-            // 过滤掉无效物品
-            if (!itemHelper.IsValidItem(item.Template)) continue;
-            ItemsTakeIn.TryAdd(item.Template, 0);
-            double count = item.Upd?.StackObjectsCount ?? 1;
-            // if (count > 1) Console.WriteLine($"\t物品{item.Template.ToString()}堆叠{count}个");
-            ItemsTakeIn[item.Template] += itemHelper.GetItemQualityModifier(item) * count;
-        }
-        foreach ((MongoId _, Item item) in raidInfo.ItemsTakeOut)
-        {
-            // 过滤掉无效物品
-            if (!itemHelper.IsValidItem(item.Template)) continue;
-            ItemsTakeOut.TryAdd(item.Template, 0);
-            double count = item.Upd?.StackObjectsCount ?? 1;
-            // if (count > 1) Console.WriteLine($"\t物品{item.Template.ToString()}堆叠{count}个");
-            ItemsTakeOut[item.Template] += itemHelper.GetItemQualityModifier(item) * count;
-        }
-
-        // Console.WriteLine("RaidArchive.ItemsTakeIn");
-        // foreach (var (tpl, modify) in ItemsTakeIn)
-        // {
-        //     Console.WriteLine($"\t{tpl}x{modify}");
-        // }
-        // Console.WriteLine("RaidArchive.ItemsTakeOut");
-        // foreach (var (tpl, modify) in ItemsTakeOut)
-        // {
-        //     Console.WriteLine($"\t{tpl}x{modify}");
-        // }
-
-        // 其他属性
-        PreRaidValue = raidInfo.PreRaidValue;
-        EquipmentValue = raidInfo.EquipmentValue;
-        SecuredValue = raidInfo.SecuredValue;
-        GrossProfit = raidInfo.GrossProfit;
-        CombatLosses = raidInfo.CombatLosses;
-        EftStats = raidInfo.EftStats;
-        Results = raidInfo.Results;
-    }
 }

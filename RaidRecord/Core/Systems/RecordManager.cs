@@ -7,9 +7,12 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Utils;
+using SPTarkov.Server.Core.Utils.Cloners;
+using Path = System.IO.Path;
 
 namespace RaidRecord.Core.Systems;
 
@@ -28,7 +31,8 @@ public class RecordManager(
     ModHelper modHelper,
     ProfileHelper profileHelper,
     ItemHelper itemHelper,
-    SaveServer saveServer
+    SaveServer saveServer,
+    ICloner cloner
 ): IOnLoad
 {
     private string? _recordDbPath;
@@ -333,7 +337,7 @@ public class RecordManager(
             RaidDataWrapper wrapper = new();
             if (records.InfoRecordCache != null)
             {
-                records.Records.Add(records.InfoRecordCache.Zip(itemHelper));
+                records.Records.Add(ZipRaidDataWrapper(records.InfoRecordCache));
                 // modConfig.Warn($"玩家{playerId}的战绩记录缓存不为空, 已直接归档缓存");
                 modConfig.Warn(i18N.GetText(
                     "RecordManager-Warn.创建记录时存在缓存->归档缓存",
@@ -382,14 +386,83 @@ public class RecordManager(
         {
             foreach (RaidDataWrapper wrapper in combatRecord.Records)
             {
-                wrapper.Zip(itemHelper);
+                ZipRaidDataWrapper(wrapper);
             }
             if (combatRecord.InfoRecordCache != null)
             {
-                combatRecord.Records.Add(combatRecord.InfoRecordCache.Zip(itemHelper));
+                combatRecord.Records.Add(ZipRaidDataWrapper(combatRecord.InfoRecordCache));
                 combatRecord.InfoRecordCache = null;
             }
         }
         SaveEFTRecord(account);
+    }
+
+    /// <summary>
+    /// 如果RaidDataWrapper未存档，则进行存档
+    /// <returns> 存档后的数据 </returns>
+    /// </summary>
+    public RaidDataWrapper ZipRaidDataWrapper(RaidDataWrapper raidData)
+    {
+        if (!raidData.IsInfo) return raidData;
+        raidData.Archive = new RaidArchive
+        {
+            ServerId = raidData.Info!.ServerId,
+            PlayerId = raidData.Info!.PlayerId,
+            CreateTime = raidData.Info!.CreateTime,
+            State = raidData.Info.State,
+            Side = raidData.Info.Side,
+            ItemsTakeIn = new Dictionary<MongoId, double>(),
+            ItemsTakeOut = new Dictionary<MongoId, double>(),
+            PreRaidValue = raidData.Info.PreRaidValue,
+            EquipmentValue = raidData.Info.EquipmentValue,
+            SecuredValue = raidData.Info.SecuredValue,
+            SecuredItems = new Dictionary<MongoId, double>(),
+            GrossProfit = raidData.Info.GrossProfit,
+            CombatLosses = raidData.Info.CombatLosses,
+            EftStats = cloner.Clone(raidData.Info.EftStats),
+            Results = cloner.Clone(raidData.Info.Results)
+        };
+
+        if (raidData.Info.EftStats == null)
+        {
+            raidData.Archive.State = "中途退出";
+        }
+
+        AccumulateItems(raidData.Info.ItemsTakeIn.Values, raidData.Archive.ItemsTakeIn);
+        AccumulateItems(raidData.Info.ItemsTakeOut.Values, raidData.Archive.ItemsTakeOut);
+
+        List<Item?> equipmentItems = raidData.Info.EquipmentItems?.Select(cloner.Clone).ToList() ?? [];
+        List<Item?> securedItems = raidData.Info.SecuredItems?.Select(cloner.Clone).ToList() ?? [];
+
+        raidData.Archive.EquipmentItems = equipmentItems.Where(x => x is not null).Cast<Item>().ToArray();
+
+        Item[] securedNotNullItems = securedItems.Where(x => x is not null).Cast<Item>().ToArray();
+
+        AccumulateItems(securedNotNullItems, raidData.Archive.SecuredItems);
+
+        raidData.Info = null;
+        return raidData;
+    }
+
+    /// <summary>
+    /// 把items中物品, 按 id -> 总修正 方式以targetDictionary储存
+    /// </summary>
+    /// <param name="items"></param>
+    /// <param name="targetDictionary"></param>
+    private void AccumulateItems(
+        IEnumerable<Item> items,
+        Dictionary<MongoId, double> targetDictionary)
+    {
+        foreach (Item item in items)
+        {
+            MongoId tpl = item.Template;
+            if (!itemHelper.IsValidItem(tpl)) continue;
+
+            targetDictionary.TryAdd(tpl, 0);
+
+            double count = item.Upd?.StackObjectsCount ?? 1;
+            double qualityModifier = itemHelper.GetItemQualityModifier(item);
+            targetDictionary[tpl] += qualityModifier * count;
+        }
     }
 }

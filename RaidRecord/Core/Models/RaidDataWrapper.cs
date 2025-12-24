@@ -14,17 +14,4 @@ public class RaidDataWrapper
 
     public bool IsInfo => Info != null;
     public bool IsArchive => Archive != null;
-
-    /// <summary>
-    /// 如果未存档，则进行存档
-    /// <returns> 存档后的数据 </returns>
-    /// </summary>
-    public RaidDataWrapper Zip(ItemHelper itemHelper)
-    {
-        if (!IsInfo) return this;
-        Archive = new RaidArchive();
-        Archive.Zip(Info!, itemHelper);
-        Info = null;
-        return this;
-    }
 }
