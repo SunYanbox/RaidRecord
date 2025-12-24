@@ -1,150 +1,169 @@
-# RaidRecord
+# Tabs {.tabset}
 
-一款用于记录离线版塔克夫战绩的模组
+## 模组概述与安装方式
 
-## 更新日志
+### 模组概述
 
-### 0.6.5
+原版游戏仅保存有限统计数据(总览页面), 而本模组精准记录每一场对局的完整战斗日志, 包括:
 
-新增
-- 新增`price`指令, 用于搜索物品价值; 允许通过tpl精确搜索; 或者通过名字模糊搜索
-  > 如果名字中含有空格, 需要使用一对英文半角双引号双引号包含, 例如`price name "45mm SSA"`
-  > 同时最后且只有最后一个双引号允许缺省, 例如`price name "45mm SSA`
+**击杀**
+> 使用`info index [需要查看的对局]`即可查看
+- 使用的具体武器
+- 命中部位(头部、胸部、四肢等)
+- 击杀目标类型(PMC、Scav、Boss、Scav Boss、Boss 带的守卫等)
+-  击杀目标的时间
 
-修改
-- 允许的误差改为1e-9
-- 使用RagfairController中的方式重构价格计算逻辑
-- 重构了StringUtil.SplitCommand以支持在参数中包含带有空格的字符串
-- PriceSystem提供的用到缓存的函数, 已更名以使得函数名更清晰
-- 将`RaidRecord/RaidRecord.cs`中注册ChatBot的代码移动到RaidRecordManagerChat中, 从属关系更明确
+**物资**
+- 带入对局的物品与带出对局的物品清单
+  > 使用`items index [需要查看的对局] mode all`来查看
+- 这场对局中新搜到的物资, 损失的物资, 变化的物资(子弹数量增加, 药品与武器耐久减少等)
+  > 使用`items index [需要查看的对局] (mode change)`(圆括号内可省略)来查看
 
-优化
-- 优化价格计算逻辑
-- 优化指令系统, 参数内需要包含空格时, 可以通过一对英文半角双引号包含, 例如`items name "45mm SSA"`
+**对局收益**
+> 使用`info index [需要查看的对局]`即可查看
+- 对局地图信息, 对局游玩时间
+- 对局入场时的
+    - 战备价值(类似三角洲行动, 计算武器, 弹挂, 背包, 护甲等装备的价值和)
+    - 安全箱内价值(安全箱内所有物资总价值, 有不少情况下, 这里的价值占非常大的比率)(Scav模式为0)
+    - 总的带入价值(该值等于战备价值+安全箱内价值+背包弹挂口袋特殊插槽内的物品价值)
+- 离开对局时
+    - 带出总价值(算是毛利润)
+    - 战损(使用物品消耗, 丢弃物品, 耐久损耗等)
+    - 净利润(毛利润-战损)
+- 对局结果
+  ```csharp
+  // 理论上有这些:
+  public enum ExitStatus
+  {
+    SURVIVED, // 幸存
+    KILLED, // 被击杀
+    LEFT, // 离开对局(指客户端Esc后那个选项)
+    RUNNER, // 匆匆撤离
+    MISSINGINACTION, // 迷失
+    TRANSIT, // 转移
+  }
+  ```
+- 如果幸存/转移/匆匆撤离 : 撤离点信息, 游戏风格信息
+- 其他情况: 被哪个阵营的哪个敌人(除了boss, 名称不重要)使用什么武器命中你哪个肢体淘汰你的信息
 
-修复
-- 修复了`items`指令使用ShortName导致一些物品显示信息不明显的问题
-- 修复了价格计算偶尔过低的问题
-- 修复了输出注册ChatBot的本地化日志时, 本地化系统还未加载的问题
+**价格**
+> 使用`price name "[物品名称关键词]"`(如果关键词中没有空格, 回车等字符, 可以省略双引号)即可查看
+> 该功能偏向调试, 主要用于验证模组计算的价格是否正确, 也可以用于模糊搜索与关键词相关的物品名称与ID
 
-### 0.6.4
+**意外情况处理**
+- 模组会在服务端记录数据, 如果对局结束时服务端在非本模组原因下崩溃, 重启服务端仍然有概率正确记录对局数据
+- 对局启动后Alt+F4或者客户端崩溃, 下一次启动战局后会导致记录的该战局的缓存对局结果被记录为未知结局
 
-新增
-- 新增设置选项`autoUnloadOtherLanguages`: 默认为true, 当为true时, 模组将自动卸载其他不使用的语言的数据
-  > 例如: 你当前语言是en, 将加载完成后将删除除了en和ch(出错回退语言)外其他所有语言的数据
-- 新增设置选项`priceCacheUpdateMinTime`: 默认为6min, 控制新版价格缓存持有时间
-- info中新增击杀数量与爆头率信息
-- list显示时进行了一定程度的格式化, 提升可视性
+### 安装方式
 
-更改
-- 重构了价格计算逻辑, 改为 合理的市场报价的三均值--回退-->手册/prices.json的价格
-- 重构了本地化逻辑, 目的是让翻译文件的键更直观
-- 将ItemUtil从静态类改为依赖注入类, 降低其函数参数对ItemHelper的依赖
-- 将RecordCacheManager更名为RecordManager
-- 提取info与items指令共有的部分为对局元数据信息
-- 将LocalizationManager类重命名为I18N
-> 因为写`LocalizationManager`写的我难受, 专门搜了个短的表示国际化的词代替
+安装方法很简单, 只需将 .7z 文件解压到您的SPT游戏根目录即可
+安装完成后，您的文件结构应如下所示：
+```
+你的SPT游戏根目录\SPT\user\mods\RaidRecord\(模组的任何文件)
+```
 
-优化
-- 优化了价格计算与缓存逻辑, 默认每条价格缓存6min
-- 优化了本地化获取译文的方式
-- 优化了本地语言包多了后对内存的占用
-- 优化了list命令显示的文本
-- 优化了info显示的信息
-- SPT相关的数据库, 获取后的变量名称附带`spt`前缀
+### 致谢
 
-修复
-- `info`与`items`命令移除使用`ServerId`获取对局的方式, 命令中index依然是可选参数, 但不输入默认为-1
-- 修复了部分地图名称没有正确使用本地化描述的问题
-- 修复了击杀者信息显示部位错误的问题
+- 感谢SPT团队提供的框架与文档。
+- 感谢DrakiaXYZ, HiddenCirno, jbs4bmx, GhostFenix̵̮̀x̴̹̃©, Dsnyder | WTT以及其他所有在社区中分享经验、代码与耐心解答问题的开发者们。
+- 感谢您下载并尝试本模组。
 
-> 未本地化的剩下的那几个一直没遇到过, 先不翻译了
+## 配置, 数据库, 命令系统与本地化方式
 
-### 0.6.3
+### 设置
 
-新增
-- items指令新增 mode 参数支持 change/all 模式切换物品显示
-- 新增 GetParameter<T> 泛型方法，支持从参数字典中安全提取并转换值
-- 新增通过 serverId 和 index 精确查找对局存档的功能
-- 新增独立的 UpdateItemsChanged 方法，用于统一处理物品变更检测逻辑
-- 聊天机器人命令执行流程中新增异常捕获机制，提升稳定性
-- 对局开始与结束时补充信息用于辅助判断模组能否正确记录带入带出物品的数据
+1. 前往…/SPT/user/mods/RaidRecord/db 并打开“config.json”
+2. 设置`local`为db/locals文件夹下存在的翻译文件的二位名称, 例如"cn"
+   > 更改任何语言后如果无效, 应该在Launcher清理本地缓存后再启动客户端
+3. 设置`logPath`以更改模组内一些日志的输出目录(这是为了避免模组报错信息导致SPT服务端日志过于繁琐的问题)
+4. 设置`autoUnloadOtherLanguages`, 以启用`0.6.4`开始的对多语言化的优化功能
+5. 设置`priceCacheUpdateMinTime`, 以更改模组价格缓存的更新间隔, 该设置不会影响`price`命令, `price`只会立刻获取当前模组计算的价格
 
-更改
-- 将RaidInfo中的突袭开始和结束处理方法移至RaidUtil工具类
-- 新增RaidUtil类统一管理突袭相关的业务逻辑
-- 重构了命令系统
-- 限制所有储存的命令参数为小写, 以支持客户端可以大小写任意输入
-- 重构命令类中的参数解析逻辑，统一调用新工具方法以提高复用性
-- 所有命令参数名在解析前统一转为小写，增强命令兼容性与容错能力
-- 对局结束获取物品时将不再从Resuts.Profile中获取, 此处疑似是对局开始的存档数据
+### 数据库说明
 
-优化
-- 优化物品变更信息的显示格式：限制描述长度、对齐数值列，显著提升可读性
-- 简化物品变更检测流程，逻辑更清晰，性能更高效
-- 调整物品详情格式化输出，增强可读性
-- 修改物品带入带出信息显示格式，明确标示价格计算方式
+> …/SPT/user/mods/RaidRecord/db 文件夹
 
-移除
-- 命令系统中移除了`CommandCallback`委托, 改为基于抽象类与派生了实现执行命令
-- 移除多处重复的物品变更集合（add/remove/change）清理代码，减少冗余
+**~0.6.1**
+locals文件夹下为翻译文件
+records文件夹(运行过模组后才会创建)为不同账户的记录文件
+config.json保存模组配置
 
-### 0.6.2
+安装与数据库的兼容性参考本模组的**Version**中的详细信息
 
-新增
-- 通过局内ChatBot获取信息时, 当信息超过一条后会显示当前发送的条数与剩余条数, 这些信息结束位置会显示他们对应的消息列表的开头的一些字符, 用来标记消息所属的信息
-- 游戏开始或结束时, 输出信息, 用于判断是否正确记录对局信息
-- 支持Scav模式了
+### 命令系统
 
-变化
-- 重构了对局记录的数据结构
-- 进行了完整的代码清理与格式化, 优化了代码风格
-- 实现了除了命令相关的那些函数外绝大部分非空引用判断
-- 部分引用为空时显示错误信息, 方便追踪与报告可能的错误
-- `InjectableClasses`由手动注入依赖改为主构造函数注入
-- 移除了当战局是Scav时抛出异常的逻辑, 支持Scav模式的战斗记录数据
-- 修改 RecordCacheManager 以支持按账户 ID 管理数据
-- 修改了RaidRecordManagerChat各个指令获取存档的逻辑, 以获取正确存档
+> 所有命令和参数对大小写不敏感, 但推荐全部使用小写字母
 
-优化
-- 优化了长消息接受体验
-- 移除了不使用的变量, 移除了冗余初始化
-- 使用依赖注入降低了手动解析依赖的风险, 简化了获取依赖的代码
-- 优化物品价格计算和库存信息获取方法, 使用类似`InRaidHelper.SetInventory`中的方式
+进入对局后, 找到一个名为**对局战绩管理**的好友, 对他发送`help`以获取指令的帮助信息
 
-修复
-- 修复了无法查看未知结果(中途退出)的战绩详情的问题
-- 修复无法把输出目录的dll文件正确拷贝到SPT目录的问题
-- 修复了部分错误变量命名规范未清理的问题
+当前版本支持以下指令:
+- help: 获取所有命令帮助信息
+- cls: 清理对话框聊天记录(推荐多用用)
+- info: 获取指定对局收益, 击杀等信息
+- items: 获取指定对局物资变化或带入带出清单
+- list: 列出当前已有的所有对局记录, 页数越靠后, 对局越新; 可以通过`limit`参数调整每页显示数量
+- price: 获取指定物品价值, 或者通过名称模糊搜索多个物品价值
 
-已知问题
-- ~~游戏开始时info.ServerId意外为null(已修复)~~
-- 正常游戏流程下偶现游戏结束时没有发现任何已经开始的对局数据(发现是因为SPT偶尔会处理两次请求, 导致第二次没有数据)
-- 暂时不支持跟踪**转移**相关的物品的价值
-- 新版本部分信息与报错没有做多语言处理
+### 本地化方式
 
-计划
-- 考虑使用资源`.resx`进行多语言支持
-- ~~重构RaidInfo相关的成员函数, 降低其对部分参数的依赖和耦合~~
-- 重构命令系统, 降低RaidRecordManagerChat的代码长度, 分解相关的代码
-- 优化items指令, 或新添更多有用的指令
-- 支持**转移**相关的物品的跟踪
+**AI辅助翻译**
+1. 复制一份`ch.json`或`en.json`, 重命名为对应语言的二位名称, 例如"cz.json"(最好与Game Folder\SPT\SPT_Data\database\locales\global\**.json)的名称对应
+2. 将翻译文件发送给AI, 要求它保留格式的翻译;
+    - 如果AI进行了任何翻译键的操作, 打断他, 并在提示词中要求AI只翻译json的值
+    - 如果AI修改了任何{{}}中的内容, 打断他, 并在提示词中要求AI禁止翻译`{{}}`与其中的值
+3. 验证翻译结果是否正确, 上述操作基本能进行70%以上的翻译
+4. 检查翻译文件`"translations"`键下的各个表的列的变量是否与名称对应, 以防止AI改变语序(列名和表名顺序一起改变是可以的)
+5. 检查是否漏了`\n`
 
-### 0.6.1
-- 兼容过去版本(0.5.0)的数据库(即db文件夹下所有文件)
-- 修复了0.6.0版本大量命令失效的错误
-- 迁移0.5.0的代码到新命名空间结构
+**手动翻译**
+1. 可以在`Game Folder\SPT\SPT_Data\database\locales\global\**.json`通过找到的翻译
+    - "roleNames": 搜索`BotRole`和`ScavRole`
+    - "armorZone": 搜索`DeathInfo`, `Collider Type`(推荐), `Armor Zone`, `HeadSegment`
+2. 急需使用命令, 优先翻译"translations"下的值
+3. 急需查看服务端输出的日志, 优先翻译"serverMessage"下的值
 
-计划
-- 使用新代码风格进行代码清理
-- 完善空引用判断
-- 完善更详细的日志
+## 使用命令的示意图
 
-已知问题
-- ~~未知结果(中途退出)的战绩查看info时没有处理空引用问题~~
+```markdown
+### Example Images
 
-### 0.6.0
-- 从[RaidRecordOutdated](https://github.com/SunYanbox/raidrecordOutdated)迁移过来
-- ~~兼容过去版本(`raidrecord-v0.5.0bate-0.5.0`等)的数据库(即db文件夹下所有文件)~~
-- 不兼容模组文件夹名称, 不兼容模组dll文件名称
-- 新版本默认使用RaidRecord作为模组文件夹名称与dll文件名称, 方便未来覆盖式更新
+#### Load mod
+![Load mod](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/modLoad_en.png?raw=true)
+
+#### cls cmd
+![Use cls cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/cls_en.png?raw=true)
+
+#### list cmd
+![Use list cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/list_en.png?raw=true)
+
+#### items cmd
+![Use items cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/items_en.png?raw=true)
+
+#### info cmd
+![Use info cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/info_en.png?raw=true)
+
+![Use info cmd too](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/info_kill_en.png?raw=true)
+> The previous image did not eliminate any bots; here’s an additional one as a supplement.
+
+### 示例图片
+
+#### 模组加载时
+![模组加载时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/modLoad_ch.png?raw=true)
+
+#### cls命令
+![使用cls命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/cls_ch.png?raw=true)
+
+#### list命令
+![使用list命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/list_ch.png?raw=true)
+
+#### items命令
+![使用items命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/items_ch.png?raw=true)
+
+#### info命令
+![使用info命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/info_ch.png?raw=true)
+
+![使用info命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/info_kill_ch.png?raw=true)
+> 上一份图片中未击杀任何人机, 额外补一张
+```
+
+{.endtabset}
