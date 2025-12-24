@@ -3,6 +3,7 @@ using RaidRecord.Core.ChatBot.Commands;
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Configs;
 using RaidRecord.Core.Locals;
+using RaidRecord.Core.Systems;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
@@ -25,7 +26,7 @@ public class RaidRecordManagerChat(
     I18N i18N,
     IServiceProvider serviceProvider,
     ConfigServer configServer,
-    CmdUtil cmdUtil): IDialogueChatBot, IOnLoad
+    DataGetterSystem dataGetter): IDialogueChatBot, IOnLoad
 {
     public readonly Dictionary<string, CommandBase> Commands = new();
 
@@ -46,7 +47,7 @@ public class RaidRecordManagerChat(
 
     public UserDialogInfo GetChatBot()
     {
-        return cmdUtil.GetChatBot();
+        return dataGetter.GetChatBotInfo();
     }
 
     public ValueTask<string> HandleMessage(MongoId sessionId, SendMessageRequest request)

@@ -14,6 +14,7 @@ public class PriceCmd: CommandBase
     private readonly I18N _i18N;
     private readonly PriceSystem _priceSystem;
     private readonly ItemHelper _itemHelper;
+    private readonly DataGetterSystem _dataGetter;
     private readonly int _itemNameLen = "5422acb9af1c889c16000029 Name".Length;
 
     /// <summary>
@@ -21,12 +22,14 @@ public class PriceCmd: CommandBase
     /// </summary>
     private Dictionary<string, string>? _name2Id;
 
-    public PriceCmd(CmdUtil cmdUtil, I18N i18N, ItemHelper itemHelper, PriceSystem priceSystem)
+    public PriceCmd(CmdUtil cmdUtil, I18N i18N, ItemHelper itemHelper, PriceSystem priceSystem,
+        DataGetterSystem dataGetter)
     {
         _cmdUtil = cmdUtil;
         _i18N = i18N;
         _priceSystem = priceSystem;
         _itemHelper = itemHelper;
+        _dataGetter = dataGetter;
         Key = "price";
         Desc = i18N.GetText("Cmd-Price.Desc");
         ParaInfo = cmdUtil.ParaInfoBuilder
@@ -41,7 +44,7 @@ public class PriceCmd: CommandBase
     {
         if (_name2Id != null) return;
         _name2Id ??= new Dictionary<string, string>();
-        Dictionary<string, string>? sptLocals = _i18N.GetSptLocals();
+        Dictionary<string, string>? sptLocals = _dataGetter.GetSptLocals();
         if (sptLocals == null) return;
         foreach (KeyValuePair<string, string> kv in sptLocals.AsReadOnly()) // 不需要更改spt的数据库, 只读限定一下
         {

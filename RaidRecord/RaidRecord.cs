@@ -1,12 +1,6 @@
-﻿using RaidRecord.Core.ChatBot;
-using RaidRecord.Core.Configs;
-using RaidRecord.Core.Locals;
+﻿using RaidRecord.Core.Configs;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
-using SPTarkov.Server.Core.Models.Eft.Profile;
-using SPTarkov.Server.Core.Models.Spt.Config;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Servers;
 
 // ReSharper disable UnusedType.Global
 

@@ -5,10 +5,8 @@ using RaidRecord.Core.Models;
 using RaidRecord.Core.Systems;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
-using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Enums;
 
 namespace RaidRecord.Core.Utils;
@@ -35,7 +33,6 @@ public class CmdUtil(
     public bool IsBodyPartHeadshotKill(string? bodyPart)
     {
         return !string.IsNullOrEmpty(bodyPart) && HeadshotBodyPart.Any(bodyPart.Contains);
-
     }
 
     public static string GetPlayerGroupOfServerId(string serverId)
@@ -165,23 +162,6 @@ public class CmdUtil(
         }
     }
 
-    public UserDialogInfo GetChatBot()
-    {
-        return new UserDialogInfo
-        {
-            Id = "68e2d45e17ea301214c2596d",
-            Aid = 8100860,
-            Info = new UserDialogDetails
-            {
-                Nickname = I18N!.GetText("ChatBotName"),
-                Side = "Usec",
-                Level = 69,
-                MemberCategory = MemberCategory.Sherpa,
-                SelectedMemberCategory = MemberCategory.Sherpa
-            }
-        };
-    }
-
     public string DateFormatterFull(long timestamp)
     {
         var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc); // Unix 时间起点
@@ -240,58 +220,5 @@ public class CmdUtil(
             ? I18N!.GetText("CmdUtil-Error.参数验证.属性ManagerChat为空")
             : null;
         // return parametric.ManagerChat == null ? "实例未正确初始化: 缺少managerChat属性" : null;
-    }
-
-    public MongoId? GetAccountBySession(string sessionId)
-    {
-        return RecordManager!.GetAccount(profileHelper.GetPmcProfile(sessionId)?.Id ?? new MongoId());
-    }
-
-    public List<RaidArchive> GetArchivesBySession(string sessionId)
-    {
-        List<RaidArchive> result = [];
-        MongoId? account = GetAccountBySession(sessionId);
-        if (account == null) return result;
-        EFTCombatRecord records = RecordManager!.GetRecord(account.Value);
-        foreach (RaidDataWrapper record in records.Records)
-        {
-            if (record.IsArchive)
-            {
-                result.Add(record.Archive!);
-            }
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// 尝试通过serverId配合sessionId获取准确存档
-    /// </summary>
-    public RaidArchive? GetArchiveWithServerId(string serverId, string sessionId)
-    {
-        if (string.IsNullOrEmpty(serverId)) return null;
-        List<RaidArchive> records = GetArchivesBySession(sessionId);
-        RaidArchive? record = records.Find(x => x.ServerId.ToString() == serverId);
-        return record;
-    }
-
-    /// <summary>
-    /// 尝试通过index配合sessionId获取准确存档
-    /// </summary>
-    /// <exception cref="IndexOutOfRangeException">索引超出范围时报错</exception>
-    public RaidArchive GetArchiveWithIndex(int index, string sessionId)
-    {
-        List<RaidArchive> records = GetArchivesBySession(sessionId);
-        if (index >= records.Count || index < 0)
-        {
-            throw new IndexOutOfRangeException(I18N!.GetText(
-                "CmdUtil-Error.索引超出记录数量范围",
-                new
-                {
-                    Index = index,
-                    RecordCount = records.Count
-                }));
-        }
-        // throw new IndexOutOfRangeException($"index {index} out of range: [0, {records.Count})");
-        return records[index];
     }
 }

@@ -1,12 +1,11 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
+using RaidRecord.Core.Systems;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Enums;
-using SPTarkov.Server.Core.Services;
-using SPTarkov.Server.Core.Utils.Json;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
@@ -14,14 +13,13 @@ namespace RaidRecord.Core.ChatBot.Commands;
 public class InfoCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
-    private readonly DatabaseService _databaseService;
     private readonly I18N _i18N;
     private readonly string _unknowWeapon;
+    private readonly DataGetterSystem _dataGetter;
 
-    public InfoCmd(CmdUtil cmdUtil, DatabaseService databaseService, I18N i18N)
+    public InfoCmd(CmdUtil cmdUtil, DataGetterSystem dataGetter, I18N i18N)
     {
         _cmdUtil = cmdUtil;
-        _databaseService = databaseService;
         Key = "info";
         Desc = i18N.GetText("Cmd-Info.Desc");
         ParaInfo = cmdUtil.ParaInfoBuilder
@@ -30,6 +28,7 @@ public class InfoCmd: CommandBase
             .Build();
         _unknowWeapon = i18N.GetText("UnknownWeapon");
         _i18N = i18N;
+        _dataGetter = dataGetter;
     }
 
     public override string Execute(Parametric parametric)
@@ -39,7 +38,7 @@ public class InfoCmd: CommandBase
 
         int index = _cmdUtil.GetParameter(parametric.Paras, "index", -1);
 
-        return GetArchiveDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId));
+        return GetArchiveDetails(_dataGetter.GetArchiveWithIndex(index, parametric.SessionId));
     }
 
     private string GetArchiveDetails(RaidArchive archive)
@@ -49,8 +48,7 @@ public class InfoCmd: CommandBase
         msg += _cmdUtil.GetArchiveMetadata(archive);
 
         List<Victim> victims = archive.EftStats?.Victims?.ToList() ?? [];
-        LazyLoad<Dictionary<string, string>> sptLocalTemps = _databaseService.GetTables().Locales.Global[_cmdUtil.I18N!.CurrentLanguage];
-        Dictionary<string, string>? sptLocals = sptLocalTemps.Value;
+        Dictionary<string, string>? sptLocals = _dataGetter.GetSptLocals();
 
         if (victims.Count > 0)
         {
@@ -76,7 +74,7 @@ public class InfoCmd: CommandBase
                     {
                         VictimTime = victim.Time?[..13],
                         WeaponName = weapon,
-                        BodyPart = _cmdUtil.I18N.GetArmorZoneName(victim.BodyPart ?? ""),
+                        BodyPart = _cmdUtil.I18N!.GetArmorZoneName(victim.BodyPart ?? ""),
                         VictimDistance = (int)(victim.Distance ?? 0),
                         VictimName = victim.Name,
                         VictimLevel = victim.Level,
@@ -115,7 +113,7 @@ public class InfoCmd: CommandBase
                         AggressorName = aggressor.Name,
                         AggressorSide = aggressor.Side,
                         WeaponName = weapon,
-                        BodyPart = _cmdUtil.I18N.GetArmorZoneName(aggressor.BodyPart ?? _i18N.GetText("Unknown"))
+                        BodyPart = _cmdUtil.I18N!.GetArmorZoneName(aggressor.BodyPart ?? _i18N.GetText("Unknown"))
                     }
                 );
             }

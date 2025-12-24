@@ -1,6 +1,7 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
+using RaidRecord.Core.Systems;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
@@ -16,20 +17,25 @@ public class ItemsCmd: CommandBase
     private readonly DatabaseService _databaseService;
     private readonly ItemHelper _itemHelper;
     private readonly I18N _i18N;
+    private readonly DataGetterSystem _dataGetter;
 
     public ItemsCmd(CmdUtil cmdUtil,
         DatabaseService databaseService,
+        DataGetterSystem dataGetter,
         I18N i18N,
         ItemHelper itemHelper)
     {
         _cmdUtil = cmdUtil;
         _databaseService = databaseService;
         _itemHelper = itemHelper;
+        _dataGetter = dataGetter;
         Key = "items";
         Desc = i18N.GetText("Cmd-Items.Desc");
         ParaInfo = cmdUtil.ParaInfoBuilder
             .AddParam("index", "int", i18N.GetText("Cmd-参数简述.index"))
             .AddParam("mode", "string", i18N.GetText("Cmd-参数化简述.Items.mode"))
+            .AddParam("ge", "double", i18N.GetText("Cmd-参数化简述.Items.ge"))
+            .AddParam("le", "double", i18N.GetText("Cmd-参数化简述.Items.le"))
             .SetOptional(["index", "mode"])
             .Build();
         _i18N = i18N;
@@ -42,18 +48,31 @@ public class ItemsCmd: CommandBase
 
         int index = _cmdUtil.GetParameter(parametric.Paras, "index", -1);
         string mode = _cmdUtil.GetParameter<string>(parametric.Paras, "mode", "change");
+        double ge = _cmdUtil.GetParameter<double>(parametric.Paras, "ge", 0);
+        double le = _cmdUtil.GetParameter<double>(parametric.Paras, "le", double.MaxValue);
 
-        return GetItemsDetails(_cmdUtil.GetArchiveWithIndex(index, parametric.SessionId), mode);
+        return GetItemsDetails(
+            _dataGetter.GetArchiveWithIndex(index, parametric.SessionId),
+            mode, ge, le);
     }
 
-    protected string GetItemsDetails(RaidArchive archive, string mode)
+    private bool ShouldSkip(MongoId tpl, double modify, double ge, double le)
+    {
+        ge = Math.Abs(ge);
+        le = Math.Abs(le);
+        if (ge > le) (ge, le) = (le, ge);
+        double priceValue = Math.Abs((_itemHelper.GetItemPrice(tpl) ?? 0) * modify);
+        return !(priceValue >= ge && priceValue <= le);
+    }
+
+    protected string GetItemsDetails(RaidArchive archive, string mode, double ge, double le)
     {
         string msg = "";
 
         msg += _cmdUtil.GetArchiveMetadata(archive);
 
         // Dictionary<MongoId, TemplateItem> itemTpls = databaseService.GetTables().Templates.Items;
-        Dictionary<string, string>? sptLocal = _databaseService.GetTables().Locales.Global[_cmdUtil.I18N!.CurrentLanguage].Value;
+        Dictionary<string, string>? sptLocal = _dataGetter.GetSptLocals();
 
         if (sptLocal == null) return "无法显示属性, 这是由于SPT的本地化数据库加载失败";
 
@@ -68,6 +87,7 @@ public class ItemsCmd: CommandBase
 
                 foreach ((MongoId tpl, double modify) in archive.ItemsTakeIn)
                 {
+                    if (ShouldSkip(tpl, modify, ge, le)) continue;
                     msg += $"\n\n - {GetItemDetails(tpl, modify, sptLocal)}";
                 }
             }
@@ -77,6 +97,7 @@ public class ItemsCmd: CommandBase
                 msg += _i18N.GetText("Cmd-Items.All.带出物品标题");
                 foreach ((MongoId tpl, double modify) in archive.ItemsTakeOut)
                 {
+                    if (ShouldSkip(tpl, modify, ge, le)) continue;
                     msg += $"\n\n - {GetItemDetails(tpl, modify, sptLocal)}";
                 }
             }
@@ -96,8 +117,9 @@ public class ItemsCmd: CommandBase
         foreach (MongoId addTpl in add)
         {
             double modify = archive.ItemsTakeOut.GetValueOrDefault(addTpl, 0);
-            if (Math.Abs(modify) > Constants.Epsilon)
-                msg += $"\n + {GetItemDetails(addTpl, modify, sptLocal)}";
+            if (!(Math.Abs(modify) > Constants.Epsilon)) continue;
+            if (ShouldSkip(addTpl, modify, ge, le)) continue;
+            msg += $"\n + {GetItemDetails(addTpl, modify, sptLocal)}";
         }
 
         msg += _i18N.GetText("Cmd-Items.Change.丢失的物品");
@@ -105,8 +127,9 @@ public class ItemsCmd: CommandBase
         foreach (MongoId removeTpl in remove)
         {
             double modify = archive.ItemsTakeIn.GetValueOrDefault(removeTpl, 0);
-            if (Math.Abs(modify) > Constants.Epsilon)
-                msg += $"\n - {GetItemDetails(removeTpl, modify, sptLocal)}";
+            if (!(Math.Abs(modify) > Constants.Epsilon)) continue;
+            if (ShouldSkip(removeTpl, modify, ge, le)) continue;
+            msg += $"\n - {GetItemDetails(removeTpl, modify, sptLocal)}";
         }
 
         msg += _i18N.GetText("Cmd-Items.Change.变化的物品");
@@ -115,8 +138,9 @@ public class ItemsCmd: CommandBase
         {
             double modify = archive.ItemsTakeOut.GetValueOrDefault(changeTpl, 0)
                             - archive.ItemsTakeIn.GetValueOrDefault(changeTpl, 0);
-            if (Math.Abs(modify) > Constants.Epsilon)
-                msg += $"\n ~ {GetItemDetails(changeTpl, modify, sptLocal)}";
+            if (!(Math.Abs(modify) > Constants.Epsilon)) continue;
+            if (ShouldSkip(changeTpl, modify, ge, le)) continue;
+            msg += $"\n ~ {GetItemDetails(changeTpl, modify, sptLocal)}";
         }
 
         return msg;

@@ -1,6 +1,7 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
+using RaidRecord.Core.Systems;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 
@@ -11,8 +12,9 @@ public class ListCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
     private readonly I18N _i18N;
+    private readonly DataGetterSystem _dataGetter;
 
-    public ListCmd(CmdUtil cmdUtil, I18N i18N)
+    public ListCmd(CmdUtil cmdUtil, I18N i18N, DataGetterSystem dataGetter)
     {
         _cmdUtil = cmdUtil;
         Key = "list";
@@ -23,6 +25,7 @@ public class ListCmd: CommandBase
             .SetOptional(["limit", "page"])
             .Build();
         _i18N = i18N;
+        _dataGetter = dataGetter;
     }
 
     public override string Execute(Parametric parametric)
@@ -30,13 +33,16 @@ public class ListCmd: CommandBase
         string? verify = _cmdUtil.VerifyIParametric(parametric);
         if (verify != null) return verify;
 
-        List<RaidArchive> records = _cmdUtil.GetArchivesBySession(parametric.SessionId);
+        List<RaidArchive> records = _dataGetter.GetArchivesBySession(parametric.SessionId);
         int numberLimit = _cmdUtil.GetParameter(parametric.Paras, "Limit", 10);
-        int page = _cmdUtil.GetParameter(parametric.Paras, "Page", 1);
-        numberLimit = Math.Min(20, Math.Max(1, numberLimit));
-        page = Math.Max(1, page);
+        int page = _cmdUtil.GetParameter(parametric.Paras, "Page", -1);
+        numberLimit = Math.Min(50, Math.Max(1, numberLimit));
 
         int totalCount = records.Count;
+        int pageTotal = (int)Math.Ceiling((double)totalCount / numberLimit);
+
+        page = Math.Min(Math.Max(1, page > 0 ? page : pageTotal + page + 1), pageTotal);
+
         int indexLeft = Math.Max(numberLimit * (page - 1), 0);
         int indexRight = Math.Min(numberLimit * page, totalCount);
         if (totalCount <= 0) return _i18N.GetText("Cmd-List.没有任何历史战绩");
@@ -67,7 +73,7 @@ public class ListCmd: CommandBase
             ResultCount = countAfterCheck,
             TotalCount = totalCount,
             PageCurrent = page,
-            PageTotal = (int)Math.Ceiling((double)totalCount / numberLimit)
+            PageTotal = pageTotal
         });
         // string msg = $"历史战绩(共{countAfterCheck}/{totalCount}条, 第{page}页/共{(int)Math.Ceiling((double)totalCount / numberLimit)}页):\n";
 

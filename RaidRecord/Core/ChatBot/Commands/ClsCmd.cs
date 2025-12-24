@@ -1,8 +1,8 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
+using RaidRecord.Core.Systems;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 
@@ -12,16 +12,17 @@ namespace RaidRecord.Core.ChatBot.Commands;
 public class ClsCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
-    private readonly DialogueHelper _dialogueHelper;
+    private readonly DataGetterSystem _dataGetter;
     private readonly I18N _i18N;
 
-    public ClsCmd(CmdUtil cmdUtil, DialogueHelper dialogueHelper, I18N i18N)
+    public ClsCmd(CmdUtil cmdUtil, I18N i18N,
+        DataGetterSystem dataGetter)
     {
         _cmdUtil = cmdUtil;
-        _dialogueHelper = dialogueHelper;
         Key = "cls";
         Desc = i18N.GetText("Cmd-Cls.Desc");
         _i18N = i18N;
+        _dataGetter = dataGetter;
     }
 
     public override string Execute(Parametric parametric)
@@ -29,9 +30,9 @@ public class ClsCmd: CommandBase
         string? verify = _cmdUtil.VerifyIParametric(parametric);
         if (verify != null) return verify;
 
-        UserDialogInfo managerProfile = _cmdUtil.GetChatBot();
+        UserDialogInfo managerProfile = _dataGetter.GetChatBotInfo();
 
-        Dictionary<MongoId, Dialogue> dialogs = _dialogueHelper.GetDialogsForProfile(parametric.SessionId);
+        Dictionary<MongoId, Dialogue> dialogs = _dataGetter.GetDialogsForProfile(parametric.SessionId);
         Dialogue dialog = dialogs[managerProfile.Id];
         // if (dialog.Messages == null) return "找不到你的聊天记录";
         if (dialog.Messages == null) return _i18N.GetText("Cmd-Cls.找不到聊天记录");
