@@ -105,6 +105,7 @@ public class RaidRecordManagerChat(
             RegisterCommand<ListCmd>();
             RegisterCommand<ItemsCmd>();
             RegisterCommand<PriceCmd>();
+            RegisterCommand<BuyCmd>();
 
             modConfig.Info(i18N.GetText(
                 "Chatbot-Info.命令初始化完毕",
@@ -156,11 +157,12 @@ public class RaidRecordManagerChat(
             // return $"未知的命令: {data[0]}, 可用的命令包括: {string.Join(",", Commands.Keys.ToArray())}";
         }
 
-        iCmd.Paras = new Parametric(sessionId, this);
+        iCmd.Paras = new Parametric(sessionId, command, this);
 
         int index = 1;
         while (index >= 1 && index < data.Length)
         {
+            if (index + 1 >= data.Length) break;
             if (!string.IsNullOrEmpty(data[index + 1]))
             {
                 iCmd.Paras.Paras[data[index]] = data[index + 1];

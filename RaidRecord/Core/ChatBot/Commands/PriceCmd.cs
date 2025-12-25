@@ -75,7 +75,7 @@ public class PriceCmd: CommandBase
         string tpl = _cmdUtil.GetParameter(parametric.Paras, "tpl", string.Empty);
         string name = _cmdUtil.GetParameter(parametric.Paras, "name", string.Empty);
         int top = _cmdUtil.GetParameter(parametric.Paras, "top", 10);
-        top = Math.Max(10, top);
+        top = Math.Max(1, top);
 
         if (string.IsNullOrEmpty(tpl) && string.IsNullOrEmpty(name))
         {

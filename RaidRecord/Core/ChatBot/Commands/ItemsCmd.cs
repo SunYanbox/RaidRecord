@@ -36,7 +36,7 @@ public class ItemsCmd: CommandBase
             .AddParam("mode", "string", i18N.GetText("Cmd-参数化简述.Items.mode"))
             .AddParam("ge", "double", i18N.GetText("Cmd-参数化简述.Items.ge"))
             .AddParam("le", "double", i18N.GetText("Cmd-参数化简述.Items.le"))
-            .SetOptional(["index", "mode"])
+            .SetOptional(["index", "mode", "ge", "le"])
             .Build();
         _i18N = i18N;
     }

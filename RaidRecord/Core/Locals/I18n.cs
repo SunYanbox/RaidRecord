@@ -77,6 +77,9 @@ public class I18N(
                     modConfig.Error($"加载本地化数据库时出错: {fileName}", e);
                 }
             }
+            
+            CurrentLanguage = modConfig.Configs.Local;
+            
             // 从这里加载完毕
             modConfig.Info(GetText("I18N-Info.已加载语言信息", new
             {
@@ -92,7 +95,6 @@ public class I18N(
             logger.Error($"[RaidRecord] Localisation database does not exist: {localsDir}");
         }
 
-        CurrentLanguage = modConfig.Configs.Local;
 
         if (modConfig.Configs.AutoUnloadOtherLanguages)
         {

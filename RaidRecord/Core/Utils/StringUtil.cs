@@ -59,10 +59,13 @@ public static class StringUtil
     /// </summary>
     public static string[] SplitStringByNewlines(string str)
     {
-        // 如果字符串长度不超过限制，直接返回包含原字符串的数组
-        if (str.Length <= Constants.SendLimit)
+        switch (str.Length)
         {
-            return [str];
+            case 0:
+                return [];
+            // 如果字符串长度不超过限制，直接返回包含原字符串的数组
+            case <= Constants.SendLimit:
+                return [str];
         }
 
         // 用换行符分割

@@ -82,7 +82,7 @@ public class ListCmd: CommandBase
         // 字段宽度数组（9列）
         int[] colWidths =
         [
-            3, 7, 10, 10, 10, 10, 16, 4, 4
+            3, 7, 8, 10, 10, 10, 10, 6, 4, 4
         ];
 
         // 计算字符串宽度
@@ -113,6 +113,7 @@ public class ListCmd: CommandBase
                 CmdUtil.GetPlayerGroupOfServerId(row.ServerId),
                 _cmdUtil.I18N!.GetMapName(row.ServerId[..row.ServerId.IndexOf('.')].ToLower()),
                 row.PreRaidValue.ToString(),
+                row.EquipmentValue.ToString(),
                 row.GrossProfit.ToString(),
                 row.CombatLosses.ToString(),
                 row.Results?.PlayTime.ToString() ?? "",
@@ -155,7 +156,7 @@ public class ListCmd: CommandBase
 
         msg += "\n";
 
-        // msg += " - serverId                 序号 地图 入场总价值 带出收益 战损 游戏时间 本局击杀数 结果\n";
+        // msg += " - serverId                 序号 地图 入场总价值 带出收益 战备 战损 游戏时间 本局击杀数 结果\n";
 
         // 显示文本
         for (int i = 0; i < countAfterCheck; i++)
@@ -185,6 +186,7 @@ public class ListCmd: CommandBase
                 CmdUtil.GetPlayerGroupOfServerId(archive.ServerId),
                 _cmdUtil.I18N!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower()),
                 archive.PreRaidValue.ToString(),
+                archive.EquipmentValue.ToString(),
                 archive.GrossProfit.ToString(),
                 archive.CombatLosses.ToString(),
                 archive.Results?.PlayTime.ToString() ?? "",
@@ -206,11 +208,12 @@ public class ListCmd: CommandBase
                 PlayerGroup = values[1],
                 MapName = values[2],
                 PreRaidValue = values[3],
-                GrossProfit = values[4],
-                CombatLosses = values[5],
-                PlayTime = values[6],
-                KillCount = values[7],
-                Result = values[8]
+                EquipmentValue = values[4],
+                GrossProfit = values[5],
+                CombatLosses = values[6],
+                PlayTime = values[7],
+                KillCount = values[8],
+                Result = values[9]
             }).Replace("|", "");
 
             // msg += $" - {archive.ServerId} {indexLeft + i} "

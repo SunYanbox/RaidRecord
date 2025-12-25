@@ -70,6 +70,8 @@ public class PriceSystem(
 
     public double GetItemValueWithCache(MongoId itemId)
     {
+        if (itemHelper.IsOfBaseclass(itemId, BaseClasses.BUILT_IN_INSERTS))
+            return 0;
         long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         if (_priceCache.TryGetValue(itemId, out PriceCache? priceCache))
         {

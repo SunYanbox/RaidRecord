@@ -14,6 +14,7 @@ namespace RaidRecord.Core.Utils;
 
 [Injectable(InjectionType.Singleton)]
 public class RaidUtil(
+    ICloner cloner,
     ItemUtil itemUtil,
     PriceSystem priceSystem,
     ItemHelper itemHelper,
@@ -48,8 +49,18 @@ public class RaidUtil(
 
         Item[] itemsTakeIn = raidInfo.ItemsTakeIn.Values.ToArray();
         raidInfo.PreRaidValue = itemUtil.GetItemsValueAll(itemsTakeIn);
-        raidInfo.EquipmentValue = itemUtil.GetItemsValueWithBaseClasses(itemsTakeIn, Equipments);
-        raidInfo.SecuredValue = itemUtil.GetItemsValueAll(itemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn));
+
+        Item[] equipments = itemUtil.GetItemsWithBaseClasses(itemsTakeIn, Equipments);
+        Item[] itemsInSecured = itemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn);
+        equipments = equipments.Except(itemsInSecured).ToArray(); // 安全箱内的装备不支持也不应该是战备
+
+        raidInfo.EquipmentValue = itemUtil.GetItemsValueAll(equipments);
+        raidInfo.EquipmentItems = cloner.Clone(equipments);
+
+        Item[] secured = itemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn);
+        raidInfo.SecuredValue = itemUtil.GetItemsValueAll(secured);
+        raidInfo.SecuredItems = cloner.Clone(secured);
+
         // Console.WriteLine($"itemsTakeIn.Length: {itemsTakeIn.Length}\n\tPreRaidValue: {PreRaidValue}\n\tEquipmentValue: {EquipmentValue}\n\tSecuredValue: {SecuredValue}");
     }
 
@@ -291,7 +302,6 @@ public class RaidUtil(
     private static readonly MongoId[] Equipments =
     [
         BaseClasses.WEAPON,
-        // BaseClasses.UBGL,
         BaseClasses.ARMOR,
         BaseClasses.ARMORED_EQUIPMENT,
         BaseClasses.HEADWEAR,
@@ -331,7 +341,6 @@ public class RaidUtil(
         BaseClasses.PISTOL_GRIP,
         BaseClasses.RECEIVER,
         BaseClasses.BARREL,
-        // BaseClasses.CHARGING_HANDLE,
         BaseClasses.MUZZLE_COMBO,
         BaseClasses.TACTICAL_COMBO
     ];

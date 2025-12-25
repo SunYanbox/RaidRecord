@@ -1,6 +1,6 @@
 # Tabs {.tabset}
 
-## 模组概述与安装方式
+## 简介与安装
 
 ### 模组概述
 
@@ -50,8 +50,13 @@
 > 使用`price name "[物品名称关键词]"`(如果关键词中没有空格, 回车等字符, 可以省略双引号)即可查看
 > 该功能偏向调试, 主要用于验证模组计算的价格是否正确, 也可以用于模糊搜索与关键词相关的物品名称与ID
 
+**快捷起装**
+> 使用`buy [index: int]`快速购买指定对局进入对局时的装备
+> 使用`buy [page: int] [limit: int] list`列出支持快捷起装的对局的列表(list可缩写为ls)
+> 使用`buy [index: int] preview`列出指定支持快捷起装的对局的装备与对应售价列表(preview可缩写为pv)
+
 **意外情况处理**
-- 模组会在服务端记录数据, 如果对局结束时服务端在非本模组原因下崩溃, 重启服务端仍然有概率正确记录对局数据
+- 模组会在服务端记录数据, 如果对局结束前服务端在非本模组原因下崩溃, 只要不是客户端刚对局结束时服务端就崩溃, 重启服务端仍然有概率(>90%)正确记录对局数据
 - 对局启动后Alt+F4或者客户端崩溃, 下一次启动战局后会导致记录的该战局的缓存对局结果被记录为未知结局
 
 ### 安装方式
@@ -68,7 +73,7 @@
 - 感谢DrakiaXYZ, HiddenCirno, jbs4bmx, GhostFenix̵̮̀x̴̹̃©, Dsnyder | WTT以及其他所有在社区中分享经验、代码与耐心解答问题的开发者们。
 - 感谢您下载并尝试本模组。
 
-## 配置, 数据库, 命令系统与本地化方式
+## 配置与数据
 
 ### 设置
 
@@ -90,9 +95,13 @@ config.json保存模组配置
 
 安装与数据库的兼容性参考本模组的**Version**中的详细信息
 
+## 命令与语言
+
 ### 命令系统
 
 > 所有命令和参数对大小写不敏感, 但推荐全部使用小写字母
+> 指令使用方式为`命令键 参数1 参数1的值 参数2 参数2的值 尾缀参数`
+> 字符串类型参数的值可以用半角英文双引号包起来以输入空格
 
 进入对局后, 找到一个名为**对局战绩管理**的好友, 对他发送`help`以获取指令的帮助信息
 
@@ -100,9 +109,10 @@ config.json保存模组配置
 - help: 获取所有命令帮助信息
 - cls: 清理对话框聊天记录(推荐多用用)
 - info: 获取指定对局收益, 击杀等信息
-- items: 获取指定对局物资变化或带入带出清单
+- items: 获取指定对局物资变化或带入带出清单, 可以限定只输出价格变化量处于[ge, le]之间的物品清单
 - list: 列出当前已有的所有对局记录, 页数越靠后, 对局越新; 可以通过`limit`参数调整每页显示数量
 - price: 获取指定物品价值, 或者通过名称模糊搜索多个物品价值
+- buy: 快速购买指定对局进入对局时的装备
 
 ### 本地化方式
 
@@ -122,7 +132,7 @@ config.json保存模组配置
 2. 急需使用命令, 优先翻译"translations"下的值
 3. 急需查看服务端输出的日志, 优先翻译"serverMessage"下的值
 
-## 使用命令的示意图
+## 使用示例图
 
 ```markdown
 ### Example Images
@@ -145,6 +155,14 @@ config.json保存模组配置
 ![Use info cmd too](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/info_kill_en.png?raw=true)
 > The previous image did not eliminate any bots; here’s an additional one as a supplement.
 
+#### price cmd
+
+![Use price cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/price_en.png?raw=true)
+
+#### buy cmd
+
+![Use buy cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/buy_en.png?raw=true)
+
 ### 示例图片
 
 #### 模组加载时
@@ -164,6 +182,17 @@ config.json保存模组配置
 
 ![使用info命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/info_kill_ch.png?raw=true)
 > 上一份图片中未击杀任何人机, 额外补一张
+
+#### price命令
+
+![使用price命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/price_ch.png?raw=true)
+
+#### buy命令
+
+![使用buy命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/buy_ch.png?raw=true)
+
+> 你可以只输入`buy`以快速购买上一把入局的装备
+
 ```
 
 {.endtabset}
