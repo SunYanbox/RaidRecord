@@ -1,6 +1,6 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
-using RaidRecord.Core.Systems;
+using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
@@ -12,11 +12,11 @@ namespace RaidRecord.Core.ChatBot.Commands;
 public class ClsCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
-    private readonly DataGetterSystem _dataGetter;
+    private readonly DataGetterService _dataGetter;
     private readonly I18N _i18N;
 
     public ClsCmd(CmdUtil cmdUtil, I18N i18N,
-        DataGetterSystem dataGetter)
+        DataGetterService dataGetter)
     {
         _cmdUtil = cmdUtil;
         Key = "cls";

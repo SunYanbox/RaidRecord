@@ -1,5 +1,6 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
+using RaidRecord.Core.Services;
 using RaidRecord.Core.Systems;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
@@ -14,7 +15,7 @@ public class PriceCmd: CommandBase
     private readonly I18N _i18N;
     private readonly PriceSystem _priceSystem;
     private readonly ItemHelper _itemHelper;
-    private readonly DataGetterSystem _dataGetter;
+    private readonly DataGetterService _dataGetter;
     private readonly int _itemNameLen = "5422acb9af1c889c16000029 Name".Length;
 
     /// <summary>
@@ -23,7 +24,7 @@ public class PriceCmd: CommandBase
     private Dictionary<string, string>? _name2Id;
 
     public PriceCmd(CmdUtil cmdUtil, I18N i18N, ItemHelper itemHelper, PriceSystem priceSystem,
-        DataGetterSystem dataGetter)
+        DataGetterService dataGetter)
     {
         _cmdUtil = cmdUtil;
         _i18N = i18N;

@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 // ReSharper disable MemberCanBePrivate.Global

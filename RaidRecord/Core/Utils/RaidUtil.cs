@@ -1,4 +1,3 @@
-using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Systems;
 using SPTarkov.DI.Annotations;
@@ -16,8 +15,8 @@ namespace RaidRecord.Core.Utils;
 public class RaidUtil(
     ICloner cloner,
     ItemUtil itemUtil,
-    PriceSystem priceSystem,
     ItemHelper itemHelper,
+    PriceSystem priceSystem,
     ProfileHelper profileHelper,
     RecordManager recordCacheManager)
 {

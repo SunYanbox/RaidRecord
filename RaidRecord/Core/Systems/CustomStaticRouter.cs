@@ -17,17 +17,16 @@ namespace RaidRecord.Core.Systems;
 [Injectable]
 public class CustomStaticRouter: StaticRouter
 {
-    // private static IContainer? _container;
+    private static RaidUtil? _raidUtil;
     private static IServiceProvider? _serviceProvider;
     private static InjectableClasses? _injectableClasses;
-    private static RaidUtil? _raidUtil;
 
     public CustomStaticRouter(
-        ISptLogger<CustomStaticRouter> sptLogger,
         JsonUtil jsonUtil,
-        InjectableClasses injectableClasses,
+        RaidUtil raidUtil,
         IServiceProvider serviceProvider,
-        RaidUtil raidUtil
+        InjectableClasses injectableClasses,
+        ISptLogger<CustomStaticRouter> sptLogger
     ): base(
         jsonUtil,
         GetCustomRoutes()
@@ -240,5 +239,14 @@ public class CustomStaticRouter: StaticRouter
             _injectableClasses?.ModConfig?.LogError(e, "CustomStaticRouter.HandleRaidEnd", msg);
         }
     }
-
 }
+
+/*
+ *   (RouteAction) new RouteAction<StartLocalRaidRequestData>("/client/match/local/start",
+ *      (Func<string, StartLocalRaidRequestData, MongoId, string, ValueTask<string>>)
+ *          (async (url, info, sessionID, output) => await matchCallbacks.StartLocalRaid(url, info, sessionID))),
+ * ---
+  (RouteAction) new RouteAction<EndLocalRaidRequestData>("/client/match/local/end",
+        (Func<string, EndLocalRaidRequestData, MongoId, string, ValueTask<string>>)
+            (async (url, info, sessionID, output) => await matchCallbacks.EndLocalRaid(url, info, sessionID)))
+ */

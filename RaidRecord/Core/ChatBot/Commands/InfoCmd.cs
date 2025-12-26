@@ -1,7 +1,7 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
-using RaidRecord.Core.Systems;
+using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
@@ -15,9 +15,9 @@ public class InfoCmd: CommandBase
     private readonly CmdUtil _cmdUtil;
     private readonly I18N _i18N;
     private readonly string _unknowWeapon;
-    private readonly DataGetterSystem _dataGetter;
+    private readonly DataGetterService _dataGetter;
 
-    public InfoCmd(CmdUtil cmdUtil, DataGetterSystem dataGetter, I18N i18N)
+    public InfoCmd(CmdUtil cmdUtil, DataGetterService dataGetter, I18N i18N)
     {
         _cmdUtil = cmdUtil;
         Key = "info";

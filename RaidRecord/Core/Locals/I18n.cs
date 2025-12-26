@@ -18,9 +18,9 @@ namespace RaidRecord.Core.Locals;
 /// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
 public class I18N(
-    ISptLogger<I18N> logger,
     ModHelper modHelper,
     ModConfig modConfig,
+    ISptLogger<I18N> logger,
     DatabaseServer databaseServer): IOnLoad
 {
     public readonly Dictionary<string, string> MapNames = new();

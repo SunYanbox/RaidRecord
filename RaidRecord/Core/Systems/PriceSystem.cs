@@ -15,11 +15,11 @@ namespace RaidRecord.Core.Systems;
 [Injectable(InjectionType.Singleton)]
 public class PriceSystem(
     ModConfig modConfig,
-    RagfairOfferService ragfairOfferService,
-    DatabaseService databaseService,
-    HandbookHelper handbookHelper,
+    ItemHelper itemHelper,
     PaymentHelper paymentHelper,
-    ItemHelper itemHelper)
+    HandbookHelper handbookHelper,
+    DatabaseService databaseService,
+    RagfairOfferService ragfairOfferService)
 {
     private readonly Dictionary<MongoId, PriceCache> _priceCache = new();
 
@@ -141,7 +141,7 @@ public class PriceSystem(
             }
 
             // Figure out how many items the requirementsCost is applying to, and what the per-item price is
-            double offerItemCount = offer.SellInOnePiece.GetValueOrDefault(false) ? offer.Items.First().Upd?.StackObjectsCount ?? 1 : 1;
+            double offerItemCount = offer.SellInOnePiece.GetValueOrDefault(false) ? offer.Items?.First().Upd?.StackObjectsCount ?? 1 : 1;
             double? perItemPrice = offer.RequirementsCost / offerItemCount;
 
             // Handle min/max calculations based on the per-item price

@@ -26,13 +26,13 @@ namespace RaidRecord.Core.Systems;
 [Injectable(InjectionType = InjectionType.Singleton)]
 public class RecordManager(
     I18N i18N,
+    ICloner cloner,
     JsonUtil jsonUtil,
     ModConfig modConfig,
     ModHelper modHelper,
-    ProfileHelper profileHelper,
     ItemHelper itemHelper,
     SaveServer saveServer,
-    ICloner cloner
+    ProfileHelper profileHelper
 ): IOnLoad
 {
     private string? _recordDbPath;

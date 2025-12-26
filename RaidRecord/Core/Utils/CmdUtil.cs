@@ -13,10 +13,10 @@ namespace RaidRecord.Core.Utils;
 
 [Injectable(InjectionType.Singleton)]
 public class CmdUtil(
-    ProfileHelper profileHelper,
     I18N i18N,
-    RecordManager recordCacheManager,
-    ModConfig modConfig
+    ModConfig modConfig,
+    ProfileHelper profileHelper,
+    RecordManager recordCacheManager
 )
 {
     public readonly string[] HeadshotBodyPart = ["Head", "Ears", "Eyes"];

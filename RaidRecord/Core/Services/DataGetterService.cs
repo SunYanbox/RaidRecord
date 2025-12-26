@@ -1,5 +1,8 @@
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
+using RaidRecord.Core.Models.BaseModels;
+using RaidRecord.Core.Models.Services;
+using RaidRecord.Core.Systems;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
@@ -7,13 +10,13 @@ using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Services;
 
-namespace RaidRecord.Core.Systems;
+namespace RaidRecord.Core.Services;
 
 /// <summary>
 /// 封装常用的数据获取方法
 /// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
-public class DataGetterSystem(
+public class DataGetterService(
     DialogueHelper dialogueHelper,
     DatabaseService databaseService,
     RecordManager recordManager,
@@ -55,7 +58,7 @@ public class DataGetterSystem(
     /// </summary>
     public Dictionary<string, string>? GetSptLocals()
     {
-        return databaseService.GetTables().Locales.Global[i18N.CurrentLanguage].Value;
+        return i18N.GetSptLocals();
     }
 
     /// <summary>
@@ -119,4 +122,60 @@ public class DataGetterSystem(
         // throw new IndexOutOfRangeException($"index {index} out of range: [0, {records.Count})");
         return records[index];
     }
+
+    /// <summary>
+    /// 获取分页的存档 | 会在内部调整page和pageSize的值
+    /// </summary>
+    /// <param name="session">sessionId</param>
+    /// <param name="page">页码(从1开始)</param>
+    /// <param name="pageSize">每页数量(默认10)</param>
+    /// <param name="filter">筛选存档的函数</param>
+    /// <returns>分页结果</returns>
+    public ArchivePageableResult GetArchivesPageable(string session, int page = -1, int pageSize = 10,
+        Func<RaidArchive, bool>? filter = null)
+    {
+        ArchivePageableResult result = new();
+        filter ??= x => !string.IsNullOrEmpty(x.ServerId);
+        List<RaidArchive> records = GetArchivesBySession(session);
+        pageSize = Math.Min(PageSizeRange.Right, Math.Max(PageSizeRange.Left, pageSize));
+
+        int totalCount = records.Count;
+        int pageTotal = (int)Math.Ceiling((double)totalCount / pageSize);
+
+        page = Math.Min(Math.Max(1, page > 0 ? page : pageTotal + page + 1), pageTotal);
+
+        int indexLeft = Math.Max(pageSize * (page - 1), 0);
+        int indexRight = Math.Min(pageSize * page, totalCount);
+        if (totalCount <= 0)
+        {
+            result.Errors = [$"您没有任何历史战绩, 请至少对局一次后再来查询吧"];
+            return result;
+        }
+        List<ArchiveIndexed> results = [];
+        for (int i = indexLeft; i < indexRight; i++)
+        {
+            results.Add(new ArchiveIndexed(records[i], i));
+        }
+        int countBeforeCheck = results.Count;
+        if (countBeforeCheck <= 0)
+        {
+            result.Errors = [$"未查询到您第{indexLeft + 1}到{indexRight}条历史战绩, 支持的页码范围是[0, {totalCount})"];
+            return result;
+        }
+
+        results.RemoveAll(x => !filter(x.Archive));
+        int countAfterCheck = results.Count;
+        
+        result.Archives = results.ToList();
+        result.IndexRange = new RangeTuple<int>(indexLeft, indexRight);
+        result.Page = page;
+        result.PageMax = pageTotal;
+        result.JumpData = countBeforeCheck - countAfterCheck;
+        
+        return result;
+    }
+    
+    
+    
+    public readonly RangeTuple<int> PageSizeRange = new(1, 50);
 }

@@ -3,58 +3,34 @@ using RaidRecord.Core.ChatBot.Commands;
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Configs;
 using RaidRecord.Core.Locals;
-using RaidRecord.Core.Systems;
+using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
-using SPTarkov.Server.Core.Helpers.Dialogue;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Dialog;
-using SPTarkov.Server.Core.Models.Eft.Profile;
-using SPTarkov.Server.Core.Models.Enums;
-using SPTarkov.Server.Core.Models.Spt.Config;
-using SPTarkov.Server.Core.Models.Spt.Dialog;
-using SPTarkov.Server.Core.Servers;
-using SPTarkov.Server.Core.Services;
 
 namespace RaidRecord.Core.ChatBot;
 
 [Injectable(InjectionType.Singleton)]
 public class RaidRecordManagerChat(
-    MailSendService mailSendService,
-    ModConfig modConfig,
     I18N i18N,
-    IServiceProvider serviceProvider,
-    ConfigServer configServer,
-    DataGetterSystem dataGetter): IDialogueChatBot, IOnLoad
+    ModConfig modConfig,
+    IServiceProvider serviceProvider): IOnLoad
 {
     public readonly Dictionary<string, CommandBase> Commands = new();
 
     public Task OnLoad()
     {
         InitCommands();
-        UserDialogInfo chatbot = GetChatBot();
-        var coreConfig = configServer.GetConfig<CoreConfig>();
-        coreConfig.Features.ChatbotFeatures.Ids[chatbot.Info!.Nickname!] = chatbot.Id;
-        coreConfig.Features.ChatbotFeatures.EnabledBots[chatbot.Id] = true;
-        // logger.Info($"[RaidRecord] 已经成功注册ChatBot: {chatbot.Id}");
-        modConfig.Info(i18N.GetText("MainMod-Info.成功注册ChatBot", new
-        {
-            ChatBotId = chatbot.Id
-        }));
         return Task.CompletedTask;
     }
 
-    public UserDialogInfo GetChatBot()
-    {
-        return dataGetter.GetChatBotInfo();
-    }
-
-    public ValueTask<string> HandleMessage(MongoId sessionId, SendMessageRequest request)
+    public ValueTask<string> HandleMessage(ModMailService modMailService, MongoId sessionId, SendMessageRequest request)
     {
         try
         {
-            SendAllMessage(sessionId, HandleCommand(request.Text, sessionId)).Wait();
+            modMailService.SendAllMessage(sessionId, HandleCommand(request.Text, sessionId)).Wait();
         }
         catch (Exception e)
         {
@@ -64,7 +40,7 @@ public class RaidRecordManagerChat(
                     new { SessionId = sessionId }
                 ), e);
             // modConfig.Error($"用户{sessionId}输入的指令处理失败: ", e);
-            SendMessage(sessionId, i18N.GetText(
+            modMailService.SendMessage(sessionId, i18N.GetText(
                 "Chatbot-Mail.发送指令处理失败信息",
                 new
                 {
@@ -189,48 +165,5 @@ public class RaidRecordManagerChat(
         iCmd.Paras.Paras.Clear();
         iCmd.Paras = null;
         return result;
-    }
-
-    /// <summary>
-    /// 将消息发给对应sessionId的客户端
-    /// </summary>
-    public void SendMessage(string sessionId, string msg)
-    {
-        var details = new SendMessageDetails
-        {
-            RecipientId = sessionId,
-            MessageText = msg,
-            Sender = MessageType.UserMessage,
-            SenderDetails = GetChatBot()
-        };
-        mailSendService.SendMessageToPlayer(details);
-    }
-
-    public async Task SendAllMessage(string sessionId, string message)
-    {
-        string[] messages = StringUtil.SplitStringByNewlines(message);
-        switch (messages.Length)
-        {
-            case 0:
-                return;
-            case 1:
-                await Task.Delay(1000);
-                SendMessage(sessionId, messages[0]);
-                return;
-        }
-
-        await Task.Delay(750);
-
-        // 同时有多条消息被启用时, 用来唯一标记
-        string messageTag = $"[{messages[0][new Range(0, Math.Min(16, messages[0].Length))]}...]";
-
-        for (int i = 0; i < messages.Length; i++)
-        {
-            SendMessage(sessionId, messages[i] + $"\n{i + 1}/{messages.Length} tag: {messageTag}");
-            if (i < messages.Length - 1)
-            {
-                await Task.Delay(1250);
-            }
-        }
     }
 }

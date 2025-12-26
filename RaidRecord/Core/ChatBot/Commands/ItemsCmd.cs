@@ -1,12 +1,11 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
-using RaidRecord.Core.Systems;
+using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
-using SPTarkov.Server.Core.Services;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
@@ -14,19 +13,16 @@ namespace RaidRecord.Core.ChatBot.Commands;
 public class ItemsCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
-    private readonly DatabaseService _databaseService;
     private readonly ItemHelper _itemHelper;
     private readonly I18N _i18N;
-    private readonly DataGetterSystem _dataGetter;
+    private readonly DataGetterService _dataGetter;
 
     public ItemsCmd(CmdUtil cmdUtil,
-        DatabaseService databaseService,
-        DataGetterSystem dataGetter,
         I18N i18N,
-        ItemHelper itemHelper)
+        ItemHelper itemHelper,
+        DataGetterService dataGetter)
     {
         _cmdUtil = cmdUtil;
-        _databaseService = databaseService;
         _itemHelper = itemHelper;
         _dataGetter = dataGetter;
         Key = "items";

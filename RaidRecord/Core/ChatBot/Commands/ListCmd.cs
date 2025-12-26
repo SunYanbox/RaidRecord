@@ -1,7 +1,8 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
-using RaidRecord.Core.Systems;
+using RaidRecord.Core.Models.Services;
+using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 
@@ -10,11 +11,11 @@ namespace RaidRecord.Core.ChatBot.Commands;
 [Injectable]
 public class ListCmd: CommandBase
 {
-    private readonly CmdUtil _cmdUtil;
     private readonly I18N _i18N;
-    private readonly DataGetterSystem _dataGetter;
+    private readonly CmdUtil _cmdUtil;
+    private readonly DataGetterService _dataGetter;
 
-    public ListCmd(CmdUtil cmdUtil, I18N i18N, DataGetterSystem dataGetter)
+    public ListCmd(CmdUtil cmdUtil, I18N i18N, DataGetterService dataGetter)
     {
         _cmdUtil = cmdUtil;
         Key = "list";
@@ -33,51 +34,26 @@ public class ListCmd: CommandBase
         string? verify = _cmdUtil.VerifyIParametric(parametric);
         if (verify != null) return verify;
 
-        List<RaidArchive> records = _dataGetter.GetArchivesBySession(parametric.SessionId);
         int numberLimit = _cmdUtil.GetParameter(parametric.Paras, "Limit", 10);
         int page = _cmdUtil.GetParameter(parametric.Paras, "Page", -1);
-        numberLimit = Math.Min(50, Math.Max(1, numberLimit));
 
-        int totalCount = records.Count;
-        int pageTotal = (int)Math.Ceiling((double)totalCount / numberLimit);
+        ArchivePageableResult results = _dataGetter.GetArchivesPageable(
+            parametric.SessionId,
+            page,
+            numberLimit);
 
-        page = Math.Min(Math.Max(1, page > 0 ? page : pageTotal + page + 1), pageTotal);
-
-        int indexLeft = Math.Max(numberLimit * (page - 1), 0);
-        int indexRight = Math.Min(numberLimit * page, totalCount);
-        if (totalCount <= 0) return _i18N.GetText("Cmd-List.没有任何历史战绩");
-        // if (totalCount <= 0) return "您没有任何历史战绩, 请至少对局一次后再来查询吧";
-        List<RaidArchive> results = [];
-        for (int i = indexLeft; i < indexRight; i++)
-        {
-            results.Add(records[i]);
-        }
-        int countBeforeCheck = results.Count;
-        if (countBeforeCheck <= 0)
-        {
-            return _i18N.GetText("Cmd-List.没有找到指定页的记录",
-                new
-                {
-                    StartIndex = indexLeft + 1,
-                    EndIndex = indexRight + 1,
-                    IndexRange = $"[0, {totalCount})"
-                });
-        }
-        // if (countBeforeCheck <= 0) return $"未查询到您第{indexLeft + 1}到{indexRight}条历史战绩";
-
-        results.RemoveAll(x => string.IsNullOrEmpty(x.ServerId));
-        int countAfterCheck = results.Count;
-
+        int countAfterCheck = results.Archives.Count;
+        
         string msg = _i18N.GetText("Cmd-List.历史战绩.统计表头", new
         {
             ResultCount = countAfterCheck,
-            TotalCount = totalCount,
-            PageCurrent = page,
-            PageTotal = pageTotal
+            TotalCount = countAfterCheck + results.JumpData,
+            PageCurrent = results.Page,
+            PageTotal = results.PageMax
         });
         // string msg = $"历史战绩(共{countAfterCheck}/{totalCount}条, 第{page}页/共{(int)Math.Ceiling((double)totalCount / numberLimit)}页):\n";
 
-        int jump = countBeforeCheck - countAfterCheck;
+        int jump = results.JumpData;
 
         // 字段宽度数组（9列）
         int[] colWidths =
@@ -89,7 +65,7 @@ public class ListCmd: CommandBase
         // 遍历所有数据行，更新每列最大宽度
         for (int k = 0; k < countAfterCheck; k++)
         {
-            RaidArchive row = results[k];
+            RaidArchive row = results.Archives[k].Archive;
 
             string result = _i18N.GetText("UnknownResult");
             RaidResultData? raidResultData = row.Results;
@@ -161,7 +137,7 @@ public class ListCmd: CommandBase
         // 显示文本
         for (int i = 0; i < countAfterCheck; i++)
         {
-            RaidArchive archive = results[i];
+            RaidArchive archive = results.Archives[i].Archive;
 
             string result = _i18N.GetText("UnknownResult");
             RaidResultData? raidResultData = archive.Results;
@@ -182,7 +158,7 @@ public class ListCmd: CommandBase
 
             string[] values =
             [
-                (indexLeft + i).ToString(),
+                results.Archives[i].Index.ToString(),
                 CmdUtil.GetPlayerGroupOfServerId(archive.ServerId),
                 _cmdUtil.I18N!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower()),
                 archive.PreRaidValue.ToString(),

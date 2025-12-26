@@ -1,6 +1,7 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
+using RaidRecord.Core.Services;
 using RaidRecord.Core.Systems;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
@@ -8,37 +9,29 @@ using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.ItemEvent;
-using SPTarkov.Server.Core.Models.Enums;
-using SPTarkov.Server.Core.Models.Spt.Dialog;
-using SPTarkov.Server.Core.Routers;
-using SPTarkov.Server.Core.Services;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
 [Injectable]
 public class BuyCmd: CommandBase
 {
-    private readonly CmdUtil _cmdUtil;
     private readonly I18N _i18N;
-    private readonly DataGetterSystem _dataGetter;
+    private readonly CmdUtil _cmdUtil;
     private readonly ItemUtil _itemUtil;
     private readonly ItemHelper _itemHelper;
-    private readonly ProfileHelper _profileHelper;
-    private readonly PaymentService _paymentService;
-    private readonly MailSendService _mailSendService;
-    private readonly EventOutputHolder _eventOutputHolder;
     private readonly PriceSystem _priceSystem;
+    private readonly ProfileHelper _profileHelper;
+    private readonly DataGetterService _dataGetter;
+    private readonly ModMailService _modMailService;
 
     public BuyCmd(CmdUtil cmdUtil,
-        DataGetterSystem dataGetter,
-        MailSendService mailSendService,
         I18N i18N,
         ItemUtil itemUtil,
-        PriceSystem priceSystem,
         ItemHelper itemHelper,
-        PaymentService paymentService,
-        EventOutputHolder eventOutputHolder,
-        ProfileHelper profileHelper)
+        PriceSystem priceSystem,
+        ProfileHelper profileHelper,
+        DataGetterService dataGetter,
+        ModMailService modMailService)
     {
         _cmdUtil = cmdUtil;
         Key = "buy";
@@ -55,11 +48,9 @@ public class BuyCmd: CommandBase
         _dataGetter = dataGetter;
         _itemUtil = itemUtil;
         _profileHelper = profileHelper;
-        _mailSendService = mailSendService;
-        _paymentService = paymentService;
-        _eventOutputHolder = eventOutputHolder;
         _itemHelper = itemHelper;
         _priceSystem = priceSystem;
+        _modMailService = modMailService;
     }
 
     public override string Execute(Parametric parametric)
@@ -103,26 +94,14 @@ public class BuyCmd: CommandBase
             }
             return msg;
         }
+        
+        List<Warning>? warnings = _modMailService.Payment(parametric.SessionId, totalPrice, pmcData);
 
-        ItemEventRouterResponse output = _eventOutputHolder.GetOutput(parametric.SessionId);
-
-        _paymentService.AddPaymentToOutput(
-            pmcData,
-            Money.ROUBLES,
-            totalPrice,
-            parametric.SessionId,
-            output);
-
-        if (output.Warnings?.Count > 0)
+        if (warnings?.Count > 0)
         {
-            return _i18N.GetText(
-                "Cmd-Buy.Error.卢布不够或者购买时出现错误",
-                new
-                {
-                    ErrorMessage = string.Join(", ", output.Warnings.Select(x => $"({x.Index} {x.ErrorMessage})"))
-                });
+            return string.Join("\n", warnings.Select(x => x.ErrorMessage));
         }
-
+        
         string successMsg = _i18N.GetText("Cmd-Buy.Success.您已购买装备", new
         {
             Index = index,
@@ -131,12 +110,13 @@ public class BuyCmd: CommandBase
             TotalPrice = totalPrice
         });
 
-        _mailSendService.SendSystemMessageToPlayer(
+        List<Warning>? warnings2 = _modMailService.SendItemsToPlayer(
             parametric.SessionId,
             successMsg,
             equipments.ToList());
+        
+        return warnings2?.Count > 0 ? string.Join("\n", warnings2.Select(x => x.ErrorMessage)) : successMsg;
 
-        return successMsg;
     }
 
     public string ExecuteBuyList(Parametric parametric)
