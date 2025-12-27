@@ -14,3 +14,6 @@ riderModule.iml
 *.DotSettings*
 RaidRecord-ImageHosting/
 SummaryForSPTEFT/
+
+# Blazor模板 / 测试
+BlazorTemplate

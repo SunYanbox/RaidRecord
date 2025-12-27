@@ -165,17 +165,17 @@ public class DataGetterService(
 
         results.RemoveAll(x => !filter(x.Archive));
         int countAfterCheck = results.Count;
-        
+
         result.Archives = results.ToList();
         result.IndexRange = new RangeTuple<int>(indexLeft, indexRight);
         result.Page = page;
         result.PageMax = pageTotal;
         result.JumpData = countBeforeCheck - countAfterCheck;
-        
+
         return result;
     }
-    
-    
-    
+
+
+
     public readonly RangeTuple<int> PageSizeRange = new(1, 50);
 }

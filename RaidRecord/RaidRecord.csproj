@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <OutputType>Library</OutputType>
@@ -19,29 +19,29 @@
         <PackageReference Include="SPTarkov.Server.Web" Version="4.0.8"/>
     </ItemGroup>
 
+    <!-- 需要复制的数据库, 资源文件 -->
     <ItemGroup>
-        <DatabasePath Include="db\**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </DatabasePath>
+        <DatabasePath Include="db\**\*.*"/>
+        <WWWRootPath Include="wwwroot\**\*.*"/>
     </ItemGroup>
 
+    <!-- 路径变量 -->
     <PropertyGroup>
         <ZipToolPath>"D:\Program Files\7-Zip\7z.exe"</ZipToolPath>
-    </PropertyGroup>
-
-    <PropertyGroup>
         <BeforeZipPath>$(OutputPath)SPT\user\mods\$(AssemblyName)\</BeforeZipPath>
+        <ModsDirectoryPath>user\mods\$(AssemblyName)\</ModsDirectoryPath>
     </PropertyGroup>
 
     <!--  项目构建后, 把输出目录下的RaidRecord.dll和db文件夹全部复制到
       "输出目录\SPT\user\mods\$(AssemblyName)"文件夹下
       然后分别压缩SPT文件夹为"$(AssemblyName)-$(Version).zip"和"$(AssemblyName)-$(Version).7z"
       -->
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Target Name="压缩需要发布的模组" AfterTargets="PostBuildEvent">
         <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(BeforeZipPath)"/>
         <Copy SourceFiles="@(DatabasePath)"
-              DestinationFiles="@(DatabasePath->'$(BeforeZipPath)%(RelativeDir)%(Filename)%(Extension)')"
-              Condition="'%(Extension)' != ''"/>
+              DestinationFolder="$(BeforeZipPath)db\%(RecursiveDir)"/>
+        <Copy SourceFiles="@(WWWRootPath)"
+              DestinationFolder="$(BeforeZipPath)wwwroot\%(RecursiveDir)"/>
         <Exec WorkingDirectory="$(OutputPath)" Command="$(ZipToolPath) a -tzip -mx=9 $(AssemblyName)-$(Version).zip SPT\"/>
         <Exec WorkingDirectory="$(OutputPath)" Command="$(ZipToolPath) a -tzip -mx=9 $(AssemblyName)-$(Version).7z SPT\"/>
     </Target>
@@ -51,21 +51,29 @@
         <None Include="$(MSBuildProjectFullPath).user" Condition="Exists('$(MSBuildProjectFullPath).user')"/>
     </ItemGroup>
 
-    <PropertyGroup>
-        <ModsDirectoryPath>\user\mods\$(AssemblyName)\</ModsDirectoryPath>
-    </PropertyGroup>
-
     <Target Name="拷贝模组到SPT" AfterTargets="AfterBuild" Condition="'$(SPTPath)' != ''">
-        <Message Importance="high" Text="SPTPath是否存在: '$(SPTPath)'"/>
-        <Message Importance="high" Text="正在准备拷贝模组到: '$(SPTPath)$(ModsDirectoryPath)'"/>
+        <!-- 定义变量 -->
+        <PropertyGroup>
+            <SPTModPath>$(SPTPath)$(ModsDirectoryPath)</SPTModPath>
+        </PropertyGroup>
         <ItemGroup>
             <FilesToCopy Include="$(OutputPath)$(TargetName).dll"/>
             <FilesToCopy Include="$(OutputPath)$(TargetName).pdb"/>
         </ItemGroup>
+
+        <Message Importance="high" Text="SPTPath是否存在: '$(SPTPath)'"/>
+        <Message Importance="high" Text="正在准备拷贝模组到: '$(SPTModPath)'"/>
+
+        <!-- 复制数据库文件-->
         <Copy SourceFiles="@(DatabasePath)"
-              DestinationFiles="@(DatabasePath->'$(SPTPath)$(ModsDirectoryPath)%(RelativeDir)%(Filename)%(Extension)')"
-              Condition="'%(Extension)' != ''"/>
-        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(SPTPath)$(ModsDirectoryPath)" ContinueOnError="false"/>
+              DestinationFolder="$(SPTModPath)db\%(RecursiveDir)"/>
+
+        <!-- 复制静态资源文件-->
+        <Copy SourceFiles="@(WWWRootPath)"
+              DestinationFolder="$(SPTModPath)wwwroot\%(RecursiveDir)"/>
+
+        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(SPTModPath)"/>
+
         <Message Text="所有模组文件拷贝完成"/>
     </Target>
 

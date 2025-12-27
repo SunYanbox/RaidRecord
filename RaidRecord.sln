@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaidRecord", "RaidRecord\RaidRecord.csproj", "{D65354CA-66A0-4F2D-A3D1-A16B77E2D981}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorTemplate", "BlazorTemplate\BlazorTemplate.csproj", "{2701CC65-0C39-4302-9CE0-6ECB1F525B62}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{D65354CA-66A0-4F2D-A3D1-A16B77E2D981}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D65354CA-66A0-4F2D-A3D1-A16B77E2D981}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D65354CA-66A0-4F2D-A3D1-A16B77E2D981}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2701CC65-0C39-4302-9CE0-6ECB1F525B62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2701CC65-0C39-4302-9CE0-6ECB1F525B62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2701CC65-0C39-4302-9CE0-6ECB1F525B62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2701CC65-0C39-4302-9CE0-6ECB1F525B62}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

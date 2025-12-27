@@ -94,14 +94,14 @@ public class BuyCmd: CommandBase
             }
             return msg;
         }
-        
+
         List<Warning>? warnings = _modMailService.Payment(parametric.SessionId, totalPrice, pmcData);
 
         if (warnings?.Count > 0)
         {
             return string.Join("\n", warnings.Select(x => x.ErrorMessage));
         }
-        
+
         string successMsg = _i18N.GetText("Cmd-Buy.Success.您已购买装备", new
         {
             Index = index,
@@ -114,7 +114,7 @@ public class BuyCmd: CommandBase
             parametric.SessionId,
             successMsg,
             equipments.ToList());
-        
+
         return warnings2?.Count > 0 ? string.Join("\n", warnings2.Select(x => x.ErrorMessage)) : successMsg;
 
     }

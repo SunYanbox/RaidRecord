@@ -43,7 +43,7 @@ public class ListCmd: CommandBase
             numberLimit);
 
         int countAfterCheck = results.Archives.Count;
-        
+
         string msg = _i18N.GetText("Cmd-List.历史战绩.统计表头", new
         {
             ResultCount = countAfterCheck,

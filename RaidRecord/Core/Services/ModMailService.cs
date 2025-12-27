@@ -35,7 +35,7 @@ public class ModMailService(
     MailSendService mailSendService,
     RaidRecordManagerChat modChatBot,
     EventOutputHolder eventOutputHolder
-    ): IDialogueChatBot, IOnLoad
+): IDialogueChatBot, IOnLoad
 {
     public UserDialogInfo GetChatBot()
     {
@@ -60,7 +60,7 @@ public class ModMailService(
         }));
         return Task.CompletedTask;
     }
-    
+
     /// <summary>
     /// 将消息发给对应sessionId的客户端
     /// </summary>
@@ -106,7 +106,7 @@ public class ModMailService(
             }
         }
     }
-    
+
     /// <summary>
     /// 按照指定数额进行扣费
     /// </summary>
@@ -115,11 +115,17 @@ public class ModMailService(
     {
         ItemEventRouterResponse output = eventOutputHolder.GetOutput(sessionId);
         pmcData ??= profileHelper.GetPmcProfile(sessionId);
-        
-        if (pmcData == null) return [new Warning
+
+        if (pmcData == null)
         {
-            ErrorMessage = $"未获取到Session {sessionId} 对应的玩家存档信息"
-        }];
+            return
+            [
+                new Warning
+                {
+                    ErrorMessage = $"未获取到Session {sessionId} 对应的玩家存档信息"
+                }
+            ];
+        }
 
         try
         {
@@ -138,7 +144,7 @@ public class ModMailService(
                 ErrorMessage = $"扣费时出现错误: {e.Message} {e.StackTrace}"
             });
         }
-        
+
         return output.Warnings;
     }
 
@@ -151,17 +157,23 @@ public class ModMailService(
     /// <param name="maxStorageTimeSeconds">默认为2天</param>
     /// <returns>如果未成功则返回警告列表</returns>
     public List<Warning>? SendItemsToPlayer(
-        MongoId sessionId, 
-        string msg, 
+        MongoId sessionId,
+        string msg,
         List<Item>? items,
         long? maxStorageTimeSeconds = 172800L)
     {
         try
         {
-            if (items?.Count <= 0) return [new Warning
+            if (items?.Count <= 0)
             {
-                ErrorMessage = "未指定物品"
-            }];
+                return
+                [
+                    new Warning
+                    {
+                        ErrorMessage = "未指定物品"
+                    }
+                ];
+            }
             mailSendService.SendSystemMessageToPlayer(
                 sessionId,
                 msg,
@@ -171,10 +183,13 @@ public class ModMailService(
         }
         catch (Exception e)
         {
-            return [new Warning
-            {
-                ErrorMessage = $"发送物品时出现错误: {e.Message} {e.StackTrace}"
-            }];
+            return
+            [
+                new Warning
+                {
+                    ErrorMessage = $"发送物品时出现错误: {e.Message} {e.StackTrace}"
+                }
+            ];
         }
     }
 }
