@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Reflection;
 using RaidRecord.Core.Configs;
 using RaidRecord.Core.Locals;
@@ -43,8 +44,11 @@ public class RecordManager(
     /// <summary> Pmc/Scav id 到账户id的映射 </summary>
     private readonly Dictionary<MongoId, MongoId> _playerId2Account = new();
 
-    /// <summary> 所有账号id的映射 </summary>
+    /// <summary> 所有已存在的账号id的集合 </summary>
     private HashSet<MongoId> _accountIds = [];
+
+    /// <summary> 所有已存在的账号id的只读视图集合 </summary>
+    public ReadOnlySet<MongoId> AccountIds => new(_accountIds);
 
     /// <summary> 维护常用Id映射 </summary>
     public void UpdateAccountData()

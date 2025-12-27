@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Models.BaseModels;
@@ -175,7 +176,11 @@ public class DataGetterService(
         return result;
     }
 
-
+    /// <summary> 获取已存在的所有账户ID </summary>
+    public ReadOnlySet<MongoId> GetAllAccounts()
+    {
+        return recordManager.AccountIds;
+    }
 
     public readonly RangeTuple<int> PageSizeRange = new(1, 50);
 }
