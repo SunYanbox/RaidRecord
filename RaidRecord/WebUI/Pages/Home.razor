@@ -1,0 +1,60 @@
+@page "/RaidRecord"
+@using System.Collections.ObjectModel
+@using SPTarkov.Server.Core.Controllers
+@using SPTarkov.Server.Core.Models.Common
+@using SPTarkov.Server.Core.Models.Eft.Profile
+@using SPTarkov.Server.Core.Servers
+
+@inject SaveServer SaveServer;
+@inject LauncherController LauncherController;
+@inject DataGetterService DataGetter;
+@inject WebDataContext WebData;
+@inject ModConfig ModConfig;
+
+<MainLayout/>
+
+<MudContainer>
+    <MudSelect @bind-Value="WebData.CurrentAccount"
+               Style="width: auto"
+               Label="选择存档"
+               AdornmentColor="Color.Secondary">
+        @foreach (MongoId account in AccountAllExist) {
+            <MudSelectItem Value="@account.ToString()">@account @GetName(account)</MudSelectItem>
+        }
+    </MudSelect>
+
+    <ProfileInfoWidget SptProfile="GetCurrentSptProfile()"></ProfileInfoWidget>
+</MudContainer>
+
+@code {
+    private string GetName(MongoId session)
+    {
+        Info? info = LauncherController.Find(session);
+        return info != null ? $"{info.Username}" : string.Empty;
+    }
+
+    private ReadOnlySet<MongoId> AccountAllExist => DataGetter.GetAllAccounts();
+
+    private SptProfile? GetCurrentSptProfile()
+    {
+        if (!MongoId.IsValidMongoId(WebData.CurrentAccount)) return null;
+        try
+        {
+            return SaveServer.GetProfile(WebData.CurrentAccount);
+        }
+        catch (Exception e)
+        {
+            ModConfig.Warn($"无法获取到{WebData.CurrentAccount}的存档信息: {e.Message}");
+            return null;
+        }
+    }
+    
+    protected override void OnInitialized()
+    {
+        ReadOnlySet<MongoId> accounts = AccountAllExist;
+        if (accounts.Count > 0 && string.IsNullOrEmpty(WebData.CurrentAccount))
+        {
+            WebData.CurrentAccount = accounts.First().ToString();
+        }
+    }
+}

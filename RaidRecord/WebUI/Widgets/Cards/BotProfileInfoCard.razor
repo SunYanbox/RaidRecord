@@ -1,0 +1,52 @@
+@using SPTarkov.Server.Core.Models.Eft.Common
+@using SPTarkov.Server.Core.Models.Eft.Profile
+<MudCardContent Class="bot-info-mud-card-content" Style="@Style">
+    <MudText>PMC存档信息</MudText>
+    <MudText Class="two-char-indent">昵称: @PmcData?.Info?.Nickname</MudText>
+    <MudText Class="two-char-indent">简称: @PmcData?.Info?.LowerNickname</MudText>
+    <MudText Class="two-char-indent">等级: @PmcData?.Info?.Level</MudText>
+    <MudText Class="two-char-indent">游戏版本: @PmcData?.Info?.GameVersion</MudText>
+    <MudText Class="two-char-indent">阵营: @PmcData?.Info?.Side</MudText>
+    <MudText>SCAV模组信息</MudText>
+    @if (_botInfoShowAll)
+    {
+        <MudText Class="two-char-indent">昵称: @ScavData?.Info?.Nickname</MudText>
+        <MudText Class="two-char-indent">简称: @ScavData?.Info?.LowerNickname</MudText>
+        <MudText Class="two-char-indent">等级: @ScavData?.Info?.Level</MudText>
+        <MudText Class="two-char-indent">游戏版本: @ScavData?.Info?.GameVersion</MudText>
+        <MudText Class="two-char-indent">阵营: @ScavData?.Info?.Side</MudText>
+    }
+    <MudCardActions>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="_ => ToggleShowAll()">
+            @_botInfoShowAllText
+        </MudButton>
+    </MudCardActions>
+    <style>
+        .two-char-indent {
+            text-indent: 2ch;
+        }
+        .bot-info-mud-card-content {
+            border: 2px solid #ccc;
+            background-color: #e8f4f5;
+        }
+    </style>
+</MudCardContent>
+
+@code {
+    [Parameter]
+    public SptProfile? SptProfile { get; set; }
+    [Parameter] public string? Style { get; set; }
+
+    private PmcData? PmcData => SptProfile?.CharacterData?.PmcData;
+    private PmcData? ScavData => SptProfile?.CharacterData?.ScavData;
+    
+    private bool _botInfoShowAll;
+    private string _botInfoShowAllText = "查看全部";
+    
+    private void ToggleShowAll()
+    {
+        _botInfoShowAll = !_botInfoShowAll;
+        _botInfoShowAllText = _botInfoShowAll ? "收起详情" : "查看全部";
+    }
+    
+}

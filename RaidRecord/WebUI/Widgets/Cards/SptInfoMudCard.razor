@@ -1,0 +1,51 @@
+@using SPTarkov.Server.Core.Models.Eft.Profile
+
+<MudCardContent Class="spt-info-mud-card-content">
+    <MudText>SPT信息</MudText>
+    <MudText Class="two-char-indent" Typo="Typo.body2">Version: @SptProfile?.SptData?.Version</MudText>
+    <MudText>模组信息</MudText>
+    @{
+        List<ModDetails> mods = SptProfile?.SptData?.Mods ?? [];
+        IEnumerable<ModDetails> displayMods = _modInfoShowAll ? mods : mods.Take(5);
+        foreach (ModDetails detail in displayMods)
+        {
+            <div style="display: flex">
+                <MudText Class="two-char-indent">名字: @detail.Name</MudText>
+                <MudText Class="two-char-indent">版本: @detail.Version</MudText>
+                <MudText Class="two-char-indent">作者: @detail.Author</MudText>
+                @if(!string.IsNullOrEmpty(detail.Url))
+                {
+                    <MudLink Class="two-char-indent" Href="@detail.Url">@detail.Name</MudLink>
+                }
+            </div>
+        }
+    }
+    <MudCardActions>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="_ => ToggleShowAll()">
+            @_modInfoShowAllText
+        </MudButton>
+    </MudCardActions>
+    <style>
+        .two-char-indent {
+            text-indent: 2ch;
+        }
+        .spt-info-mud-card-content {
+            border: 2px solid #ccc;
+            background-color: #e8f5e9;
+        }
+    </style>
+</MudCardContent>
+
+@code {
+    [Parameter]
+    public SptProfile? SptProfile { get; set; }
+    
+    private bool _modInfoShowAll;
+    private string _modInfoShowAllText = "查看全部";
+    
+    private void ToggleShowAll()
+    {
+        _modInfoShowAll = !_modInfoShowAll;
+        _modInfoShowAllText = _modInfoShowAll ? "收起详情" : "查看全部";
+    }
+}
