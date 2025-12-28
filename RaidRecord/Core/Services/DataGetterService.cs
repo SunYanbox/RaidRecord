@@ -67,7 +67,7 @@ public class DataGetterService(
     /// </summary>
     public Dictionary<string, string>? GetSptLocals()
     {
-        return i18N.GetSptLocals();
+        return i18N.SptLocals;
     }
 
     /// <summary>
@@ -272,15 +272,19 @@ public class DataGetterService(
         BaseClasses.BUILT_IN_INSERTS // 内置插件
     ]);
 
-    /// <summary> 被视为战备的基类(胸挂, 护甲, 背包) </summary>
+    /// <summary> 被视为战备的基类(胸挂, 护甲) </summary>
     public readonly IReadOnlySet<MongoId> ArmorClassesAlls = new HashSet<MongoId>([
         BaseClasses.ARMOR, // 护甲
         BaseClasses.ARMOR_PLATE, // 装甲板
         BaseClasses.ARMORED_EQUIPMENT, // 装甲装备
-        BaseClasses.BACKPACK, // 背包
         BaseClasses.VEST, // 胸挂/背心
         BaseClasses.BUILT_IN_INSERTS, // 内置插件(这个头盔和护甲都得有, 下面的同理)
         BaseClasses.GEAR_MOD // 装备模组
+    ]);
+
+    /// <summary> 被视为战备的基类(背包) </summary>
+    public readonly IReadOnlySet<MongoId> BackpackClassesAlls = new HashSet<MongoId>([
+        BaseClasses.BACKPACK // 背包
     ]);
 
     private HashSet<MongoId>? _equipmentClassesAlls;
@@ -293,7 +297,8 @@ public class DataGetterService(
             _equipmentClassesAlls ??= WeaponClassesAlls
                 .Union(WeaponModClassesAll)
                 .Union(HeadClassesAlls)
-                .Union(ArmorClassesAlls).ToHashSet();
+                .Union(ArmorClassesAlls)
+                .Union(BackpackClassesAlls).ToHashSet();
             return _equipmentClassesAlls;
         }
     }

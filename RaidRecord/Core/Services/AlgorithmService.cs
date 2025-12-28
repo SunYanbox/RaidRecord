@@ -1,4 +1,7 @@
+using MudBlazor;
+using RaidRecord.Core.Locals;
 using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 
 namespace RaidRecord.Core.Services;
 
@@ -6,7 +9,7 @@ namespace RaidRecord.Core.Services;
 /// 算法相关服务
 /// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
-public class AlgorithmService
+public class AlgorithmService(I18N i18N)
 {
     public static readonly string[] HeadshotBodyPart = ["Head", "Ears", "Eyes"];
     /// <summary>
@@ -75,6 +78,40 @@ public class AlgorithmService
         return pq;
     }
 
+    /// <summary> 将Item[]构建为TreeItemData树 </summary>
+    public List<TreeItemData<string>> GetTreeItems(Item[] items)
+    {
+        if (items.Length == 0) return [];
+        List<Item> rootItems = GetRootItems(items);
+
+        List<TreeItemData<string>> treeItems = [];
+        foreach (Item root in rootItems)
+        {
+            TreeItemData<string>? node = BuildTreeNode(root, 0, items, 15);
+            if (node != null) treeItems.Add(node);
+        }
+        return treeItems;
+    }
+
+    /// <summary> 获取Item[]中所有根物品 </summary>
+    public static List<Item> GetRootItems(IEnumerable<Item> items)
+    {
+        Item[] enumerable = items as Item[] ?? items.ToArray();
+        var itemIds = new HashSet<string>(enumerable.Select(i => i.Id.ToString()));
+        var rootItems = new List<Item>();
+
+        foreach (Item item in enumerable)
+        {
+            // 如果 ParentId 为空，或 ParentId 不在当前列表中，则是根物品
+            if (string.IsNullOrEmpty(item.ParentId) || !itemIds.Contains(item.ParentId))
+            {
+                rootItems.Add(item);
+            }
+        }
+
+        return rootItems;
+    }
+
     /// <summary>
     /// n-gram的Jacquard计算相似度
     /// </summary>
@@ -96,5 +133,35 @@ public class AlgorithmService
 
         return Enumerable.Range(0, text.Length - n + 1)
             .Select(i => text.Substring(i, n));
+    }
+
+    /// <summary>
+    /// 递归构建树节点
+    /// </summary>
+    private TreeItemData<string>? BuildTreeNode(Item item, int depth, Item[] items, int maxDepth = 15)
+    {
+        if (depth >= maxDepth) return null;
+
+        string value = item.Template.ToString();
+        string text = i18N.GetItemName(item.Template);
+
+        var node = new TreeItemData<string>
+        {
+            Value = value,
+            Text = text,
+            Children = []
+        };
+
+        List<Item> children = items.Where(x => x.ParentId != null && x.ParentId == item.Id).ToList();
+        foreach (Item child in children)
+        {
+            TreeItemData<string>? childNode = BuildTreeNode(child, depth + 1, items, maxDepth);
+            if (childNode != null)
+            {
+                node.Children?.Add(childNode);
+            }
+        }
+
+        return node;
     }
 }

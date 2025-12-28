@@ -85,12 +85,10 @@ public class BuyCmd: CommandBase
 
         if (parametric.Command.Contains("preview") || parametric.Command.Contains("pv"))
         {
-            Dictionary<string, string>? sptLocals = _i18N.GetSptLocals();
-
             string msg = $"Index: {index}, ServerId: {archive.ServerId}\n";
             foreach (Item item in equipments)
             {
-                msg += $"{item.Template} {sptLocals?.GetValueOrDefault($"{item.Template} Name")} {_itemHelper.GetItemQualityModifier(item)}x{_priceSystem.GetItemValueWithCache(item.Template)} rub\n";
+                msg += $"{item.Template} {_i18N.GetItemName(item.Template)} {_itemHelper.GetItemQualityModifier(item)}x{_priceSystem.GetItemValueWithCache(item.Template)} rub\n";
             }
             return msg;
         }
@@ -113,7 +111,8 @@ public class BuyCmd: CommandBase
         List<Warning>? warnings2 = _modMailService.SendItemsToPlayer(
             parametric.SessionId,
             successMsg,
-            equipments.ToList());
+            equipments.ToList(),
+            isFiRItem: true);
 
         return warnings2?.Count > 0 ? string.Join("\n", warnings2.Select(x => x.ErrorMessage)) : successMsg;
 

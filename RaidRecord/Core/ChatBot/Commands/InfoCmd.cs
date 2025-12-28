@@ -14,7 +14,6 @@ public class InfoCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
     private readonly I18N _i18N;
-    private readonly string _unknowWeapon;
     private readonly DataGetterService _dataGetter;
     private readonly DataFormatService _dataFormatService;
 
@@ -27,7 +26,6 @@ public class InfoCmd: CommandBase
             .AddParam("index", "int", i18N.GetText("Cmd-参数简述.index"))
             .SetOptional(["index"])
             .Build();
-        _unknowWeapon = i18N.GetText("UnknownWeapon");
         _i18N = i18N;
         _dataGetter = dataGetter;
         _dataFormatService = dataFormatService;
@@ -50,7 +48,6 @@ public class InfoCmd: CommandBase
         msg += _cmdUtil.GetArchiveMetadata(archive);
 
         List<Victim> victims = archive.EftStats?.Victims?.ToList() ?? [];
-        Dictionary<string, string>? sptLocals = _dataGetter.GetSptLocals();
 
         if (victims.Count > 0)
         {

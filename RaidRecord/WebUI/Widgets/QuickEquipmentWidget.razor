@@ -1,0 +1,218 @@
+@using SPTarkov.Server.Core.Models.Common
+@using SPTarkov.Server.Core.Models.Eft.Common
+@using SPTarkov.Server.Core.Models.Eft.Common.Tables
+@using SPTarkov.Server.Core.Models.Eft.ItemEvent
+@using Color = MudBlazor.Color
+
+@inject ISnackbar Snackbar
+@inject ModConfig ModConfig
+@inject ItemHelper ItemHelper
+@inject PriceSystem PriceSystem
+@inject DataGetterService DataGetter
+@inject ModMailService ModMailService
+@inject WebDataContext WebDataContext
+@inject AlgorithmService AlgorithmService
+
+<MudPaper Class="pa-16 ma-2" Outlined="true">
+    <MudText Typo="Typo.h4">装备信息</MudText>
+    <MudSpacer/>
+    @if (_initEd)
+    {
+        <MudContainer Style="display: flex; align-items: center; height: 100%;">
+            <MudText Typo="Typo.body1">已选择总价值:</MudText>
+            <MudText Color="Color.Info">@(GetChoiceAllPriceFormat())</MudText>
+            <MudSwitch @bind-Value="LabelSwitchWeapon" Label="武器" Color="Color.Success"/>
+            <MudSwitch @bind-Value="LabelSwitchWeaponMod" Label="武器配件" Color="Color.Success"/>
+            <MudSwitch @bind-Value="LabelSwitchHeadArmor" Label="头盔, 护甲与胸挂" Color="Color.Success"/>
+            <MudSwitch @bind-Value="LabelSwitchBackpack" Label="背包" Color="Color.Success"/>
+
+            @if (ProvideQuickBuy)
+            {
+                <MudButton
+                    StartIcon="@Icons.Material.Filled.Payment"
+                    Disabled="@(GetChoiceAllPrice() <= 0)"
+                    OnClick="@(() => QuickBuyEquipmentMegBox.ShowAsync())">
+                    立刻购买
+                </MudButton>
+            }
+        </MudContainer>
+
+        @if (Equipments.Length == 0)
+        {
+            <MudAlert Color="Color.Warning">当前存档没有储存的装备信息</MudAlert>
+        }
+        else
+        {
+            <MudTreeView Items="@TreeItems" ReadOnly="@true" Hover="@true" Dense="@true" ExpandOnClick="@true">
+                <ItemTemplate>
+                    @{
+                        TreeItemData<string> presenter = context;
+                        <MudTreeViewItem
+                            @bind-Expanded="@presenter.Expanded"
+                            Items="@presenter.Children"
+                            Value="@presenter.Value"
+                            Icon="@presenter.Icon"
+                            Text="@presenter.Text"
+                            EndText="@GetEndText(presenter)"
+                            EndTextTypo="@Typo.caption"
+                            Disabled="@IsNodeDisable(presenter)"/>
+                    }
+                </ItemTemplate>
+            </MudTreeView>
+        }
+    }
+    else
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7"/>
+    }
+</MudPaper>
+
+<MudMessageBox @ref="QuickBuyEquipmentMegBox" Title="Info" CancelText="Cancel">
+    <MessageContent>
+        <MudText Typo="Typo.body2" Color="Color.Info">
+            是否消耗 @GetChoiceAllPriceFormat() rub购买装备
+        </MudText>
+    </MessageContent>
+
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Commit"
+                   OnClick="@(() => QuickBuy())">确认付款
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+@code {
+    /// <summary> 存档 </summary>
+    [Parameter] public required RaidArchive Archive { get; set; }
+    /// <summary> 是否提供快速购买按钮 </summary>
+    [Parameter] public bool ProvideQuickBuy { get; set; }
+    /// <summary> 初始化的异步延迟 用来避免其他控件卡住 </summary>
+    [Parameter] public int InitDelay { get; set; } = 200;
+
+    public required MudMessageBox QuickBuyEquipmentMegBox;
+    private bool _initEd;
+    private bool LabelSwitchWeapon { get; set; } = true;
+    private bool LabelSwitchWeaponMod { get; set; } = true;
+    private bool LabelSwitchHeadArmor { get; set; } = true;
+    private bool LabelSwitchBackpack { get; set; } = true;
+
+    private List<TreeItemData<string>>? _treeItems;
+    public List<TreeItemData<string>> TreeItems => _treeItems ??= AlgorithmService.GetTreeItems(Equipments);
+
+    public void QuickBuy()
+    {
+        Item[] items = GetChoiceItems();
+        double totalPrice = GetChoiceAllPrice();
+        PmcData? pmcData = DataGetter.GetPmcData(WebDataContext.CurrentAccount);
+        if (pmcData == null | items.Length <= 0)
+        {
+            ModConfig.Warn("购买物品失败: 玩家数据获取失败");
+            return;
+        }
+        List<Warning>? warnings = ModMailService.Payment(WebDataContext.CurrentAccount, Convert.ToInt64(totalPrice), pmcData);
+
+        if (warnings?.Count > 0)
+        {
+            ModConfig.Warn($"购买物品失败: {string.Join("\n", warnings.Select(x => x.ErrorMessage))}");
+            return;
+        }
+
+        List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
+            WebDataContext.CurrentAccount,
+            "您已购买物资",
+            items.ToList(),
+            isFiRItem: true);
+
+        if (warnings2?.Count > 0)
+        {
+            ModConfig.Warn($"发送物品失败: {string.Join("\n", warnings2.Select(x => x.ErrorMessage))}; 将回退扣费");
+            List<Warning>? warnings3 = ModMailService.SendMoney(WebDataContext.CurrentAccount, "回退资金", totalPrice);
+
+            if (warnings3?.Count > 0)
+            {
+                ModConfig.Warn($"回退资金失败, 我也没招了: {string.Join("\n", warnings3.Select(x => x.ErrorMessage))}");
+            }
+            return;
+        }
+        Snackbar.Add($"已成功购买物品: {items.Length}件 消耗{totalPrice}rub");
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (!_initEd)
+        {
+            await Task.Delay(InitDelay);
+            _initEd = true;
+        }
+        await base.OnInitializedAsync();
+    }
+
+    /// <summary> 获取所有选择的物品 </summary>
+    public Item[] GetChoiceItems()
+    {
+        return Equipments.Where(x => !IsTplClassNotChoice(x.Template)).ToArray();
+    }
+
+    /// <summary> 获取所有选择的物品总价值 </summary>
+    public double GetChoiceAllPrice()
+    {
+        return GetChoiceItems().Sum(x => PriceSystem.GetItemValueWithCache(x.Template));
+    }
+
+    /// <summary> 获取所有选择的物品总价的字符串 </summary>
+    public string GetChoiceAllPriceFormat()
+    {
+        return $"{GetChoiceAllPrice():F2}rub";
+    }
+
+    private string GetEndText(TreeItemData<string> node)
+    {
+        return $"{GetPrice(node):F2}rub";
+    }
+ /// <summary> 递归的获取节点总价值 </summary>
+    private double GetPrice(TreeItemData<string> node)
+    {
+        double value = 0;
+        if (IsNodeDisable(node)) return value;
+        if (node.Value != null)
+            value = PriceSystem.GetItemValueWithCache(node.Value);
+        if (node.Children?.Count > 0)
+            value += node.Children.Sum(GetPrice);
+        return value;
+    }
+
+    public Item[] Equipments => Archive.EquipmentItems ?? [];
+    
+    /// <summary> 判断节点是否禁用 </summary>
+    public bool IsNodeDisable(TreeItemData<string> item)
+    {
+        string? value = item.Value;
+        if (string.IsNullOrEmpty(value) || value.Length != 24) return false;
+        MongoId tpl = new(value);
+        return IsTplClassNotChoice(tpl);
+    }
+
+    /// <summary> 判断模板ID是否禁用 </summary>
+    public bool IsTplClassNotChoice(MongoId tpl)
+    {
+        if (!LabelSwitchWeapon)
+        {
+            if (ItemHelper.IsOfBaseclasses(tpl, DataGetter.WeaponClassesAlls)) return true;
+            if (ItemHelper.IsOfBaseclasses(tpl, DataGetter.WeaponModClassesAll)) return true;
+        }
+        if (!LabelSwitchWeaponMod)
+        {
+            if (ItemHelper.IsOfBaseclasses(tpl, DataGetter.WeaponModClassesAll)) return true;
+        }
+        if (!LabelSwitchHeadArmor)
+        {
+            if (ItemHelper.IsOfBaseclasses(tpl, DataGetter.HeadClassesAlls)) return true;
+            if (ItemHelper.IsOfBaseclasses(tpl, DataGetter.ArmorClassesAlls)) return true;
+        }
+        if (!LabelSwitchBackpack)
+        {
+            if (ItemHelper.IsOfBaseclasses(tpl, DataGetter.BackpackClassesAlls)) return true;
+        }
+        return false;
+    }
+}

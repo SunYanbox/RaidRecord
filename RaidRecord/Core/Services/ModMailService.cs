@@ -206,7 +206,7 @@ public class ModMailService(
         MongoId sessionId,
         string msg,
         List<Item>? items,
-        bool isFiRItem = true,
+        bool isFiRItem,
         long? maxStorageTimeSeconds = 172800L)
     {
         try

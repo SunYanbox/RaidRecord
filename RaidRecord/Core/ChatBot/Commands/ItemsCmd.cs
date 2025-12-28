@@ -68,7 +68,7 @@ public class ItemsCmd: CommandBase
         msg += _cmdUtil.GetArchiveMetadata(archive);
 
         // Dictionary<MongoId, TemplateItem> itemTpls = databaseService.GetTables().Templates.Items;
-        Dictionary<string, string>? sptLocal = _dataGetter.GetSptLocals();
+        Dictionary<string, string>? sptLocal = _i18N.SptLocals;
 
         if (sptLocal == null) return "无法显示属性, 这是由于SPT的本地化数据库加载失败";
 

@@ -1,0 +1,122 @@
+@using SPTarkov.Server.Core.Models.Common
+
+@inject I18N I18N
+@inject ISnackbar Snackbar
+@inject ModConfig ModConfig
+@inject ItemHelper ItemHelper
+@inject PriceSystem PriceSystem
+@inject DataGetterService DataGetter
+@inject ModMailService ModMailService
+@inject WebDataContext WebDataContext
+
+<MudPaper Class="pa-16 ma-2" Outlined="true">
+    <MudText Typo="Typo.h4">物品变化信息</MudText>
+    <MudSpacer/>
+    @if (_initEd)
+    {
+        <MudTable Items="@ItemDeltaShouldShow" Dense="@true" Hover="@true" Bordered="@true">
+            <ToolBarContent>
+                <MudContainer Style="display: flex; align-items: center; height: 100%;">
+                    <MudText Typo="Typo.h6">物资变化列表</MudText>
+                    <MudSwitch @bind-Value="_showAdd" Color="Color.Success">新增</MudSwitch>
+                    <MudSwitch @bind-Value="_showChange" Color="Color.Warning">变化</MudSwitch>
+                    <MudSwitch @bind-Value="_showRemove" Color="Color.Error">移除</MudSwitch>
+                </MudContainer>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>物品ID</MudTh>
+                <MudTh>物品名称</MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<KeyValuePair<MongoId, double>, object>(x => x.Value)">
+                        物品变化量
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<KeyValuePair<MongoId, double>, object>(x => GetPrice(x))">
+                        价值变化量
+                    </MudTableSortLabel>
+                </MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Key</MudTd>
+                <MudTd>@I18N.GetItemName(context.Key)</MudTd>
+                <MudTd>
+                    <MudText Color="@GetColor(context.Key)">@context.Value</MudText>
+                </MudTd>
+                <MudTd>
+                    <MudText Color="@GetColor(context.Key)">@GetPrice(context)</MudText>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager/>
+            </PagerContent>
+        </MudTable>
+    }
+    else
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7"/>
+    }
+</MudPaper>
+
+@code {
+    /// <summary> 存档 </summary>
+    [Parameter] public required RaidArchive Archive { get; set; }
+    /// <summary> 初始化的异步延迟 用来避免其他控件卡住 </summary>
+    [Parameter] public int InitDelay { get; set; } = 200;
+
+    private readonly Dictionary<MongoId, double> _itemDeltaCache = [];
+
+    private Dictionary<MongoId, double> ItemDeltaShouldShow => _itemDeltaCache.Where(ShouldShow).ToDictionary();
+
+    private bool _initEd;
+
+    private bool _showAdd = true;
+    private bool _showChange = true;
+    private bool _showRemove = true;
+    private readonly List<MongoId> _add = [];
+    private readonly List<MongoId> _remove = [];
+    private readonly List<MongoId> _change = [];
+    private readonly HashSet<MongoId> _addSet = [];
+    private readonly HashSet<MongoId> _removeSet = [];
+
+    private double GetPrice(KeyValuePair<MongoId, double> item)
+    {
+        return PriceSystem.GetItemValueWithCache(item.Key) * item.Value;
+    }
+
+    private Color GetColor(MongoId id)
+    {
+        if (_addSet.Contains(id)) return Color.Success;
+        return _removeSet.Contains(id) ? Color.Error : Color.Warning;
+    }
+
+    private bool ShouldShow(KeyValuePair<MongoId, double> item)
+    {
+        MongoId id = item.Key;
+        if (Math.Abs(item.Value) < Constants.Epsilon) return false;
+        if (_addSet.Contains(id) && _showAdd) return true;
+        if (_removeSet.Contains(id) && _showRemove) return true;
+        if (_change.Contains(id) && _showChange) return true;
+        return false;
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (!_initEd)
+        {
+            await Task.Delay(InitDelay);
+            _initEd = true;
+        }
+        RaidUtil.UpdateItemsChanged(_add, _remove, _change, Archive.ItemsTakeIn, Archive.ItemsTakeOut);
+        _addSet.UnionWith(_add);
+        _removeSet.UnionWith(_remove);
+        foreach (MongoId tpl in Archive.ItemsTakeIn.Keys.Union(Archive.ItemsTakeOut.Keys))
+        {
+            _itemDeltaCache[tpl] =
+                Archive.ItemsTakeOut.GetValueOrDefault(tpl, 0) -
+                Archive.ItemsTakeIn.GetValueOrDefault(tpl, 0);
+        }
+        await base.OnInitializedAsync();
+    }
+
+}

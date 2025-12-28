@@ -121,6 +121,14 @@
         </MudCardContent>
     </MudCard>
 
+    <MudCard>
+        <QuickEquipmentWidget Archive="Archive" ProvideQuickBuy="@true"/>
+    </MudCard>
+
+    <MudCard>
+        <ItemsShowWidget Archive="Archive"/>
+    </MudCard>
+
     @code
     {
         PmcData PlayerData => RecordManager.GetPmcDataByPlayerId(Archive.PlayerId);

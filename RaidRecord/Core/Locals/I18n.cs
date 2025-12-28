@@ -4,6 +4,7 @@ using SPTarkov.Common.Extensions;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
@@ -26,6 +27,25 @@ public class I18N(
     public readonly Dictionary<string, string> MapNames = new();
     public readonly Dictionary<string, Dictionary<string, string>> ExitNames = new();
     private readonly Dictionary<string, I18NData> _allTrans = new();
+    private Dictionary<string, string>? _sptLocals;
+
+    /// <summary> 获取当前语言对应的SPT数据库 </summary>
+    public Dictionary<string, string>? SptLocals => _sptLocals ??= GetSptLocals();
+
+    /// <summary> 当前语言 </summary>
+    public string CurrentLanguage
+    {
+        get => _currentLanguage;
+        set
+        {
+            if (!_allTrans.ContainsKey(value)) return;
+            _currentLanguage = value;
+            _sptLocals = null;
+        }
+    }
+
+    /// <summary> 只读属性, 查看支持的语言 </summary>
+    public List<string> AvailableLanguages => _allTrans.Keys.ToList();
 
     private string _currentLanguage = "ch"; // 默认语言
 
@@ -177,6 +197,15 @@ public class I18N(
     }
 
     /// <summary>
+    /// 基于物品TplID获取物品本地化名称
+    /// </summary>
+    /// <returns>本地化后的字符串</returns>
+    public string GetItemName(MongoId temple)
+    {
+        return SptLocals?.GetValueOrDefault($"{temple} Name") ?? temple.ToString();
+    }
+
+    /// <summary>
     /// 获取小写去除_的地图名称, 作为字典的键
     /// </summary>
     private static string GetMapKey(string mapName)
@@ -256,16 +285,6 @@ public class I18N(
         }));
     }
 
-    public string CurrentLanguage
-    {
-        get => _currentLanguage;
-        set
-        {
-            if (_allTrans.ContainsKey(value))
-                _currentLanguage = value;
-        }
-    }
-
     /// <summary>
     /// 获取地图本地化名称
     /// </summary>
@@ -297,7 +316,4 @@ public class I18N(
     {
         return _allTrans[CurrentLanguage].RoleNames.GetValueOrDefault(key, key);
     }
-
-    // 只读属性, 查看支持的语言
-    public List<string> AvailableLanguages => _allTrans.Keys.ToList();
 }
