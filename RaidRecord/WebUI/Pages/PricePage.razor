@@ -1,0 +1,213 @@
+@page "/RaidRecord/Price"
+@using SPTarkov.Server.Core.Helpers
+@using SPTarkov.Server.Core.Models.Common
+@using SPTarkov.Server.Core.Models.Eft.Common
+@using SPTarkov.Server.Core.Models.Eft.Common.Tables
+@using SPTarkov.Server.Core.Models.Eft.ItemEvent
+@using Color = MudBlazor.Color
+
+@inject ISnackbar Snackbar
+@inject ModConfig ModConfig
+@inject ItemHelper ItemHelper
+@inject PriceSystem PriceSystem
+@inject DataGetterService DataGetter
+@inject ModMailService ModMailService
+@inject WebDataContext WebDataContext
+
+<MainLayout/>
+
+<MudTable Items="@GetSimilarity()" FixedHeader="@true" FixedFooter="@true"
+          Dense="@true" Hover="@true" ReadOnly="@true" Style="width: 100%;"
+          @bind-SelectedItem="SelectedPriceItem" SortLabel="Sort By">
+    <ToolBarContent>
+        <MudIcon Icon="@Icons.Material.Filled.PriceCheck" Color="Color.Success"/>
+        <MudText Typo="Typo.h6" Style="text-indent: 2ch;">价格页面</MudText>
+        <MudText Typo="Typo.body2" Style="text-indent: 2ch;">可以用于模糊搜索物品价格, 以及快速购买物品</MudText>
+
+        <MudContainer Style="display: flex">
+            <MudTextField Typo="Typo.body1" @bind-Value="Query" Label="名称" Variant="Variant.Filled" Clearable="true"
+                          Adornment="Adornment.End" AdornmentColor="Color.Primary"/>
+            <MudNumericField Typo="Typo.body1" @bind-Value="TopN" Label="TopN" Variant="Variant.Filled" Min="1"
+                             Max="50"/>
+        </MudContainer>
+    </ToolBarContent>
+    <ColGroup>
+        <col style="min-width: 20ch"/>
+        <col style="min-width: 26ch"/>
+        <col style="min-width: 15ch"/>
+        <col style="min-width: 15ch"/>
+        <col style="min-width: 15ch"/>
+        <col style="min-width: 10ch"/>
+        <col style="min-width: 15ch"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>名称</MudTh>
+        <MudTh>Tpl</MudTh>
+        <MudTh>
+            模组价格(rub)
+            <MudText Typo="Typo.body2">市场平均价格</MudText>
+        </MudTh>
+        <MudTh>动态价格(rub)</MudTh>
+        <MudTh>手册价格(rub)</MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<PriceItem, object>(x => x.Similarity)">
+                相似度得分
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            工具栏
+        </MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>@context.TplId</MudTd>
+        <MudTd>@context.AvgPrice</MudTd>
+        <MudTd>@context.DynPrice</MudTd>
+        <MudTd>@context.HandbookPrice</MudTd>
+        <MudTd>@($"{context.Similarity:F2}")</MudTd>
+
+        <MudTd>
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Payment" Color="Color.Info"
+                       Onclick="@(() => OnQuickBuyItem(context))">
+                购买这个物品
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager RowsPerPageString="每页行数:" InfoFormat="{first_item}-{last_item} / {all_items}"
+                       PageSizeOptions="new[] { 10, 1, 5, 20, 50, 100 }"/>
+    </PagerContent>
+</MudTable>
+
+<MudMessageBox @ref="QuickBuyItemMegBox" Title="Info" CancelText="Cancel">
+    <MessageContent>
+        <MudText>
+            输入购买@(WillBuy?.Name)的数量:
+            <MudText Typo="Typo.body2" Color="Color.Warning">
+                此处不会处理带有内置槽位的物品, 请不要购买带有内置槽位的物品
+            </MudText>
+            <MudText Typo="Typo.body2" Color="Color.Info">
+                这是消耗你存档的卢布进行购买, 不是零元购
+            </MudText>
+        </MudText>
+        <MudText>当前单价: @(WillBuy?.AvgPrice ?? 0)rub</MudText>
+        <MudNumericField @bind-Value="_num" Variant="Variant.Text" Min="1" Max="10000"/>
+    </MessageContent>
+
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Commit"
+                   OnClick="@(() => YesBuy())">确认付款
+        </MudButton>
+    </YesButton>
+
+    @code
+    {
+        public PriceItem? WillBuy;
+
+        int _num = 1;
+
+        public double TotalPrice => (WillBuy?.AvgPrice ?? 0) * _num;
+
+        void YesBuy()
+        {
+            PmcData? pmcData = DataGetter.GetPmcData(WebDataContext.CurrentAccount);
+            if (pmcData == null || WillBuy == null)
+            {
+                ModConfig.Warn("购买物品失败: 玩家数据获取失败");
+                return;
+            }
+            List<Warning>? warnings = ModMailService.Payment(WebDataContext.CurrentAccount, Convert.ToInt64(TotalPrice), pmcData);
+
+            if (warnings?.Count > 0)
+            {
+                ModConfig.Warn($"购买物品失败: {string.Join("\n", warnings.Select(x => x.ErrorMessage))}");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(WillBuy?.TplId))
+            {
+                ModConfig.Warn("购买物品失败: 物资模版ID为空");
+                return;
+            }
+
+            List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
+                WebDataContext.CurrentAccount,
+                "您已购买物资",
+                ItemHelper.SplitStackIntoSeparateItems(new Item
+                {
+                    Id = new MongoId(),
+                    Template = WillBuy?.TplId ?? "",
+                    Upd = new Upd
+                    {
+                        StackObjectsCount = _num
+                    }
+                }).SelectMany(x => x).ToList(),
+                isFiRItem: true);
+
+            if (warnings2?.Count > 0)
+            {
+                ModConfig.Warn($"发送物品失败: {string.Join("\n", warnings2.Select(x => x.ErrorMessage))}; 将回退扣费");
+                List<Warning>? warnings3 = ModMailService.SendMoney(WebDataContext.CurrentAccount, "回退资金", TotalPrice);
+
+                if (warnings3?.Count > 0)
+                {
+                    ModConfig.Warn($"回退资金失败, 我也没招了: {string.Join("\n", warnings3.Select(x => x.ErrorMessage))}");
+                }
+                return;
+            }
+            Snackbar.Add($"已成功购买物品: {WillBuy?.Name} x{_num}, 消耗{TotalPrice}rub");
+        }
+    }
+</MudMessageBox>
+
+@code {
+    public required MudMessageBox QuickBuyItemMegBox;
+
+    public void OnQuickBuyItem(PriceItem item)
+    {
+        WillBuy = item;
+        QuickBuyItemMegBox.ShowAsync();
+    }
+
+    public int TopN { get; set; } = 10;
+
+    public string Query { get; set; } = string.Empty;
+
+    public PriceItem SelectedPriceItem { get; set; }
+
+    List<PriceItem> GetSimilarity()
+    {
+        if (string.IsNullOrEmpty(Query)) return [];
+        PriorityQueue<(string name, double similarity), double> search = AlgorithmService.Search(Query, DataGetter.Name2Id, TopN);
+        List<PriceItem> result = [];
+        while (search.Count > 0)
+        {
+            (string nameResult, double similarityResult) = search.Dequeue();
+            // "Cmd-Price.name结果": "物品名称: {{Name}} 物品模板ID: {{TplId}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub 相似得分: {{Similarity}}"
+            string tplResult = DataGetter.Name2Id[nameResult];
+
+            result.Add(new PriceItem
+            {
+                Name = nameResult,
+                TplId = tplResult,
+                AvgPrice = PriceSystem.GetNewestPrice(tplResult),
+                DynPrice = ItemHelper.GetDynamicItemPrice(tplResult) ?? 0,
+                HandbookPrice = ItemHelper.GetStaticItemPrice(tplResult),
+                Similarity = similarityResult
+            });
+        }
+        result.Reverse();
+        return result;
+    }
+
+    public struct PriceItem
+    {
+        public string Name;
+        public double Similarity;
+        public string TplId;
+        public double AvgPrice;
+        public double DynPrice;
+        public double HandbookPrice;
+    }
+
+}

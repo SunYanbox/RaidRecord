@@ -28,6 +28,7 @@ namespace RaidRecord.Core.Services;
 public class ModMailService(
     I18N i18N,
     ModConfig modConfig,
+    ItemHelper itemHelper,
     ConfigServer configServer,
     ProfileHelper profileHelper,
     DataGetterService dataGetter,
@@ -149,17 +150,63 @@ public class ModMailService(
     }
 
     /// <summary>
+    /// 给玩家发送钱, 且为FIR状态
+    /// </summary>
+    public List<Warning>? SendMoney(MongoId sessionId, string msg, double amount)
+    {
+        ItemEventRouterResponse output = eventOutputHolder.GetOutput(sessionId);
+
+        try
+        {
+            List<Warning>? warnings = SendItemsToPlayer(
+                sessionId,
+                msg,
+                itemHelper.SplitStackIntoSeparateItems(new Item
+                {
+                    Id = new MongoId(),
+                    Template = Money.ROUBLES,
+                    Upd = new Upd
+                    {
+                        StackObjectsCount = amount
+                    }
+                }).SelectMany(x => x).ToList(),
+                isFiRItem: true);
+            if (warnings != null)
+            {
+                foreach (Warning warning in warnings)
+                {
+                    output.Warnings ??= [];
+                    output.Warnings.Add(warning);
+                }
+                return warnings;
+            }
+        }
+        catch (Exception e)
+        {
+            output.Warnings ??= [];
+            output.Warnings.Add(new Warning
+            {
+                ErrorMessage = $"扣费时出现错误: {e.Message} {e.StackTrace}"
+            });
+        }
+
+        return output.Warnings;
+    }
+
+    /// <summary>
     /// 将物品以System账户发送给玩家
     /// </summary>
     /// <param name="sessionId">玩家sessionId</param>
     /// <param name="msg">提示信息</param>
     /// <param name="items">物品列表</param>
+    /// <param name="isFiRItem">是否令所有物品为突袭中发现物品</param>
     /// <param name="maxStorageTimeSeconds">默认为2天</param>
     /// <returns>如果未成功则返回警告列表</returns>
     public List<Warning>? SendItemsToPlayer(
         MongoId sessionId,
         string msg,
         List<Item>? items,
+        bool isFiRItem = true,
         long? maxStorageTimeSeconds = 172800L)
     {
         try
@@ -173,6 +220,14 @@ public class ModMailService(
                         ErrorMessage = "未指定物品"
                     }
                 ];
+            }
+            if (isFiRItem)
+            {
+                foreach (Item item in items ?? [])
+                {
+                    item.Upd ??= new Upd();
+                    item.Upd.SpawnedInSession = isFiRItem;
+                }
             }
             mailSendService.SendSystemMessageToPlayer(
                 sessionId,

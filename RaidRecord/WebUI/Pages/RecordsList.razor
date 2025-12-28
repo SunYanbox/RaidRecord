@@ -85,20 +85,20 @@
         </MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd>@context.Index</MudTd>
-        <MudTd>@context.Archive.Side</MudTd>
-        <MudTd>@DataFormat.GetMapNameLocal(context.Archive)</MudTd>
-        <MudTd>@DataFormat.FromDateTimeSeconds(context.Archive.CreateTime)</MudTd>
-        <MudTd>@context.Archive.PreRaidValue</MudTd>
-        <MudTd>@context.Archive.EquipmentValue</MudTd>
-        <MudTd>@context.Archive.GrossProfit</MudTd>
-        <MudTd>@context.Archive.CombatLosses</MudTd>
-        <MudTd>@DataFormat.GetNetProfit(context.Archive)</MudTd>
-        <MudTd>@DataFormat.GetKillCount(context.Archive)</MudTd>
-        <MudTd>@DataFormat.GetResultStr(context.Archive)</MudTd>
+        <MudTd>@context!.Index</MudTd>
+        <MudTd>@context!.Archive.Side</MudTd>
+        <MudTd>@DataFormat.GetMapNameLocal(context!.Archive)</MudTd>
+        <MudTd>@DataFormat.FromDateTimeSeconds(context!.Archive.CreateTime)</MudTd>
+        <MudTd>@context!.Archive.PreRaidValue</MudTd>
+        <MudTd>@context!.Archive.EquipmentValue</MudTd>
+        <MudTd>@context!.Archive.GrossProfit</MudTd>
+        <MudTd>@context!.Archive.CombatLosses</MudTd>
+        <MudTd>@DataFormat.GetNetProfit(context!.Archive)</MudTd>
+        <MudTd>@DataFormat.GetKillCount(context!.Archive)</MudTd>
+        <MudTd>@DataFormat.GetResultStr(context!.Archive)</MudTd>
         <MudTd>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Info" Color="Color.Info"
-                       Onclick="@(() => LookDetails(context))">
+                       Onclick="@(() => LookDetails(context!))">
                 信息
             </MudButton>
         </MudTd>

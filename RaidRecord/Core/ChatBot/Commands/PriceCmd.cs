@@ -16,12 +16,6 @@ public class PriceCmd: CommandBase
     private readonly PriceSystem _priceSystem;
     private readonly ItemHelper _itemHelper;
     private readonly DataGetterService _dataGetter;
-    private readonly int _itemNameLen = "5422acb9af1c889c16000029 Name".Length;
-
-    /// <summary>
-    /// 用来缓存名称和id的映射关系, 只有调用过任意一次price命令后才会初始化
-    /// </summary>
-    private Dictionary<string, string>? _name2Id;
 
     public PriceCmd(CmdUtil cmdUtil, I18N i18N, ItemHelper itemHelper, PriceSystem priceSystem,
         DataGetterService dataGetter)
@@ -41,35 +35,8 @@ public class PriceCmd: CommandBase
             .Build();
     }
 
-    private void InitName2Id()
-    {
-        if (_name2Id != null) return;
-        _name2Id ??= new Dictionary<string, string>();
-        Dictionary<string, string>? sptLocals = _dataGetter.GetSptLocals();
-        if (sptLocals == null) return;
-        foreach (KeyValuePair<string, string> kv in sptLocals.AsReadOnly()) // 不需要更改spt的数据库, 只读限定一下
-        {
-            if (kv.Key.EndsWith(" ShortName")
-                || kv.Key.EndsWith(" Description")
-                || kv.Key.Length != _itemNameLen)
-                continue;
-            string tpl = kv.Key.Replace(" Name", "").Replace(" name", "");
-            if (tpl.Length != 24 || !_itemHelper.IsValidItem(tpl)) continue;
-            int retryTimes = 0;
-            while (retryTimes < 10)
-            {
-                // 后缀
-                string retrySuffix = retryTimes > 0 ? $"_{retryTimes}" : "";
-                if (_name2Id.TryAdd(kv.Value, $"{tpl}{retrySuffix}"))
-                    break;
-                retryTimes++;
-            }
-        }
-    }
-
     public override string Execute(Parametric parametric)
     {
-        InitName2Id();
         string? verify = _cmdUtil.VerifyIParametric(parametric);
         if (verify != null) return verify;
 
@@ -98,16 +65,14 @@ public class PriceCmd: CommandBase
             // "Cmd-Price.tpl结果": "物品模板ID: {{TplId}} 物品名称: {{Name}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub"
         }
 
-        PriorityQueue<(string name, double similarity), double> pq = AlgorithmService.Search(name, _name2Id, top);
+        PriorityQueue<(string name, double similarity), double> pq = AlgorithmService.Search(name, _dataGetter.Name2Id, top);
 
         string returnResult = "";
         while (pq.Count > 0)
         {
             (string nameResult, double similarityResult) = pq.Dequeue();
             // "Cmd-Price.name结果": "物品名称: {{Name}} 物品模板ID: {{TplId}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub 相似得分: {{Similarity}}"
-            string? tplResult = _name2Id?[nameResult];
-
-            if (tplResult == null) continue;
+            string tplResult = _dataGetter.Name2Id[nameResult];
 
             returnResult += _i18N.GetText("Cmd-Price.name结果", new
             {

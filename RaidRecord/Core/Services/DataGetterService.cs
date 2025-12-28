@@ -7,6 +7,7 @@ using RaidRecord.Core.Systems;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Enums;
 
@@ -20,8 +21,17 @@ public class DataGetterService(
     DialogueHelper dialogueHelper,
     RecordManager recordManager,
     ProfileHelper profileHelper,
+    ItemHelper itemHelper,
     I18N i18N)
 {
+    /// <summary>
+    /// 获取Pmc存档数据
+    /// </summary>
+    public PmcData? GetPmcData(MongoId session)
+    {
+        return profileHelper.GetPmcProfile(session);
+    }
+
     /// <summary>
     /// 获取聊天机器人信息
     /// </summary>
@@ -287,4 +297,46 @@ public class DataGetterService(
             return _equipmentClassesAlls;
         }
     }
+
+    private void InitName2Id()
+    {
+        if (_name2Id != null) return;
+        _name2Id ??= new Dictionary<string, string>();
+        Dictionary<string, string>? sptLocals = GetSptLocals();
+        if (sptLocals == null) return;
+        foreach (KeyValuePair<string, string> kv in sptLocals.AsReadOnly()) // 不需要更改spt的数据库, 只读限定一下
+        {
+            if (kv.Key.EndsWith(" ShortName")
+                || kv.Key.EndsWith(" Description")
+                || kv.Key.Length != _itemNameLen)
+                continue;
+            string tpl = kv.Key.Replace(" Name", "").Replace(" name", "");
+            if (tpl.Length != 24 || !itemHelper.IsValidItem(tpl)) continue;
+            int retryTimes = 0;
+            while (retryTimes < 10)
+            {
+                // 后缀
+                string retrySuffix = retryTimes > 0 ? $"_{retryTimes}" : "";
+                if (_name2Id.TryAdd(kv.Value, $"{tpl}{retrySuffix}"))
+                    break;
+                retryTimes++;
+            }
+        }
+    }
+
+    public Dictionary<string, string> Name2Id
+    {
+        get
+        {
+            if (_name2Id == null) InitName2Id();
+            return _name2Id!;
+        }
+    }
+
+    /// <summary>
+    /// 用来缓存名称和id的映射关系, 只有调用过任意一次price命令后才会初始化
+    /// </summary>
+    private Dictionary<string, string>? _name2Id;
+
+    private readonly int _itemNameLen = "5422acb9af1c889c16000029 Name".Length;
 }
