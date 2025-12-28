@@ -8,6 +8,15 @@ namespace RaidRecord.Core.Services;
 [Injectable(InjectionType = InjectionType.Singleton)]
 public class AlgorithmService
 {
+    public static readonly string[] HeadshotBodyPart = ["Head", "Ears", "Eyes"];
+    /// <summary>
+    /// 判断命中区域是否为爆头击杀
+    /// </summary>
+    public static bool IsBodyPartHeadshotKill(string? bodyPart)
+    {
+        return !string.IsNullOrEmpty(bodyPart) && HeadshotBodyPart.Any(bodyPart.Contains);
+    }
+
     /// <summary>
     /// 在字典中搜索与query最相近的topN个结果
     /// <br />

@@ -1,0 +1,90 @@
+@page "/RaidRecord/Info"
+@inject WebDataContext WebData
+@inject DataFormatService DataFormat
+@inject ModConfig ModConfig
+@inject DataGetterService DataGetter
+
+<MainLayout/>
+
+<MudDynamicTabs Color="@Color.Info" Style="height: 100%; width: 100%;" AddTab="@OnAddTab" CloseTab="@OnCloseTab">
+    @if (WebData.LookingServerIds.Count == 0)
+    {
+        <MudText Color="Color.Error">没有选择显示任何对局详情, 请在战绩列表中选择, 或者点击右上角的加号</MudText>
+    }
+    else
+    {
+        @foreach (ArchiveIndexed archiveIndexed in WebData.LookingServerIds)
+        {
+
+            <MudTabPanel Text="@($"Index {archiveIndexed.Index}")" ToolTip="@archiveIndexed.Archive.ServerId"
+                         ShowCloseIcon="@true">
+                @try
+                {
+                    <ArchiveInfoPaperWidget Archive="archiveIndexed.Archive"/>
+                }
+                catch (Exception e)
+                {
+                    <MudText Color="Color.Error">显示存档标签失败: @e.Message</MudText>
+                }
+            </MudTabPanel>
+        }
+    }
+</MudDynamicTabs>
+
+<MudMessageBox @ref="MudMessageBox" Title="Info" CancelText="Cancel">
+    <MessageContent>
+        <MudText>输入需要查看的索引:</MudText>
+        <MudNumericField @bind-Value="_index" Variant="Variant.Text" Min="0" Max="@GetMaxCount()"/>
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Commit"
+                   OnClick="@(() => AddTab(_index))">确认!
+        </MudButton>
+    </YesButton>
+
+    @code
+    {
+        int _index;
+    }
+</MudMessageBox>
+
+@code {
+    public required MudMessageBox MudMessageBox;
+
+    private int GetMaxCount()
+    {
+        try
+        {
+            return string.IsNullOrEmpty(WebData.CurrentAccount)
+                ? 0
+                : DataGetter.GetArchivesBySession(WebData.CurrentAccount).Count - 1;
+        }
+        catch (Exception e)
+        {
+            ModConfig.Warn($"获取可选索引最大值失败: {e.Message}");
+            return 0;
+        }
+    }
+
+    private void AddTab(int index)
+    {
+        try
+        {
+            WebData.LookingServerIds.Add(new ArchiveIndexed(DataGetter.GetArchiveWithIndex(index, WebData.CurrentAccount), index));
+        }
+        catch (Exception e)
+        {
+            ModConfig.Warn($"创建索引 {index} 对局详情失败: {e.Message}");
+        }
+    }
+
+    private async Task OnAddTab()
+    {
+        await MudMessageBox.ShowAsync();
+    }
+
+    private void OnCloseTab(MudTabPanel panel)
+    {
+        WebData.LookingServerIds.RemoveWhere(x => x.Index.ToString() == panel.Text?.Replace("Index ", ""));
+    }
+}

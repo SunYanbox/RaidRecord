@@ -13,19 +13,17 @@
 
 <MainLayout/>
 
-<MudContainer>
-    <MudSelect @bind-Value="WebData.CurrentAccount"
-               Style="width: auto"
-               Label="选择存档"
-               AdornmentColor="Color.Secondary">
-        @foreach (MongoId account in AccountAllExist)
-        {
-            <MudSelectItem Value="@account.ToString()">@account @GetName(account)</MudSelectItem>
-        }
-    </MudSelect>
+<MudSelect @bind-Value="WebData.CurrentAccount"
+           Style="width: auto"
+           Label="选择存档"
+           AdornmentColor="Color.Secondary">
+    @foreach (MongoId account in AccountAllExist)
+    {
+        <MudSelectItem Value="@account.ToString()">@account @GetName(account)</MudSelectItem>
+    }
+</MudSelect>
 
-    <ProfileInfoWidget SptProfile="GetCurrentSptProfile()"></ProfileInfoWidget>
-</MudContainer>
+<ProfileInfoWidget SptProfile="GetCurrentSptProfile()"></ProfileInfoWidget>
 
 @code {
     private string GetName(MongoId session)

@@ -2,7 +2,9 @@ using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Configs;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
+using RaidRecord.Core.Services;
 using RaidRecord.Core.Systems;
+using RaidRecord.WebUI;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Eft.Common;
@@ -16,24 +18,16 @@ public class CmdUtil(
     I18N i18N,
     ModConfig modConfig,
     ProfileHelper profileHelper,
-    RecordManager recordCacheManager
+    RecordManager recordCacheManager,
+    DataFormatService dataFormatService
 )
 {
-    public readonly string[] HeadshotBodyPart = ["Head", "Ears", "Eyes"];
     #region 提供依赖给工具调用 | 只放大部分命令需要的依赖
     public readonly I18N? I18N = i18N;
     public readonly RecordManager? RecordManager = recordCacheManager;
     public readonly ModConfig? ModConfig = modConfig;
     public readonly ParaInfoBuilder ParaInfoBuilder = new();
     #endregion
-
-    /// <summary>
-    /// 判断命中区域是否为爆头击杀
-    /// </summary>
-    public bool IsBodyPartHeadshotKill(string? bodyPart)
-    {
-        return !string.IsNullOrEmpty(bodyPart) && HeadshotBodyPart.Any(bodyPart.Contains);
-    }
 
     public static string GetPlayerGroupOfServerId(string serverId)
     {
@@ -51,8 +45,6 @@ public class CmdUtil(
         string msg = "";
         string serverId = archive.ServerId;
         string playerId = archive.PlayerId;
-        string timeString = DateFormatterFull(archive.CreateTime);
-        string mapName = serverId[..serverId.IndexOf('.')].ToLower();
         PmcData playerData = RecordManager!.GetPmcDataByPlayerId(playerId);
 
         // "Record-元数据.Id与玩家信息": "{{TimeFormat}} 对局ID: {{ServerId}} 玩家信息: {{Nickname}}(Level={{Level}}, id={{PlayerId}})"
@@ -60,25 +52,22 @@ public class CmdUtil(
             "Record-元数据.Id与玩家信息",
             new
             {
-                TimeFormat = timeString,
+                TimeFormat = dataFormatService.GetCreateTimeStr(archive),
                 ServerId = serverId,
                 playerData.Info?.Nickname,
                 playerData.Info?.Level,
                 PlayerId = playerId
             }
         );
-        List<Victim> victims = archive.EftStats?.Victims?.ToList() ?? [];
-        int killCount = victims.Count;
-        int headshotKillCount = victims.Count(x => IsBodyPartHeadshotKill(x.BodyPart));
         //"Record-元数据.地图与存活时间": "\n地图: {{MapName}} 生存时间: {{PlayTime}} 击杀数量: {{KillCount}} 爆头击杀率: {{HeadshotKillRate}}",
         msg += I18N!.GetText(
             "Record-元数据.地图与存活时间",
             new
             {
-                MapName = mapName,
-                PlayTime = StringUtil.TimeString(archive.Results?.PlayTime ?? 0),
-                KillCount = killCount,
-                HeadshotKillRate = killCount == 0 ? "N/A" : $"{headshotKillCount / Math.Max((double)killCount, 1):P2}"
+                MapName = dataFormatService.GetMapNameLocal(archive),
+                PlayTime = dataFormatService.FromTimeSeconds(archive.Results?.PlayTime ?? 0),
+                KillCount = dataFormatService.GetKillCount(archive),
+                HeadshotKillRate = dataFormatService.GetHeadshotRate(archive)
             }
         );
         // "Record-元数据.入场信息": "\n入局战备: {{EquipmentValue}}rub, 安全箱物资价值: {{SecuredValue}}rub, 总带入价值: {{PreRaidValue}}rub",
@@ -99,24 +88,18 @@ public class CmdUtil(
             {
                 GrossProfit = (int)archive.GrossProfit,
                 CombatLosses = (int)archive.CombatLosses,
-                NetProfit = (int)(archive.GrossProfit - archive.CombatLosses)
+                NetProfit = dataFormatService.GetNetProfit(archive)
             }
         );
 
-        string result = I18N.GetText("UnknownResult");
-
-        if (archive.Results?.Result != null)
-        {
-            result = I18N.GetText(archive.Results.Result.Value.ToString());
-        }
         // "Record-元数据.对局结果": "\n对局结果: {{Result}} 撤离点: {{ExitName}} 游戏风格: {{SurvivorClass}}",
         msg += I18N.GetText(
             "Record-元数据.对局结果",
             new
             {
-                Result = result,
-                ExitName = I18N.GetExitName(mapName, archive.Results?.ExitName ?? I18N.GetText("Unknown")),
-                SurvivorClass = archive.EftStats?.SurvivorClass ?? I18N.GetText("Unknown")
+                Result = dataFormatService.GetResultStr(archive),
+                ExitName = dataFormatService.GetExitName(archive),
+                SurvivorClass = dataFormatService.GetSurvivorClass(archive)
             }
         );
         return msg;

@@ -1,3 +1,4 @@
+using RaidRecord.Core.Models.Services;
 using SPTarkov.DI.Annotations;
 
 namespace RaidRecord.WebUI;
@@ -12,5 +13,5 @@ public class WebDataContext
     public string CurrentAccount = string.Empty;
 
     /// <summary> 正在查看的对局信息ID(这里不用索引是为了避免索引变更) </summary>
-    public readonly HashSet<string> LookingServerIds = [];
+    public readonly HashSet<ArchiveIndexed> LookingServerIds = [];
 }

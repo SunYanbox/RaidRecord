@@ -1,0 +1,145 @@
+@using SPTarkov.Server.Core.Models.Eft.Common
+@using SPTarkov.Server.Core.Models.Eft.Common.Tables
+@using SPTarkov.Server.Core.Models.Enums
+@using Color = MudBlazor.Color
+
+@inject DataFormatService DataFormat;
+@inject RecordManager RecordManager;
+
+
+<MudPaper Class="pa-4">
+    <MudCard>
+        <MudCardContent>
+            <MudText>基础信息</MudText>
+            <MudText Typo="Typo.body2">
+                ServerId: @Archive.ServerId
+                对局时间: @DataFormat.FromDateTimeSeconds(Archive.CreateTime)
+                玩家昵称: @PlayerData.Info?.Nickname
+                玩家等级: @PlayerData.Info?.Level
+                玩家ID: @Archive.PlayerId
+            </MudText>
+        </MudCardContent>
+    </MudCard>
+    <MudCard>
+        <MudCardContent>
+            <MudText>地图与存活时间</MudText>
+            <MudText Typo="Typo.body2">
+                地图名称: @DataFormat.GetMapNameLocal(Archive)
+                存活时间: @DataFormat.FromTimeSeconds(Archive.Results?.PlayTime ?? 0)
+            </MudText>
+        </MudCardContent>
+    </MudCard>
+    <MudCard>
+        <MudCardContent>
+            <MudText>对局结果</MudText>
+            <MudText Typo="Typo.body2">
+                结果: @DataFormat.GetResultStr(Archive)
+                撤离点: @DataFormat.GetExitName(Archive)
+                生存风格: @DataFormat.GetSurvivorClass(Archive)
+            </MudText>
+        </MudCardContent>
+    </MudCard>
+    <MudCard>
+        <MudCardContent>
+            <MudText>进入对局</MudText>
+            <MudText Typo="Typo.body2">
+                战备: @Archive.EquipmentValue rub
+                安全箱物资: @Archive.SecuredValue rub
+                入局总带入: @Archive.PreRaidValue rub
+            </MudText>
+        </MudCardContent>
+    </MudCard>
+    <MudCard>
+        <MudCardContent>
+            <MudText>离开对局</MudText>
+            <MudText Typo="Typo.body2">
+                毛收益: @Archive.GrossProfit rub
+                战损: @Archive.CombatLosses rub
+                净收益: @DataFormat.GetNetProfit(Archive) rub
+            </MudText>
+        </MudCardContent>
+    </MudCard>
+    <MudCard>
+        <MudCardContent>
+            <MudText>击杀信息</MudText>
+            <MudText Typo="Typo.body2">
+                击杀数: @DataFormat.GetKillCount(Archive)
+                爆头率: @DataFormat.GetHeadshotRate(Archive)
+            </MudText>
+            @if (DataFormat.GetKillCount(Archive) > 0)
+            {
+                @if (_showKillAll)
+                {
+                    <MudTable Items="@GetVictims()" FixedHeader="@true" FixedFooter="@true">
+                        <HeaderContent>
+                            <MudTh>时间</MudTh>
+                            <MudTh>武器</MudTh>
+                            <MudTh>致死部位</MudTh>
+                            <MudTh>距离</MudTh>
+                            <MudTh>被击败者信息</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@DataFormat.GetVictimTime(context)</MudTd>
+                            <MudTd>@DataFormat.GetWeaponName(context)</MudTd>
+                            <MudTd>@DataFormat.GetBodyPartName(context)</MudTd>
+                            <MudTd>@DataFormat.GetDistance(context)</MudTd>
+                            <MudTd>@($"{context.Name}(Lv{context.Level} side: {context.Side} role: {DataFormat.GetRoleName(context)})")</MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager PageSizeOptions="new[] { 10, 30 }"/>
+                        </PagerContent>
+                    </MudTable>
+                }
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OnShowKillAllClick())">
+                        @(_showKillAll ? "收起击杀信息" : "展开击杀信息")
+                    </MudButton>
+                </MudCardActions>
+            }
+            @if (Archive.Results?.Result == ExitStatus.KILLED)
+            {
+                Aggressor? aggressor = Archive.EftStats?.Aggressor;
+                if (aggressor != null)
+                {
+                    <MudCard>
+                        <MudCardContent>
+                            <MudText>击杀玩家者</MudText>
+                            <MudText Typo="Typo.body2">
+                                名称: @aggressor.Name
+                                阵营: @aggressor.Side
+                                武器名称: @DataFormat.GetWeaponName(aggressor)
+                                角色: @DataFormat.GetRoleName(aggressor)
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                }
+                else
+                {
+                    <MudText>击杀玩家的信息加载失败</MudText>
+                }
+            }
+        </MudCardContent>
+    </MudCard>
+
+    @code
+    {
+        PmcData PlayerData => RecordManager.GetPmcDataByPlayerId(Archive.PlayerId);
+
+        bool _showKillAll;
+
+        private void OnShowKillAllClick()
+        {
+            _showKillAll = !_showKillAll;
+        }
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public required RaidArchive Archive { get; set; }
+
+    public List<Victim> GetVictims()
+    {
+        return Archive.EftStats?.Victims?.ToList() ?? [];
+    }
+}

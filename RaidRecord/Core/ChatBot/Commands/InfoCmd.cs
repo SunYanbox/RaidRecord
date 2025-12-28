@@ -16,8 +16,9 @@ public class InfoCmd: CommandBase
     private readonly I18N _i18N;
     private readonly string _unknowWeapon;
     private readonly DataGetterService _dataGetter;
+    private readonly DataFormatService _dataFormatService;
 
-    public InfoCmd(CmdUtil cmdUtil, DataGetterService dataGetter, I18N i18N)
+    public InfoCmd(CmdUtil cmdUtil, DataGetterService dataGetter, DataFormatService dataFormatService, I18N i18N)
     {
         _cmdUtil = cmdUtil;
         Key = "info";
@@ -29,6 +30,7 @@ public class InfoCmd: CommandBase
         _unknowWeapon = i18N.GetText("UnknownWeapon");
         _i18N = i18N;
         _dataGetter = dataGetter;
+        _dataFormatService = dataFormatService;
     }
 
     public override string Execute(Parametric parametric)
@@ -55,31 +57,19 @@ public class InfoCmd: CommandBase
             msg += _i18N.GetText("Cmd-Info.本局击杀标题");
             foreach (Victim victim in victims)
             {
-                string weapon;
-                if (sptLocals != null && victim.Weapon != null)
-                {
-                    weapon = sptLocals.TryGetValue(victim.Weapon, out string? value1)
-                        ? value1
-                        : victim.Weapon ?? _unknowWeapon;
-                }
-                else
-                {
-                    weapon = victim.Weapon ?? _unknowWeapon;
-                }
-
                 // "Cmd-Info.本局击杀信息": "\n {{VictimTime}} 使用{{WeaponName}}命中{{BodyPart}}淘汰距离{{VictimDistance}}m远的{{VictimName}}(等级:{{VictimLevel}} 阵营:{{VictimSide}} 角色:{{VictimRole}})",
                 msg += _i18N.GetText(
                     "Cmd-Info.本局击杀信息",
                     new
                     {
-                        VictimTime = victim.Time?[..13],
-                        WeaponName = weapon,
-                        BodyPart = _cmdUtil.I18N!.GetArmorZoneName(victim.BodyPart ?? ""),
-                        VictimDistance = (int)(victim.Distance ?? 0),
+                        VictimTime = _dataFormatService.GetVictimTime(victim),
+                        WeaponName = _dataFormatService.GetWeaponName(victim),
+                        BodyPart = _dataFormatService.GetBodyPartName(victim),
+                        VictimDistance = _dataFormatService.GetDistance(victim),
                         VictimName = victim.Name,
                         VictimLevel = victim.Level,
                         VictimSide = victim.Side,
-                        VictimRole = _cmdUtil.I18N.GetRoleName(victim.Role ?? "")
+                        VictimRole = _dataFormatService.GetRoleName(victim)
                     }
                 );
                 // msg +=
@@ -93,18 +83,6 @@ public class InfoCmd: CommandBase
             Aggressor? aggressor = archive.EftStats?.Aggressor;
             if (aggressor != null)
             {
-                string weapon;
-                if (sptLocals != null && aggressor.WeaponName != null)
-                {
-                    weapon = sptLocals.TryGetValue(aggressor.WeaponName, out string? value1)
-                        ? value1
-                        : aggressor.WeaponName ?? _unknowWeapon;
-                }
-                else
-                {
-                    weapon = aggressor.WeaponName ?? _unknowWeapon;
-                }
-
                 // "Cmd-Info.本局击杀者": "\n击杀者: {{AggressorName}}(阵营: {{AggressorSide}})使用{{WeaponName}}命中{{ArmorZone}}淘汰了你",
                 msg += _i18N.GetText(
                     "Cmd-Info.本局击杀者",
@@ -112,7 +90,7 @@ public class InfoCmd: CommandBase
                     {
                         AggressorName = aggressor.Name,
                         AggressorSide = aggressor.Side,
-                        WeaponName = weapon,
+                        WeaponName = _dataFormatService.GetWeaponName(aggressor),
                         BodyPart = _cmdUtil.I18N!.GetArmorZoneName(aggressor.BodyPart ?? _i18N.GetText("Unknown"))
                     }
                 );
