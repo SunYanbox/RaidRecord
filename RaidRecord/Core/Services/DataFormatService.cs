@@ -51,7 +51,8 @@ public class DataFormatService(I18N i18N)
     /// <summary> 获取对局生存风格 </summary>
     public string GetSurvivorClass(RaidArchive archive)
     {
-        return i18N.GetText(archive.EftStats?.SurvivorClass ?? "Unknown");
+        string survivorClass = archive.EftStats?.SurvivorClass ?? "Unknown";
+        return i18N.SptLocals?.GetValueOrDefault(survivorClass) ?? i18N.GetText("Unknown");
     }
 
     /// <summary> 获取Archive的撤离点名称 </summary>

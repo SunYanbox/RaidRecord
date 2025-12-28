@@ -1,7 +1,7 @@
 @using SPTarkov.Server.Core.Models.Eft.Profile
 
 <MudCardContent Class="spt-info-mud-card-content">
-    <MudText>SPT信息</MudText>
+    <MudText>创建存档时的SPT版本</MudText>
     <MudText Class="two-char-indent" Typo="Typo.body2">Version: @SptProfile?.SptData?.Version</MudText>
     <MudText>历史加载模组信息</MudText>
     @{
@@ -15,7 +15,7 @@
                 <MudText Class="two-char-indent">作者: @detail.Author</MudText>
                 @if (!string.IsNullOrEmpty(detail.Url))
                 {
-                    <MudLink Class="two-char-indent" Href="@detail.Url">@detail.Name</MudLink>
+                    <MudLink Class="two-char-indent" Href="@detail.Url" Target="_blank">@detail.Name</MudLink>
                 }
             </div>
         }
