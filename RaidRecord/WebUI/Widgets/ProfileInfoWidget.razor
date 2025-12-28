@@ -5,7 +5,7 @@
         <MudText>当前存档信息</MudText>
         @if (SptProfile is null)
         {
-            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+            <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
         }
         else
         {
@@ -13,7 +13,7 @@
             <MudText Typo="Typo.body2">名称: @SptProfile.ProfileInfo?.Username</MudText>
             <MudText Typo="Typo.body2">PMC Id: @SptProfile.ProfileInfo?.ProfileId</MudText>
             <MudText Typo="Typo.body2">Scav Id: @SptProfile.ProfileInfo?.ScavengerId</MudText>
-            
+
             <MudContainer Style="display: flex;margin-top: 16px;">
                 <SptInfoMudCard SptProfile="@SptProfile"/>
                 <BotProfileInfoCard SptProfile="@SptProfile" Style="margin-left: 8px;"/>
@@ -21,7 +21,7 @@
         }
     </MudCardContent>
     <style>
-        .curt-profile-card-context{
+        .curt-profile-card-context {
             border: 2px solid #ccc;
             background-color: #f5efe8;
         }

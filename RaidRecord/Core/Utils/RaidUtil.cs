@@ -1,4 +1,5 @@
 using RaidRecord.Core.Models;
+using RaidRecord.Core.Services;
 using RaidRecord.Core.Systems;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Extensions;
@@ -18,6 +19,7 @@ public class RaidUtil(
     ItemHelper itemHelper,
     PriceSystem priceSystem,
     ProfileHelper profileHelper,
+    DataGetterService dataGetter,
     RecordManager recordCacheManager)
 {
     /// <summary>
@@ -49,7 +51,7 @@ public class RaidUtil(
         Item[] itemsTakeIn = raidInfo.ItemsTakeIn.Values.ToArray();
         raidInfo.PreRaidValue = itemUtil.GetItemsValueAll(itemsTakeIn);
 
-        Item[] equipments = itemUtil.GetItemsWithBaseClasses(itemsTakeIn, Equipments);
+        Item[] equipments = itemUtil.GetItemsWithBaseClasses(itemsTakeIn, dataGetter.EquipmentClassesAlls);
         Item[] itemsInSecured = itemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn);
         equipments = equipments.Except(itemsInSecured).ToArray(); // 安全箱内的装备不支持也不应该是战备
 
@@ -295,52 +297,4 @@ public class RaidUtil(
                 add.Add(itemId);
         }
     }
-
-
-    // 被视为战备的基类(枪械, 胸挂, 背包, 护甲, 头盔等)
-    private static readonly MongoId[] Equipments =
-    [
-        BaseClasses.WEAPON,
-        BaseClasses.ARMOR,
-        BaseClasses.ARMORED_EQUIPMENT,
-        BaseClasses.HEADWEAR,
-        BaseClasses.FACE_COVER,
-        BaseClasses.VEST,
-        BaseClasses.BACKPACK,
-        BaseClasses.VISORS,
-        BaseClasses.GASBLOCK,
-        BaseClasses.RAIL_COVERS,
-        BaseClasses.MOD,
-        BaseClasses.FUNCTIONAL_MOD,
-        BaseClasses.GEAR_MOD,
-        BaseClasses.STOCK,
-        BaseClasses.FOREGRIP,
-        BaseClasses.MASTER_MOD,
-        BaseClasses.MOUNT,
-        BaseClasses.MUZZLE,
-        BaseClasses.SIGHTS,
-        BaseClasses.ASSAULT_SCOPE,
-        BaseClasses.TACTICAL_COMBO,
-        BaseClasses.FLASHLIGHT,
-        BaseClasses.MAGAZINE,
-        BaseClasses.LIGHT_LASER,
-        BaseClasses.FLASH_HIDER,
-        BaseClasses.COLLIMATOR,
-        BaseClasses.IRON_SIGHT,
-        BaseClasses.COMPACT_COLLIMATOR,
-        BaseClasses.COMPENSATOR,
-        BaseClasses.OPTIC_SCOPE,
-        BaseClasses.SPECIAL_SCOPE,
-        BaseClasses.SILENCER,
-        BaseClasses.AUXILIARY_MOD,
-        BaseClasses.BIPOD,
-        BaseClasses.BUILT_IN_INSERTS,
-        BaseClasses.ARMOR_PLATE,
-        BaseClasses.HANDGUARD,
-        BaseClasses.PISTOL_GRIP,
-        BaseClasses.RECEIVER,
-        BaseClasses.BARREL,
-        BaseClasses.MUZZLE_COMBO,
-        BaseClasses.TACTICAL_COMBO
-    ];
 }

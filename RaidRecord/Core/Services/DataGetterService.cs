@@ -9,7 +9,6 @@ using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Enums;
-using SPTarkov.Server.Core.Services;
 
 namespace RaidRecord.Core.Services;
 
@@ -19,7 +18,6 @@ namespace RaidRecord.Core.Services;
 [Injectable(InjectionType = InjectionType.Singleton)]
 public class DataGetterService(
     DialogueHelper dialogueHelper,
-    DatabaseService databaseService,
     RecordManager recordManager,
     ProfileHelper profileHelper,
     I18N i18N)
@@ -176,6 +174,18 @@ public class DataGetterService(
         return result;
     }
 
+    /// <summary>
+    /// 获取所有存档的索引与存档信息
+    /// </summary>
+    /// <param name="session"></param>
+    /// <returns></returns>
+    public List<ArchiveIndexed> GetArchivesIndexed(string session)
+    {
+        return GetArchivesBySession(session)
+            .Select((x, i) => new ArchiveIndexed(x, i))
+            .ToList();
+    }
+
     /// <summary> 获取已存在的所有账户ID </summary>
     public ReadOnlySet<MongoId> GetAllAccounts()
     {
@@ -183,4 +193,98 @@ public class DataGetterService(
     }
 
     public readonly RangeTuple<int> PageSizeRange = new(1, 50);
+
+    /// <summary> 被视为战备的基类(枪械配件) </summary>
+    public readonly IReadOnlySet<MongoId> WeaponModClassesAll = new HashSet<MongoId>(
+    [
+        BaseClasses.MAGAZINE, // 弹匣
+        BaseClasses.MOD, // 模组
+        BaseClasses.ASSAULT_SCOPE, // 突击瞄准镜
+        BaseClasses.AUXILIARY_MOD, // 辅助模组
+        BaseClasses.BARREL, // 枪管
+        BaseClasses.BIPOD, // 两脚架
+        BaseClasses.BUILT_IN_INSERTS, // 内置插件
+        BaseClasses.COLLIMATOR, // 准直瞄具
+        BaseClasses.COMPACT_COLLIMATOR, // 紧凑型准直瞄具
+        BaseClasses.COMPENSATOR, // 制退器
+        BaseClasses.FLASH_HIDER, // 消焰器
+        BaseClasses.FLASHLIGHT, // 手电筒
+        BaseClasses.FOREGRIP, // 前握把
+        BaseClasses.FUNCTIONAL_MOD, // 功能模组
+        BaseClasses.GASBLOCK, // 导气箍
+        BaseClasses.HANDGUARD, // 护木
+        BaseClasses.IRON_SIGHT, // 机械瞄具
+        BaseClasses.LIGHT_LASER, // 激光指示灯
+        BaseClasses.MASTER_MOD, // 主模组
+        BaseClasses.MOUNT, // 导轨/支架
+        BaseClasses.MUZZLE, // 枪口装置
+        BaseClasses.MUZZLE_COMBO, // 枪口组合装置
+        BaseClasses.OPTIC_SCOPE, // 光学瞄准镜
+        BaseClasses.PISTOL_GRIP, // 手枪式握把
+        BaseClasses.RAIL_COVERS, // 导轨护盖
+        BaseClasses.RECEIVER, // 机匣
+        BaseClasses.SHAFT, // 轴杆
+        BaseClasses.SIGHTS, // 瞄具
+        BaseClasses.SILENCER, // 消音器
+        BaseClasses.SPECIAL_SCOPE, // 特殊瞄准镜
+        BaseClasses.STOCK, // 枪托
+        BaseClasses.TACTICAL_COMBO // 战术组合装置
+    ]);
+
+    /// <summary> 被视为战备的基类(枪械) </summary>
+    public readonly IReadOnlySet<MongoId> WeaponClassesAlls = new HashSet<MongoId>([
+        BaseClasses.WEAPON, // 武器
+        BaseClasses.ASSAULT_CARBINE, // 突击卡宾枪
+        BaseClasses.ASSAULT_RIFLE, // 突击步枪
+        BaseClasses.GRENADE_LAUNCHER, // 榴弹发射器
+        BaseClasses.MACHINE_GUN, // 机枪
+        BaseClasses.MARKSMAN_RIFLE, // 精确射手步枪
+        BaseClasses.PISTOL, // 手枪
+        BaseClasses.REVOLVER, // 左轮手枪
+        BaseClasses.ROCKET_LAUNCHER, // 火箭发射器
+        BaseClasses.ROCKET, // 火箭弹(必须和ROCKET_LAUNCHER在一起)
+        BaseClasses.SHOTGUN, // 霰弹枪
+        BaseClasses.SMG, // 冲锋枪
+        BaseClasses.SNIPER_RIFLE, // 狙击步枪
+        BaseClasses.SPECIAL_WEAPON, // 特殊武器
+        BaseClasses.KNIFE, // 刀
+        BaseClasses.THROW_WEAP, // 投掷武器
+        BaseClasses.LAUNCHER // 发射器
+    ]);
+
+    /// <summary> 被视为战备的基类(头部护甲) </summary>
+    public readonly IReadOnlySet<MongoId> HeadClassesAlls = new HashSet<MongoId>([
+        BaseClasses.FACE_COVER, // 面部防护
+        BaseClasses.GEAR_MOD, // 装备模组
+        BaseClasses.HEADPHONES, // 耳机
+        BaseClasses.HEADWEAR, // 头饰
+        BaseClasses.VISORS, // 面罩/护目镜
+        BaseClasses.BUILT_IN_INSERTS // 内置插件
+    ]);
+
+    /// <summary> 被视为战备的基类(胸挂, 护甲, 背包) </summary>
+    public readonly IReadOnlySet<MongoId> ArmorClassesAlls = new HashSet<MongoId>([
+        BaseClasses.ARMOR, // 护甲
+        BaseClasses.ARMOR_PLATE, // 装甲板
+        BaseClasses.ARMORED_EQUIPMENT, // 装甲装备
+        BaseClasses.BACKPACK, // 背包
+        BaseClasses.VEST, // 胸挂/背心
+        BaseClasses.BUILT_IN_INSERTS, // 内置插件(这个头盔和护甲都得有, 下面的同理)
+        BaseClasses.GEAR_MOD // 装备模组
+    ]);
+
+    private HashSet<MongoId>? _equipmentClassesAlls;
+
+    /// <summary> 被视为战备的基类(枪械, 胸挂, 背包, 护甲, 头盔等) </summary>
+    public IReadOnlySet<MongoId> EquipmentClassesAlls
+    {
+        get
+        {
+            _equipmentClassesAlls ??= WeaponClassesAlls
+                .Union(WeaponModClassesAll)
+                .Union(HeadClassesAlls)
+                .Union(ArmorClassesAlls).ToHashSet();
+            return _equipmentClassesAlls;
+        }
+    }
 }

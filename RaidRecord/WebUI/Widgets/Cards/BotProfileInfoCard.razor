@@ -7,7 +7,7 @@
     <MudText Class="two-char-indent">等级: @PmcData?.Info?.Level</MudText>
     <MudText Class="two-char-indent">游戏版本: @PmcData?.Info?.GameVersion</MudText>
     <MudText Class="two-char-indent">阵营: @PmcData?.Info?.Side</MudText>
-    <MudText>SCAV模组信息</MudText>
+    <MudText>SCAV存档信息</MudText>
     @if (_botInfoShowAll)
     {
         <MudText Class="two-char-indent">昵称: @ScavData?.Info?.Nickname</MudText>
@@ -17,7 +17,7 @@
         <MudText Class="two-char-indent">阵营: @ScavData?.Info?.Side</MudText>
     }
     <MudCardActions>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="_ => ToggleShowAll()">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => ToggleShowAll())">
             @_botInfoShowAllText
         </MudButton>
     </MudCardActions>
@@ -25,6 +25,7 @@
         .two-char-indent {
             text-indent: 2ch;
         }
+
         .bot-info-mud-card-content {
             border: 2px solid #ccc;
             background-color: #e8f4f5;
@@ -39,14 +40,14 @@
 
     private PmcData? PmcData => SptProfile?.CharacterData?.PmcData;
     private PmcData? ScavData => SptProfile?.CharacterData?.ScavData;
-    
+
     private bool _botInfoShowAll;
     private string _botInfoShowAllText = "查看全部";
-    
+
     private void ToggleShowAll()
     {
         _botInfoShowAll = !_botInfoShowAll;
         _botInfoShowAllText = _botInfoShowAll ? "收起详情" : "查看全部";
     }
-    
+
 }

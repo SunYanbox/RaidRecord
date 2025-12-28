@@ -98,52 +98,7 @@ public class PriceCmd: CommandBase
             // "Cmd-Price.tpl结果": "物品模板ID: {{TplId}} 物品名称: {{Name}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub"
         }
 
-        // 搜索最相近的十个结果
-        // 最小堆，保存相似度最低的项在顶部
-        var pq = new PriorityQueue<(string name, double similarity), double>();
-
-        foreach (KeyValuePair<string, string> kv in _name2Id!.AsReadOnly())
-        {
-            double similarity = JacquardSimilarityNGram(name, kv.Key);
-
-            string kvKeyLower = kv.Key.ToLower();
-            string nameLower = name.ToLower();
-
-            if (kvKeyLower.Contains(nameLower) || nameLower.Contains(kvKeyLower))
-            {
-                if (kv.Key == name)
-                {
-                    similarity += 1; // 完全相等，最高加分
-                }
-                else if (kv.Key.Contains(name))
-                {
-                    similarity += 0.75; // 完全包含，加高
-                }
-                else if (name.Contains(kv.Key))
-                {
-                    similarity += 0.5;
-                }
-                else if (kvKeyLower.Contains(nameLower))
-                {
-                    similarity += 0.25; // 大小写不敏感包含，加高
-                }
-                else if (nameLower.Contains(kvKeyLower))
-                {
-                    similarity += 0.1;
-                }
-                similarity += 0.05;
-            }
-
-            if (pq.Count < top)
-            {
-                pq.Enqueue((kv.Key, similarity), similarity);
-            }
-            else if (similarity > pq.Peek().similarity)
-            {
-                pq.Dequeue(); // 移除相似度最低的
-                pq.Enqueue((kv.Key, similarity), similarity);
-            }
-        }
+        PriorityQueue<(string name, double similarity), double> pq = AlgorithmService.Search(name, _name2Id, top);
 
         string returnResult = "";
         while (pq.Count > 0)
@@ -166,27 +121,5 @@ public class PriceCmd: CommandBase
         }
 
         return returnResult;
-    }
-    /// <summary>
-    /// n-gram的Jacquard计算相似度
-    /// </summary>
-    public static double JacquardSimilarityNGram(string str1, string str2, int n = 2)
-    {
-        HashSet<string> set1 = GetNGrams(str1, n).ToHashSet();
-        HashSet<string> set2 = GetNGrams(str2, n).ToHashSet();
-
-        int intersection = set1.Intersect(set2).Count();
-        int union = set1.Union(set2).Count();
-
-        return union == 0 ? 1.0 : (double)intersection / union;
-    }
-
-    private static IEnumerable<string> GetNGrams(string text, int n)
-    {
-        if (string.IsNullOrEmpty(text) || text.Length < n)
-            return [];
-
-        return Enumerable.Range(0, text.Length - n + 1)
-            .Select(i => text.Substring(i, n));
     }
 }

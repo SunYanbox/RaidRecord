@@ -1,101 +1,168 @@
 @page "/RaidRecord/List"
 
 @inject I18N I18N;
-@inject ModConfig ModConfig;
 @inject WebDataContext WebData;
+@inject ModConfig ModConfig;
+@inject WebFormatService WebFormat;
 @inject DataGetterService DataGetter;
+@inject NavigationManager Navigation;
 
 <MainLayout/>
 
 <MudContainer>
-    @{
-        ArchivePageableResult? archivePageableResult = GetArchivePageable();
-        
-        @if (archivePageableResult?.Errors?.Count > 0)
-        {
-            <MudText>获取数据时出现错误: @string.Join(",", archivePageableResult.Errors)</MudText>
-        }
-        else if (archivePageableResult?.Archives.Count > 0)
-        {
-            <MudDataGrid Items="@archivePageableResult.Archives" Filterable="false" SortMode="@SortMode.None" Groupable="false">
-                <Columns>
-                    <PropertyColumn Property="x => x.Index"/>
-                    <PropertyColumn Property="x => x.Archive.Side" Title="阵营"/>
-                    <PropertyColumn Property="x => GetArchiveMapName(x.Archive)" Title="地图"/>
-                    <PropertyColumn Property="x => FromUnixTimestampSeconds(x.Archive.CreateTime)" Title="创建时间"/>
-                    <PropertyColumn Property="x => x.Archive.PreRaidValue" Title="入局带入(rub)"/>
-                    <PropertyColumn Property="x => x.Archive.EquipmentValue" Title="战备价值(rub)"/>
-                    <PropertyColumn Property="x => x.Archive.GrossProfit" Title="毛收益(rub)"/>
-                    <PropertyColumn Property="x => x.Archive.CombatLosses" Title="战损(rub)"/>
-                    <PropertyColumn Property="x => x.Archive.GrossProfit - x.Archive.CombatLosses" Title="净利润(rub)"/>
-                    <PropertyColumn Property="x => GetKillCount(x.Archive)" Title="击杀数"/>
-                    <PropertyColumn Property="x => GetResultString(x.Archive)" Title="结果"/>
-                    @* <TemplateColumn CellClass="d-flex justify-end"> *@
-                    @*     <CellTemplate> *@
-                    @*         <MudStack Row> *@
-                    @*             <MudRating Size="@Size.Small" SelectedValue="@context.Item.Rating"/> *@
-                    @*             <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary">Hire</MudButton> *@
-                    @*         </MudStack> *@
-                    @*     </CellTemplate> *@
-                    @* </TemplateColumn> *@
-                </Columns>
-            </MudDataGrid>
-            // 暂时用滑块设置每页数量
-            <MudContainer Style="display: flex">
-                <MudSlider @bind-Value="PageLimit" Min="1" Max="50" Color="Color.Info">每页行数: @PageLimit.ToString()</MudSlider>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Style="margin-left: 4px" OnClick="() => { PageLimit = 10; SelectPage = -1; }">重置</MudButton>
-            </MudContainer>
-            // 分页
-            if (archivePageableResult.PageMax > 1)
-            {
-                <MudPagination Rectangular="true" Variant="Variant.Filled" Count="@archivePageableResult.PageMax" @bind-Selected="SelectPage" Class="my-4"/>
-            }
-        }
-        else
-        {
-            <MudText>未发现存档信息, 请选择存档或进行任意对局后再来吧</MudText>
-            <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
-        }
-    }
+    <MudTable Items="@RaidArchiveIndexedAll" FixedHeader="@true" FixedFooter="@true"
+              Dense="@true" Hover="@true" ReadOnly="@true"
+              @bind-SelectedItem="SelectedArchiveIndexed" SortLabel="Sort By">
+        <ToolBarContent>
+            <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Success"/>
+            <MudText Typo="Typo.h6" Style="text-indent: 2ch;">历史战绩</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col style="width: 4px"/>
+            <col style="width: 8px"/>
+            <col style="width: fit-content"/>
+            <col style="width: fit-content"/>
+            <col style="width: fit-content"/>
+            <col style="width: fit-content"/>
+            <col style="width: fit-content"/>
+            <col style="width: fit-content"/>
+            <col style="width: fit-content"/>
+            <col style="width: fit-content"/>
+            <col style="width: fit-content"/>
+            <col style="width: fit-content"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Index)">
+                    Index
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                阵营
+            </MudTh>
+            <MudTh>
+                地图
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.CreateTime)">
+                    创建时间
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.PreRaidValue)">
+                    入局带入(rub)
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.EquipmentValue)">
+                    战备价值(rub)
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.GrossProfit)">
+                    毛收益(rub)
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.CombatLosses)">
+                    战损(rub)
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => GetNetProfit(x.Archive))">
+                    净利润(rub)
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => GetKillCount(x.Archive))">
+                    击杀数
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                结果
+            </MudTh>
+            <MudTh>
+                工具栏
+            </MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Index</MudTd>
+            <MudTd>@context.Archive.Side</MudTd>
+            <MudTd>@GetArchiveMapName(context.Archive)</MudTd>
+            <MudTd>@WebFormat.FromUnixTimestampSeconds(context.Archive.CreateTime)</MudTd>
+            <MudTd>@context.Archive.PreRaidValue</MudTd>
+            <MudTd>@context.Archive.EquipmentValue</MudTd>
+            <MudTd>@context.Archive.GrossProfit</MudTd>
+            <MudTd>@context.Archive.CombatLosses</MudTd>
+            <MudTd>@GetNetProfit(context.Archive)</MudTd>
+            <MudTd>@GetKillCount(context.Archive)</MudTd>
+            <MudTd>@GetResultString(context.Archive)</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Info" Onclick="@(() => LookDetails(context))"
+                               Color="Color.Info"/>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new[] { 10, 1, 5, 20, 50, 100 }"/>
+        </PagerContent>
+    </MudTable>
 </MudContainer>
 
 @code {
-    public int PageLimit { get; set; } = 10;
-    public int SelectPage { get; set; } = -1;
-    public List<RaidArchive> RaidArchives => DataGetter.GetArchivesBySession(WebData.CurrentAccount);
-    public ArchivePageableResult? GetArchivePageable()
+    public ArchiveIndexed? SelectedArchiveIndexed { get; set; }
+    public List<ArchiveIndexed> RaidArchiveIndexedAll => GetArchiveIndexedAll();
+
+    private List<ArchiveIndexed> GetArchiveIndexedAll()
     {
         try
         {
-            ArchivePageableResult result = DataGetter.GetArchivesPageable(WebData.CurrentAccount, SelectPage, PageLimit);
-            SelectPage = result.Page;
-            return result;
+            return DataGetter.GetArchivesIndexed(WebData.CurrentAccount);
         }
         catch (Exception e)
         {
-            ModConfig.Warn($"获取分页后的战绩时出现错误: {e.Message}");
-            return null;
+            ModConfig.Warn($"获取战绩索引列表时出现错误: {e.Message}");
+            Navigation.NavigateTo("/RaidRecord");
+            return [];
         }
     }
-    
-    private string FromUnixTimestampSeconds(long seconds)
+
+    /// <summary>
+    /// 查看战绩详情
+    /// </summary>
+    public void LookDetails(ArchiveIndexed archiveIndexed)
     {
-        DateTime time = DateTimeOffset.FromUnixTimeSeconds(seconds).DateTime;
-        return time.ToShortDateString() + " " + time.ToShortTimeString();
+        try
+        {
+            WebData.LookingServerIds.Add(archiveIndexed.Archive.ServerId);
+            Navigation.NavigateTo("/RaidRecord/Info", true);
+        }
+        catch (Exception e)
+        {
+            ModConfig.Warn($"查看战绩详情时出现错误: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 获取净利润
+    /// </summary>
+    /// <returns></returns>
+    private long GetNetProfit(RaidArchive archive)
+    {
+        return archive.GrossProfit - archive.CombatLosses;
     }
 
     private string GetArchiveMapName(RaidArchive archive)
     {
         return I18N.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower());
     }
-    
+
     private int GetKillCount(RaidArchive archive)
     {
         return archive.EftStats?.Victims?.Count() ?? 0;
     }
-    
+
     private string GetResultString(RaidArchive archive)
     {
-        return archive.Results?.Result.ToString() ?? "未知结局";
+        return I18N.GetText(archive.Results?.Result.ToString() ?? "UnknownResult");
     }
 }

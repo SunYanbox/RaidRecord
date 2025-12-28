@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using RaidRecord.Core.ChatBot.Commands;
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Configs;

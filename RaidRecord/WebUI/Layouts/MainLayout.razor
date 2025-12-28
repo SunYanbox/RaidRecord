@@ -2,26 +2,28 @@
 @inject ModMetadata ModMetadata
 
 <HeadContent>
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
-    <link href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
+    <link href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" rel="stylesheet"/>
 </HeadContent>
 
 @* Required *@
-<MudThemeProvider />
-<MudPopoverProvider />
+<MudThemeProvider/>
+<MudPopoverProvider/>
 
 @* Needed for dialogs *@
-<MudDialogProvider />
+<MudDialogProvider/>
 
 @* Needed for snackbars *@
-<MudSnackbarProvider />
+<MudSnackbarProvider/>
 
 <MudLayout>
     <MudAppBar Elevation="2">
         @NameAndVersion
         <MudNavLink Class="mud-nav-link" Href="/RaidRecord" Match="NavLinkMatch.All">主页</MudNavLink>
         <MudNavLink Class="mud-nav-link" Href="/RaidRecord/List" Match="NavLinkMatch.All">战绩列表</MudNavLink>
-        <MudLink Class="mud-nav-link" Color="Color.Default" Target="_blank" Style="margin-left: auto" Href="@Url">关于</MudLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Info" Match="NavLinkMatch.All">战绩详情</MudNavLink>
+        <MudLink Class="mud-nav-link" Color="Color.Default" Target="_blank" Style="margin-left: auto" Href="@Url">关于
+        </MudLink>
         <style>
             .mud-nav-link {
                 width: fit-content;
@@ -39,11 +41,12 @@
         html, body {
             background-color: lightgrey;
         }
+
         .mud-main-content {
             transition: margin-left 0.3s ease;
         }
     </style>
-    
+
     <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
     <script src="@Assets["_framework/blazor.server.js"]"></script>
 </MudLayout>
