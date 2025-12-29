@@ -17,14 +17,15 @@
 <MudSnackbarProvider/>
 
 <MudLayout>
-    <MudAppBar Elevation="2">
-        @NameAndVersion
+    <MudAppBar Elevation="2" Style="width: 100%">
+        <MudText Typo="Typo.body1" Style="min-width: 18ch">@NameAndVersion</MudText>
         <MudNavLink Class="mud-nav-link" Href="/RaidRecord" Match="NavLinkMatch.All">主页</MudNavLink>
         <MudNavLink Class="mud-nav-link" Href="/RaidRecord/List" Match="NavLinkMatch.All">战绩列表</MudNavLink>
         <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Info" Match="NavLinkMatch.All">战绩详情</MudNavLink>
         <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Price" Match="NavLinkMatch.All">价格页面</MudNavLink>
-        <MudLink Class="mud-nav-link" Color="Color.Default" Target="_blank" Style="margin-left: auto" Href="@Url">关于
-        </MudLink>
+        <MudSpacer />
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Setting" Match="NavLinkMatch.All">设置</MudNavLink>
+        <MudLink Class="mud-nav-link" Color="Color.Default" Target="_blank" Href="@Url">关于</MudLink>
         <style>
             .mud-nav-link {
                 width: fit-content;

@@ -3,6 +3,7 @@ using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Utils;
 
 namespace RaidRecord.Core.Configs;
 
@@ -10,10 +11,12 @@ namespace RaidRecord.Core.Configs;
 [Injectable(InjectionType = InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 1)]
 public class ModConfig(ModHelper modHelper,
     ISptLogger<ModConfig> logger,
+    JsonUtil jsonUtil,
     ModMetadata modMetadata): IOnLoad
 {
     public required ModConfigData Configs;
     private StreamWriter? _logFile;
+    private string? _configPath;
 
     /// <summary>
     /// 本模组元数据
@@ -22,6 +25,19 @@ public class ModConfig(ModHelper modHelper,
 
     private readonly Lock _logLock = new();
 
+    /// <summary> 保存配置 </summary>
+    public async Task SaveConfig()
+    {
+        _configPath ??= Constants.DBConfigPath(modHelper: modHelper);
+        if (Path.Exists(_configPath))
+        {
+            string? serialize = jsonUtil.Serialize(Configs);
+            if (serialize != null)
+            {
+                await File.WriteAllTextAsync(_configPath, serialize);
+            }
+        }
+    }
 
     public Task OnLoad()
     {

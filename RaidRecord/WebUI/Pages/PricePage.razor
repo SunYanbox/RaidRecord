@@ -8,10 +8,11 @@
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig
 @inject ItemHelper ItemHelper
+@inject WebDataContext WebData
 @inject PriceSystem PriceSystem
+@inject NavigationManager Navigation
 @inject DataGetterService DataGetter
 @inject ModMailService ModMailService
-@inject WebDataContext WebDataContext
 
 <MainLayout/>
 
@@ -78,7 +79,7 @@
     </PagerContent>
 </MudTable>
 
-<MudMessageBox @ref="QuickBuyItemMegBox" Title="Info" CancelText="Cancel">
+<MudMessageBox @ref="QuickBuyItemMegBox" Title="Info" CancelText="取消">
     <MessageContent>
         <MudText>
             输入购买@(WillBuy?.Name)的数量:
@@ -109,13 +110,13 @@
 
         void YesBuy()
         {
-            PmcData? pmcData = DataGetter.GetPmcData(WebDataContext.CurrentAccount);
+            PmcData? pmcData = DataGetter.GetPmcData(WebData.CurrentAccount);
             if (pmcData == null || WillBuy == null)
             {
                 ModConfig.Warn("购买物品失败: 玩家数据获取失败");
                 return;
             }
-            List<Warning>? warnings = ModMailService.Payment(WebDataContext.CurrentAccount, Convert.ToInt64(TotalPrice), pmcData);
+            List<Warning>? warnings = ModMailService.Payment(WebData.CurrentAccount, Convert.ToInt64(TotalPrice), pmcData);
 
             if (warnings?.Count > 0)
             {
@@ -130,7 +131,7 @@
             }
 
             List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
-                WebDataContext.CurrentAccount,
+                WebData.CurrentAccount,
                 "您已购买物资",
                 ItemHelper.SplitStackIntoSeparateItems(new Item
                 {
@@ -146,7 +147,7 @@
             if (warnings2?.Count > 0)
             {
                 ModConfig.Warn($"发送物品失败: {string.Join("\n", warnings2.Select(x => x.ErrorMessage))}; 将回退扣费");
-                List<Warning>? warnings3 = ModMailService.SendMoney(WebDataContext.CurrentAccount, "回退资金", TotalPrice);
+                List<Warning>? warnings3 = ModMailService.SendMoney(WebData.CurrentAccount, "回退资金", TotalPrice);
 
                 if (warnings3?.Count > 0)
                 {
@@ -159,7 +160,8 @@
     }
 </MudMessageBox>
 
-@code {
+@code 
+{
     public required MudMessageBox QuickBuyItemMegBox;
 
     public void OnQuickBuyItem(PriceItem item)
@@ -173,6 +175,15 @@
     public string Query { get; set; } = string.Empty;
 
     public PriceItem SelectedPriceItem { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (string.IsNullOrEmpty(WebData.CurrentAccount))
+        {
+            Navigation.NavigateTo("/RaidRecord", true);
+        }
+    }
 
     List<PriceItem> GetSimilarity()
     {

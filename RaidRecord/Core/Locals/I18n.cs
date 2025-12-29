@@ -39,8 +39,9 @@ public class I18N(
         set
         {
             if (!_allTrans.ContainsKey(value)) return;
+            if (_currentLanguage != value)
+                _sptLocals = null;
             _currentLanguage = value;
-            _sptLocals = null;
         }
     }
 
@@ -76,7 +77,7 @@ public class I18N(
     public Task OnLoad()
     {
         string localsDir = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
-        localsDir = Path.Combine(localsDir, "db\\locals");
+        localsDir = Constants.DBLocalsFolderPath(localsDir, modHelper);
         if (Directory.Exists(localsDir))
         {
             // logger.Info($"本地化数据库存在: {localsDir}");

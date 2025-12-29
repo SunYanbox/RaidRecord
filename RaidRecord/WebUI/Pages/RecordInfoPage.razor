@@ -1,8 +1,10 @@
 @page "/RaidRecord/Info"
+
+@inject ModConfig ModConfig
 @inject WebDataContext WebData
 @inject DataFormatService DataFormat
-@inject ModConfig ModConfig
 @inject DataGetterService DataGetter
+@inject NavigationManager Navigation
 
 <MainLayout/>
 
@@ -31,7 +33,7 @@
     }
 </MudDynamicTabs>
 
-<MudMessageBox @ref="MudMessageBox" Title="Info" CancelText="Cancel">
+<MudMessageBox @ref="MudMessageBox" Title="Info" CancelText="取消">
     <MessageContent>
         <MudText>输入需要查看的索引:</MudText>
         <MudNumericField @bind-Value="_index" Variant="Variant.Text" Min="0" Max="@GetMaxCount()"/>
@@ -50,7 +52,16 @@
 
 @code {
     public required MudMessageBox MudMessageBox;
-
+    
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (string.IsNullOrEmpty(WebData.CurrentAccount))
+        {
+            Navigation.NavigateTo("/RaidRecord", true);
+        }
+    }
+    
     private int GetMaxCount()
     {
         try

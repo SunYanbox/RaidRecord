@@ -1,6 +1,7 @@
 @page "/RaidRecord/List"
 
 @inject I18N I18N;
+@inject ISnackbar Snackbar
 @inject WebDataContext WebData;
 @inject ModConfig ModConfig;
 @inject DataFormatService DataFormat;
@@ -15,6 +16,7 @@
     <ToolBarContent>
         <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Success"/>
         <MudText Typo="Typo.h6" Style="text-indent: 2ch;">历史战绩</MudText>
+        <MudSwitch Label="点击信息按钮后跳转" @bind-Value="_jump2DetailPage" Color="Color.Success"/>
     </ToolBarContent>
     <ColGroup>
         <col style="min-width: 8ch"/>
@@ -96,10 +98,14 @@
         <MudTd>@DataFormat.GetNetProfit(context!.Archive)</MudTd>
         <MudTd>@DataFormat.GetKillCount(context!.Archive)</MudTd>
         <MudTd>@DataFormat.GetResultStr(context!.Archive)</MudTd>
-        <MudTd>
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Info" Color="Color.Info"
+        <MudTd Style="display: flex; align-content: center">
+            <MudButton Variant="Variant.Text" Color="Color.Info"
                        Onclick="@(() => LookDetails(context!))">
                 信息
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Success"
+                       Onclick="@(() => LookQuickEquip(context!))">
+                快速起装
             </MudButton>
         </MudTd>
     </RowTemplate>
@@ -109,7 +115,38 @@
     </PagerContent>
 </MudTable>
 
+<MudOverlay @bind-Visible="_visible" DarkBackground="true" AutoClose="true">
+    <MudContainer @onclick:stopPropagation="true" Style="background-color: white">
+        <MudText Typo="Typo.h5">快速起装</MudText>
+        <MudText Typo="Typo.inherit">点击其他区域关闭</MudText>
+        @if (QuickEquipArchive is null)
+        {
+            <MudText>选择的战绩不存在</MudText>
+        }
+        else
+        {
+            <QuickEquipmentWidget Archive="QuickEquipArchive" ProvideQuickBuy="@true"/>
+        }
+
+        @code
+        {
+            public RaidArchive? QuickEquipArchive;
+        }
+    </MudContainer>
+</MudOverlay>
+
 @code {
+    private bool _visible;
+    private bool _jump2DetailPage;
+    
+    /// <summary>
+    /// 显示/隐藏 overlay
+    /// </summary>
+    public void ToggleOverlay(bool value)
+    {
+        _visible = value;
+    }
+    
     public ArchiveIndexed? SelectedArchiveIndexed { get; set; }
     public List<ArchiveIndexed> RaidArchiveIndexedAll => GetArchiveIndexedAll();
 
@@ -133,12 +170,44 @@
     {
         try
         {
-            WebData.LookingServerIds.Add(archiveIndexed);
-            Navigation.NavigateTo("/RaidRecord/Info", true);
+            if (WebData.LookingServerIds.Add(archiveIndexed))
+            {
+                Snackbar.Add($"已将索引{archiveIndexed.Index}(ServerId:{archiveIndexed.Archive.ServerId})加入详情信息标签页");
+                if (_jump2DetailPage) Navigation.NavigateTo("/RaidRecord/Info", true);
+            }
+            else
+            {
+                Snackbar.Add($"添加索引{archiveIndexed.Index}(ServerId:{archiveIndexed.Archive.ServerId})失败, 可能是再尝试重复添加");
+            }
         }
         catch (Exception e)
         {
             ModConfig.Warn($"查看战绩详情时出现错误: {e.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// 查看快速购买界面
+    /// </summary>
+    public void LookQuickEquip(ArchiveIndexed archiveIndexed)
+    {
+        try
+        {
+            QuickEquipArchive = archiveIndexed.Archive;
+            ToggleOverlay(true);
+        }
+        catch (Exception e)
+        {
+            ModConfig.Warn($"查看快速购买界面时出现错误: {e.Message}");
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (string.IsNullOrEmpty(WebData.CurrentAccount))
+        {
+            Navigation.NavigateTo("/RaidRecord", true);
         }
     }
 }

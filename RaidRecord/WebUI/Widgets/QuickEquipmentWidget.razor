@@ -49,7 +49,7 @@
                         TreeItemData<string> presenter = context;
                         <MudTreeViewItem
                             @bind-Expanded="@presenter.Expanded"
-                            Items="@presenter.Children"
+                            Items="@presenter.Children?.AsReadOnly()"
                             Value="@presenter.Value"
                             Icon="@presenter.Icon"
                             Text="@presenter.Text"
@@ -67,7 +67,7 @@
     }
 </MudPaper>
 
-<MudMessageBox @ref="QuickBuyEquipmentMegBox" Title="Info" CancelText="Cancel">
+<MudMessageBox @ref="QuickBuyEquipmentMegBox" Title="Info" CancelText="取消">
     <MessageContent>
         <MudText Typo="Typo.body2" Color="Color.Info">
             是否消耗 @GetChoiceAllPriceFormat() rub购买装备
