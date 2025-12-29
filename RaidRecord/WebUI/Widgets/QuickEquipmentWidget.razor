@@ -118,10 +118,10 @@
         }
 
         List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
-            WebDataContext.CurrentAccount,
-            "您已购买物资",
-            items.ToList(),
-            isFiRItem: true);
+        WebDataContext.CurrentAccount,
+        "您已购买物资",
+        items.ToList(),
+        true);
 
         if (warnings2?.Count > 0)
         {
@@ -160,16 +160,10 @@
     }
 
     /// <summary> 获取所有选择的物品总价的字符串 </summary>
-    public string GetChoiceAllPriceFormat()
-    {
-        return $"{GetChoiceAllPrice():F2}rub";
-    }
+    public string GetChoiceAllPriceFormat() => $"{GetChoiceAllPrice():F2}rub";
 
-    private string GetEndText(TreeItemData<string> node)
-    {
-        return $"{GetPrice(node):F2}rub";
-    }
- /// <summary> 递归的获取节点总价值 </summary>
+    private string GetEndText(TreeItemData<string> node) => $"{GetPrice(node):F2}rub";
+       /// <summary> 递归的获取节点总价值 </summary>
     private double GetPrice(TreeItemData<string> node)
     {
         double value = 0;
@@ -182,7 +176,7 @@
     }
 
     public Item[] Equipments => Archive.EquipmentItems ?? [];
-    
+
     /// <summary> 判断节点是否禁用 </summary>
     public bool IsNodeDisable(TreeItemData<string> item)
     {

@@ -20,7 +20,7 @@
         }
     </MudSelect>
     <MudSwitch @bind-Value="AutoUnloadOtherLanguages" Label="自动卸载多余语言包信息" Color="Color.Secondary"/>
-    <MudNumericField @bind-Value="PriceCacheUpdateMinTime" Label="价格缓存更新间隔" Variant="Variant.Text" Min="1" Max="604800000" />
+    <MudNumericField @bind-Value="PriceCacheUpdateMinTime" Label="价格缓存更新间隔" Variant="Variant.Text" Min="1" Max="604800000"/>
 
     <MudButton OnClick="@(() => OnSaveConfig())">保存设置</MudButton>
     <MudButton OnClick="@(() => CancelSaveConfig())">取消设置</MudButton>
@@ -41,7 +41,7 @@
             I18N.CurrentLanguage = value;
         }
     }
-    
+
     public bool AutoUnloadOtherLanguages { get; set; }
 
     public long PriceCacheUpdateMinTime { get; set; }
@@ -61,7 +61,7 @@
         AutoUnloadOtherLanguages = ModConfig.Configs.AutoUnloadOtherLanguages;
         PriceCacheUpdateMinTime = ModConfig.Configs.PriceCacheUpdateMinTime;
     }
-    
+
     protected override void OnInitialized()
     {
         _local = ModConfig.Configs.Local;

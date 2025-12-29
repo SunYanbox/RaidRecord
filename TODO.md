@@ -1,3 +1,17 @@
+### 0.6.7
+
+TODO
+- WebUI配置界面
+    - [ ] 在模组中购买物资是否是FIR状态
+    - [ ] 理赔控件
+    - [x] 当前语言修改 
+- [x] WebUI一键配装界面
+    - ~~通过选择[MudChip](https://www.mudblazor.com/components/chips) 快速决定购买起装列表中的哪些类型的物品~~
+    - 购买时修复装备耐久
+    - [x] [树图](https://www.mudblazor.com/components/treeview)显示起装列表(尤其用于槽位的显示) 也可以用[桑基图](https://www.mudblazor.com/components/sankeychart)显示价格
+- [x] 为战绩详情显示详细带入带出物品 考虑[纸张](https://www.mudblazor.com/components/paper)+树图实现
+- [ ] 为带内置槽位的物品提供初始化生成方式
+- ~~为PricePage的快速购买提示框提供动态价格显示(MudMessageBox内部难以实现)~~
 
 ### 0.6.4
 

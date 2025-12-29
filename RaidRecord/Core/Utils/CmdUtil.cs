@@ -46,60 +46,45 @@ public class CmdUtil(
         PmcData playerData = RecordManager!.GetPmcDataByPlayerId(playerId);
 
         // "Record-元数据.Id与玩家信息": "{{TimeFormat}} 对局ID: {{ServerId}} 玩家信息: {{Nickname}}(Level={{Level}}, id={{PlayerId}})"
-        msg += I18N!.GetText(
-            "Record-元数据.Id与玩家信息",
-            new
-            {
-                TimeFormat = dataFormatService.GetCreateTimeStr(archive),
-                ServerId = serverId,
-                playerData.Info?.Nickname,
-                playerData.Info?.Level,
-                PlayerId = playerId
-            }
-        );
+        msg += I18N!.GetText("Record-元数据.Id与玩家信息",
+        new {
+            TimeFormat = dataFormatService.GetCreateTimeStr(archive),
+            ServerId = serverId,
+            playerData.Info?.Nickname,
+            playerData.Info?.Level,
+            PlayerId = playerId
+        });
         //"Record-元数据.地图与存活时间": "\n地图: {{MapName}} 生存时间: {{PlayTime}} 击杀数量: {{KillCount}} 爆头击杀率: {{HeadshotKillRate}}",
-        msg += I18N!.GetText(
-            "Record-元数据.地图与存活时间",
-            new
-            {
-                MapName = dataFormatService.GetMapNameLocal(archive),
-                PlayTime = dataFormatService.FromTimeSeconds(archive.Results?.PlayTime ?? 0),
-                KillCount = dataFormatService.GetKillCount(archive),
-                HeadshotKillRate = dataFormatService.GetHeadshotRate(archive)
-            }
-        );
+        msg += I18N!.GetText("Record-元数据.地图与存活时间",
+        new {
+            MapName = dataFormatService.GetMapNameLocal(archive),
+            PlayTime = dataFormatService.FromTimeSeconds(archive.Results?.PlayTime ?? 0),
+            KillCount = dataFormatService.GetKillCount(archive),
+            HeadshotKillRate = dataFormatService.GetHeadshotRate(archive)
+        });
         // "Record-元数据.入场信息": "\n入局战备: {{EquipmentValue}}rub, 安全箱物资价值: {{SecuredValue}}rub, 总带入价值: {{PreRaidValue}}rub",
-        msg += I18N!.GetText(
-            "Record-元数据.入场信息",
-            new
-            {
-                EquipmentValue = (int)archive.EquipmentValue,
-                SecuredValue = (int)archive.SecuredValue,
-                PreRaidValue = (int)archive.PreRaidValue
-            }
-        );
+        msg += I18N!.GetText("Record-元数据.入场信息",
+        new {
+            EquipmentValue = (int)archive.EquipmentValue,
+            SecuredValue = (int)archive.SecuredValue,
+            PreRaidValue = (int)archive.PreRaidValue
+        });
 
         // "Record-元数据.退出信息": "\n带出价值: {{GrossProfit}}rub, 战损{{CombatLosses}}rub, 净利润{{NetProfit}}rub",
-        msg += I18N!.GetText(
-            "Record-元数据.退出信息",
-            new
-            {
-                GrossProfit = (int)archive.GrossProfit,
-                CombatLosses = (int)archive.CombatLosses,
-                NetProfit = dataFormatService.GetNetProfit(archive)
-            }
-        );
+        msg += I18N!.GetText("Record-元数据.退出信息",
+        new {
+            GrossProfit = (int)archive.GrossProfit,
+            CombatLosses = (int)archive.CombatLosses,
+            NetProfit = dataFormatService.GetNetProfit(archive)
+        });
 
         // "Record-元数据.对局结果": "\n对局结果: {{Result}} 撤离点: {{ExitName}} 游戏风格: {{SurvivorClass}}",
-        msg += I18N.GetText(
-            "Record-元数据.对局结果",
-            new
-            {
-                Result = dataFormatService.GetResultStr(archive),
-                ExitName = dataFormatService.GetExitName(archive),
-                SurvivorClass = dataFormatService.GetSurvivorClass(archive)
-            }
-        );
+        msg += I18N.GetText("Record-元数据.对局结果",
+        new {
+            Result = dataFormatService.GetResultStr(archive),
+            ExitName = dataFormatService.GetExitName(archive),
+            SurvivorClass = dataFormatService.GetSurvivorClass(archive)
+        });
         return msg;
     }
 
