@@ -146,8 +146,5 @@
     [Parameter]
     public required RaidArchive Archive { get; set; }
 
-    public List<Victim> GetVictims()
-    {
-        return Archive.EftStats?.Victims?.ToList() ?? [];
-    }
+    public List<Victim> GetVictims() => Archive.EftStats?.Victims?.ToList() ?? [];
 }

@@ -1,5 +1,4 @@
 @using SPTarkov.Server.Core.Models.Common
-
 @inject I18N I18N
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig
@@ -79,10 +78,7 @@
     private readonly HashSet<MongoId> _addSet = [];
     private readonly HashSet<MongoId> _removeSet = [];
 
-    private double GetPrice(KeyValuePair<MongoId, double> item)
-    {
-        return PriceSystem.GetItemValueWithCache(item.Key) * item.Value;
-    }
+    private double GetPrice(KeyValuePair<MongoId, double> item) => PriceSystem.GetItemValueWithCache(item.Key) * item.Value;
 
     private Color GetColor(MongoId id)
     {
