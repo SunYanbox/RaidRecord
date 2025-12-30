@@ -205,15 +205,13 @@ public class DataGetterService(
     public readonly RangeTuple<int> PageSizeRange = new(1, 50);
 
     /// <summary> 被视为战备的基类(枪械配件) </summary>
-    public readonly IReadOnlySet<MongoId> WeaponModClassesAll = new HashSet<MongoId>(
-    [
+    public readonly IReadOnlySet<MongoId> WeaponModClassesAll = (HashSet<MongoId>) [
         BaseClasses.MAGAZINE, // 弹匣
         BaseClasses.MOD, // 模组
         BaseClasses.ASSAULT_SCOPE, // 突击瞄准镜
         BaseClasses.AUXILIARY_MOD, // 辅助模组
         BaseClasses.BARREL, // 枪管
         BaseClasses.BIPOD, // 两脚架
-        BaseClasses.BUILT_IN_INSERTS, // 内置插件
         BaseClasses.COLLIMATOR, // 准直瞄具
         BaseClasses.COMPACT_COLLIMATOR, // 紧凑型准直瞄具
         BaseClasses.COMPENSATOR, // 制退器
@@ -239,10 +237,17 @@ public class DataGetterService(
         BaseClasses.SPECIAL_SCOPE, // 特殊瞄准镜
         BaseClasses.STOCK, // 枪托
         BaseClasses.TACTICAL_COMBO // 战术组合装置
-    ]);
+    ];
+    
+    /// <summary> 被视为战备的基类(装备配件) </summary>
+    public readonly IReadOnlySet<MongoId> EquipmentModClassesAll = (HashSet<MongoId>) [
+        BaseClasses.BUILT_IN_INSERTS, // 内置插件
+        BaseClasses.ARMOR_PLATE, // 装甲板
+        BaseClasses.VISORS // 面罩/护目镜
+    ];
 
     /// <summary> 被视为战备的基类(枪械) </summary>
-    public readonly IReadOnlySet<MongoId> WeaponClassesAlls = new HashSet<MongoId>([
+    public readonly IReadOnlySet<MongoId> WeaponClassesAlls = (HashSet<MongoId>) [
         BaseClasses.WEAPON, // 武器
         BaseClasses.ASSAULT_CARBINE, // 突击卡宾枪
         BaseClasses.ASSAULT_RIFLE, // 突击步枪
@@ -260,32 +265,29 @@ public class DataGetterService(
         BaseClasses.KNIFE, // 刀
         BaseClasses.THROW_WEAP, // 投掷武器
         BaseClasses.LAUNCHER // 发射器
-    ]);
+    ];
 
     /// <summary> 被视为战备的基类(头部护甲) </summary>
-    public readonly IReadOnlySet<MongoId> HeadClassesAlls = new HashSet<MongoId>([
+    public readonly IReadOnlySet<MongoId> HeadClassesAlls = (HashSet<MongoId>) [
         BaseClasses.FACE_COVER, // 面部防护
-        BaseClasses.GEAR_MOD, // 装备模组
         BaseClasses.HEADPHONES, // 耳机
-        BaseClasses.HEADWEAR, // 头饰
-        BaseClasses.VISORS, // 面罩/护目镜
-        BaseClasses.BUILT_IN_INSERTS // 内置插件
-    ]);
+        BaseClasses.HEADWEAR // 头饰
+    ];
 
-    /// <summary> 被视为战备的基类(胸挂, 护甲) </summary>
-    public readonly IReadOnlySet<MongoId> ArmorClassesAlls = new HashSet<MongoId>([
-        BaseClasses.ARMOR, // 护甲
-        BaseClasses.ARMOR_PLATE, // 装甲板
-        BaseClasses.ARMORED_EQUIPMENT, // 装甲装备
-        BaseClasses.VEST, // 胸挂/背心
-        BaseClasses.BUILT_IN_INSERTS, // 内置插件(这个头盔和护甲都得有, 下面的同理)
-        BaseClasses.GEAR_MOD // 装备模组
-    ]);
-
+    /// <summary> 被视为战备的基类(护甲) </summary>
+    public readonly IReadOnlySet<MongoId> ArmorClassesAlls = (HashSet<MongoId>) [
+        BaseClasses.ARMOR // 护甲
+    ];
+    
+    /// <summary> 被视为战备的基类(胸挂) </summary>
+    public readonly IReadOnlySet<MongoId> VestClassesAlls = (HashSet<MongoId>) [
+        BaseClasses.VEST // 胸挂/背心
+    ];
+    
     /// <summary> 被视为战备的基类(背包) </summary>
-    public readonly IReadOnlySet<MongoId> BackpackClassesAlls = new HashSet<MongoId>([
+    public readonly IReadOnlySet<MongoId> BackpackClassesAlls = (HashSet<MongoId>) [
         BaseClasses.BACKPACK // 背包
-    ]);
+    ];
 
     private HashSet<MongoId>? _equipmentClassesAlls;
 
@@ -296,8 +298,10 @@ public class DataGetterService(
         {
             _equipmentClassesAlls ??= WeaponClassesAlls
                 .Union(WeaponModClassesAll)
+                .Union(EquipmentModClassesAll)
                 .Union(HeadClassesAlls)
                 .Union(ArmorClassesAlls)
+                .Union(VestClassesAlls)
                 .Union(BackpackClassesAlls).ToHashSet();
             return _equipmentClassesAlls;
         }

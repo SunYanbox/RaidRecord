@@ -1,5 +1,6 @@
 @page "/RaidRecord/Info"
 
+@inject I18N I18N
 @inject ModConfig ModConfig
 @inject WebDataContext WebData
 @inject DataFormatService DataFormat
@@ -11,7 +12,7 @@
 <MudDynamicTabs Color="@Color.Info" Style="height: 100%; width: 100%;" AddTab="@OnAddTab" CloseTab="@OnCloseTab">
     @if (WebData.LookingServerIds.Count == 0)
     {
-        <MudText Color="Color.Error">没有选择显示任何对局详情, 请在战绩列表中选择, 或者点击右上角的加号</MudText>
+        <MudText Color="Color.Error">@I18N.WebUILocal.NoArchiveWarn</MudText>
     }
     else
     {
@@ -33,14 +34,14 @@
     }
 </MudDynamicTabs>
 
-<MudMessageBox @ref="MudMessageBox" Title="Info" CancelText="取消">
+<MudMessageBox @ref="MudMessageBox" Title="Info" CancelText="@I18N.WebUILocal.Cancel">
     <MessageContent>
-        <MudText>输入需要查看的索引:</MudText>
+        <MudText>@(I18N.WebUILocal.InputIndexUWantLook):</MudText>
         <MudNumericField @bind-Value="_index" Variant="Variant.Text" Min="0" Max="@GetMaxCount()"/>
     </MessageContent>
     <YesButton>
         <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Commit"
-                   OnClick="@(() => AddTab(_index))">确认!
+                   OnClick="@(() => AddTab(_index))">@I18N.WebUILocal.Confirm
         </MudButton>
     </YesButton>
 

@@ -21,6 +21,7 @@ public class PriceSystem(
     DatabaseService databaseService,
     RagfairOfferService ragfairOfferService)
 {
+    private readonly object _lock = new();
     private readonly Dictionary<MongoId, PriceCache> _priceCache = new();
 
     /// <summary> 物品价值缓存 </summary>
@@ -73,25 +74,27 @@ public class PriceSystem(
         if (itemHelper.IsOfBaseclass(itemId, BaseClasses.BUILT_IN_INSERTS))
             return 0;
         long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-        if (_priceCache.TryGetValue(itemId, out PriceCache? priceCache))
+        lock (_lock)
         {
-            if (now - priceCache.UpdateTime <= modConfig.Configs.PriceCacheUpdateMinTime)
+            if (_priceCache.TryGetValue(itemId, out PriceCache? priceCache))
+            {
+                if (now - priceCache.UpdateTime <= modConfig.Configs.PriceCacheUpdateMinTime)
+                    return priceCache.Price;
+
+                priceCache.Price = GetNewestPrice(itemId);
+                priceCache.UpdateTime = now;
                 return priceCache.Price;
+            }
 
-            priceCache.Price = GetNewestPrice(itemId);
-            priceCache.UpdateTime = now;
-            return priceCache.Price;
+            PriceCache newPriceCache = new()
+            {
+                Price = GetNewestPrice(itemId),
+                UpdateTime = now
+            };
+
+            _priceCache.Add(itemId, newPriceCache);
+            return newPriceCache.Price;
         }
-
-        PriceCache newPriceCache = new()
-        {
-            Price = GetNewestPrice(itemId),
-            UpdateTime = now
-        };
-
-        _priceCache.Add(itemId, newPriceCache);
-
-        return newPriceCache.Price;
     }
 
     /// <summary>

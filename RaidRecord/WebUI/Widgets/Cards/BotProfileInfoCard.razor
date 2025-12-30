@@ -1,20 +1,23 @@
 @using SPTarkov.Server.Core.Models.Eft.Common
 @using SPTarkov.Server.Core.Models.Eft.Profile
+
+@inject I18N I18N
+
 <MudCardContent Class="bot-info-mud-card-content" Style="@Style">
-    <MudText>PMC存档信息</MudText>
-    <MudText Class="two-char-indent">昵称: @PmcData?.Info?.Nickname</MudText>
-    <MudText Class="two-char-indent">简称: @PmcData?.Info?.LowerNickname</MudText>
-    <MudText Class="two-char-indent">等级: @PmcData?.Info?.Level</MudText>
-    <MudText Class="two-char-indent">游戏版本: @PmcData?.Info?.GameVersion</MudText>
-    <MudText Class="two-char-indent">阵营: @PmcData?.Info?.Side</MudText>
-    <MudText>SCAV存档信息</MudText>
+    <MudText>PMC @I18N.WebUILocal.Link(I18N.WebUILocal.Profile, I18N.WebUILocal.Info)</MudText>
+    <MudText Class="two-char-indent">@I18N.WebUILocal.Nickname: @PmcData?.Info?.Nickname</MudText>
+    <MudText Class="two-char-indent">@I18N.WebUILocal.LowerNickname: @PmcData?.Info?.LowerNickname</MudText>
+    <MudText Class="two-char-indent">@I18N.WebUILocal.Level: @PmcData?.Info?.Level</MudText>
+    <MudText Class="two-char-indent">@I18N.WebUILocal.GameVersion: @PmcData?.Info?.GameVersion</MudText>
+    <MudText Class="two-char-indent">@I18N.WebUILocal.Side: @PmcData?.Info?.Side</MudText>
+    <MudText>SCAV @I18N.WebUILocal.Link(I18N.WebUILocal.Profile, I18N.WebUILocal.Info)</MudText>
     @if (_botInfoShowAll)
     {
-        <MudText Class="two-char-indent">昵称: @ScavData?.Info?.Nickname</MudText>
-        <MudText Class="two-char-indent">简称: @ScavData?.Info?.LowerNickname</MudText>
-        <MudText Class="two-char-indent">等级: @ScavData?.Info?.Level</MudText>
-        <MudText Class="two-char-indent">游戏版本: @ScavData?.Info?.GameVersion</MudText>
-        <MudText Class="two-char-indent">阵营: @ScavData?.Info?.Side</MudText>
+        <MudText Class="two-char-indent">@I18N.WebUILocal.Nickname: @ScavData?.Info?.Nickname</MudText>
+        <MudText Class="two-char-indent">@I18N.WebUILocal.LowerNickname: @ScavData?.Info?.LowerNickname</MudText>
+        <MudText Class="two-char-indent">@I18N.WebUILocal.Level: @ScavData?.Info?.Level</MudText>
+        <MudText Class="two-char-indent">@I18N.WebUILocal.GameVersion: @ScavData?.Info?.GameVersion</MudText>
+        <MudText Class="two-char-indent">@I18N.WebUILocal.Side: @ScavData?.Info?.Side</MudText>
     }
     <MudCardActions>
         <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => ToggleShowAll())">
@@ -41,12 +44,17 @@
     private PmcData? ScavData => SptProfile?.CharacterData?.ScavData;
 
     private bool _botInfoShowAll;
-    private string _botInfoShowAllText = "查看全部";
+    private string? _botInfoShowAllText;
 
     private void ToggleShowAll()
     {
         _botInfoShowAll = !_botInfoShowAll;
-        _botInfoShowAllText = _botInfoShowAll ? "收起详情" : "查看全部";
+        _botInfoShowAllText = _botInfoShowAll ? I18N.WebUILocal.Collapse : I18N.WebUILocal.Expand;
     }
 
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _botInfoShowAllText = I18N.WebUILocal.Expand;
+    }
 }

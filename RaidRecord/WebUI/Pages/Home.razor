@@ -5,17 +5,18 @@
 @using SPTarkov.Server.Core.Models.Eft.Profile
 @using SPTarkov.Server.Core.Servers
 
-@inject SaveServer SaveServer;
-@inject LauncherController LauncherController;
-@inject DataGetterService DataGetter;
-@inject WebDataContext WebData;
+@inject I18N I18N
 @inject ModConfig ModConfig;
+@inject SaveServer SaveServer;
+@inject WebDataContext WebData;
+@inject DataGetterService DataGetter;
+@inject LauncherController LauncherController;
 
 <MainLayout/>
 
 <MudSelect @bind-Value="WebData.CurrAccount"
            Style="width: auto"
-           Label="选择存档"
+           Label="@I18N.WebUILocal.ChoiceProfile"
            AdornmentColor="Color.Secondary">
     @foreach (MongoId account in AccountAllExist)
     {

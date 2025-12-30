@@ -3,6 +3,7 @@
 @using SPTarkov.Server.Core.Models.Enums
 @using Color = MudBlazor.Color
 
+@inject I18N I18N
 @inject DataFormatService DataFormat;
 @inject RecordManager RecordManager;
 
@@ -10,61 +11,61 @@
 <MudPaper Class="pa-4">
     <MudCard>
         <MudCardContent>
-            <MudText>基础信息</MudText>
+            <MudText>@I18N.WebUILocal.BaseInfo</MudText>
             <MudText Typo="Typo.body2">
                 ServerId: @Archive.ServerId
-                对局时间: @DataFormat.FromDateTimeSeconds(Archive.CreateTime)
-                玩家昵称: @PlayerData.Info?.Nickname
-                玩家等级: @PlayerData.Info?.Level
-                玩家ID: @Archive.PlayerId
+                @I18N.WebUILocal.ArchiveTime: @DataFormat.FromDateTimeSeconds(Archive.CreateTime)
+                @I18N.WebUILocal.PlayerNickName: @PlayerData.Info?.Nickname
+                @I18N.WebUILocal.PlayerLevel: @PlayerData.Info?.Level
+                @I18N.WebUILocal.PlayerId: @Archive.PlayerId
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>地图与存活时间</MudText>
+            <MudText>@I18N.WebUILocal.Link(I18N.WebUILocal.MapName, I18N.WebUILocal.And, I18N.WebUILocal.SurviveTime)</MudText>
             <MudText Typo="Typo.body2">
-                地图名称: @DataFormat.GetMapNameLocal(Archive)
-                存活时间: @DataFormat.FromTimeSeconds(Archive.Results?.PlayTime ?? 0)
+                @(I18N.WebUILocal.MapName): @DataFormat.GetMapNameLocal(Archive)
+                @(I18N.WebUILocal.SurviveTime): @DataFormat.FromTimeSeconds(Archive.Results?.PlayTime ?? 0)
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>对局结果</MudText>
+            <MudText>@I18N.WebUILocal.ArchiveResult</MudText>
             <MudText Typo="Typo.body2">
-                结果: @DataFormat.GetResultStr(Archive)
-                撤离点: @DataFormat.GetExitName(Archive)
-                生存风格: @DataFormat.GetSurvivorClass(Archive)
+                @I18N.WebUILocal.Result: @DataFormat.GetResultStr(Archive)
+                @I18N.WebUILocal.ExitName: @DataFormat.GetExitName(Archive)
+                @I18N.WebUILocal.SurvivorClass: @DataFormat.GetSurvivorClass(Archive)
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>进入对局</MudText>
+            <MudText>@I18N.WebUILocal.EnterArchive</MudText>
             <MudText Typo="Typo.body2">
-                战备: @Archive.EquipmentValue rub
-                安全箱物资: @Archive.SecuredValue rub
-                入局总带入: @Archive.PreRaidValue rub
+                @I18N.WebUILocal.EquipmentValue: @Archive.EquipmentValue rub
+                @I18N.WebUILocal.SecuredValue: @Archive.SecuredValue rub
+                @I18N.WebUILocal.PreRaidValue: @Archive.PreRaidValue rub
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>离开对局</MudText>
+            <MudText>@I18N.WebUILocal.ExitArchive</MudText>
             <MudText Typo="Typo.body2">
-                毛收益: @Archive.GrossProfit rub
-                战损: @Archive.CombatLosses rub
-                净收益: @DataFormat.GetNetProfit(Archive) rub
+                @I18N.WebUILocal.GrossProfit: @Archive.GrossProfit rub
+                @I18N.WebUILocal.CombatLoss: @Archive.CombatLosses rub
+                @I18N.WebUILocal.NetProfit: @DataFormat.GetNetProfit(Archive) rub
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>击杀信息</MudText>
+            <MudText>@I18N.WebUILocal.KillInfo</MudText>
             <MudText Typo="Typo.body2">
-                击杀数: @DataFormat.GetKillCount(Archive)
-                爆头率: @DataFormat.GetHeadshotRate(Archive)
+                @(I18N.WebUILocal.KillCount): @DataFormat.GetKillCount(Archive)
+                @(I18N.WebUILocal.HeadshotRate): @DataFormat.GetHeadshotRate(Archive)
             </MudText>
             @if (DataFormat.GetKillCount(Archive) > 0)
             {
@@ -72,11 +73,11 @@
                 {
                     <MudTable Items="@GetVictims()" FixedHeader="@true" FixedFooter="@true">
                         <HeaderContent>
-                            <MudTh>时间</MudTh>
-                            <MudTh>武器</MudTh>
-                            <MudTh>致死部位</MudTh>
-                            <MudTh>距离</MudTh>
-                            <MudTh>被击败者信息</MudTh>
+                            <MudTh>@I18N.WebUILocal.Time</MudTh>
+                            <MudTh>@I18N.WebUILocal.Weapon</MudTh>
+                            <MudTh>@I18N.WebUILocal.BodyPart</MudTh>
+                            <MudTh>@I18N.WebUILocal.Distance</MudTh>
+                            <MudTh>@I18N.WebUILocal.VictimInfo</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd>@DataFormat.GetVictimTime(context)</MudTd>
@@ -92,7 +93,7 @@
                 }
                 <MudCardActions>
                     <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OnShowKillAllClick())">
-                        @(_showKillAll ? "收起击杀信息" : "展开击杀信息")
+                        @(_showKillAll ? I18N.WebUILocal.Link(I18N.WebUILocal.Collapse, I18N.WebUILocal.KillInfo) : I18N.WebUILocal.Link(I18N.WebUILocal.Expand, I18N.WebUILocal.KillInfo))
                     </MudButton>
                 </MudCardActions>
             }
@@ -103,19 +104,19 @@
                 {
                     <MudCard>
                         <MudCardContent>
-                            <MudText>击杀玩家者</MudText>
+                            <MudText>@I18N.WebUILocal.AggressorInfo</MudText>
                             <MudText Typo="Typo.body2">
-                                名称: @aggressor.Name
-                                阵营: @aggressor.Side
-                                武器名称: @DataFormat.GetWeaponName(aggressor)
-                                角色: @DataFormat.GetRoleName(aggressor)
+                                @I18N.WebUILocal.Name: @aggressor.Name
+                                @I18N.WebUILocal.Side: @aggressor.Side
+                                @I18N.WebUILocal.Link(I18N.WebUILocal.Weapon, I18N.WebUILocal.Name): @DataFormat.GetWeaponName(aggressor)
+                                @I18N.WebUILocal.Role: @DataFormat.GetRoleName(aggressor)
                             </MudText>
                         </MudCardContent>
                     </MudCard>
                 }
                 else
                 {
-                    <MudText>击杀玩家的信息加载失败</MudText>
+                    <MudText>@I18N.WebUILocal.AggressorInfoLoadFail</MudText>
                 }
             }
         </MudCardContent>

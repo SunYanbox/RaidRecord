@@ -9,30 +9,30 @@
 @inject WebDataContext WebDataContext
 
 <MudPaper Class="pa-16 ma-2" Outlined="true">
-    <MudText Typo="Typo.h4">物品变化信息</MudText>
+    <MudText Typo="Typo.h4">@I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Change, I18N.WebUILocal.Info)</MudText>
     <MudSpacer/>
     @if (_initEd)
     {
         <MudTable Items="@ItemDeltaShouldShow" Dense="@true" Hover="@true" Bordered="@true">
             <ToolBarContent>
                 <MudContainer Style="display: flex; align-items: center; height: 100%;">
-                    <MudText Typo="Typo.h6">物资变化列表</MudText>
-                    <MudSwitch @bind-Value="_showAdd" Color="Color.Success">新增</MudSwitch>
-                    <MudSwitch @bind-Value="_showChange" Color="Color.Warning">变化</MudSwitch>
-                    <MudSwitch @bind-Value="_showRemove" Color="Color.Error">移除</MudSwitch>
+                    <MudText Typo="Typo.h6">@I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Change, I18N.WebUILocal.List)</MudText>
+                    <MudSwitch @bind-Value="_showAdd" Color="Color.Success">@I18N.WebUILocal.Add</MudSwitch>
+                    <MudSwitch @bind-Value="_showChange" Color="Color.Warning">@I18N.WebUILocal.Change</MudSwitch>
+                    <MudSwitch @bind-Value="_showRemove" Color="Color.Error">@I18N.WebUILocal.Remove</MudSwitch>
                 </MudContainer>
             </ToolBarContent>
             <HeaderContent>
-                <MudTh>物品ID</MudTh>
-                <MudTh>物品名称</MudTh>
+                <MudTh>@I18N.WebUILocal.Link(I18N.WebUILocal.Item, "ID")</MudTh>
+                <MudTh>@I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Name)</MudTh>
                 <MudTh>
                     <MudTableSortLabel SortBy="new Func<KeyValuePair<MongoId, double>, object>(x => x.Value)">
-                        物品变化量
+                        @I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Change)
                     </MudTableSortLabel>
                 </MudTh>
                 <MudTh>
                     <MudTableSortLabel SortBy="new Func<KeyValuePair<MongoId, double>, object>(x => GetPrice(x))">
-                        价值变化量
+                        @I18N.WebUILocal.Link(I18N.WebUILocal.Value, I18N.WebUILocal.Change)
                     </MudTableSortLabel>
                 </MudTh>
             </HeaderContent>

@@ -5,6 +5,7 @@
 @using SPTarkov.Server.Core.Models.Eft.ItemEvent
 @using Color = MudBlazor.Color
 
+@inject I18N I18N
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig
 @inject ItemHelper ItemHelper
@@ -21,11 +22,11 @@
           @bind-SelectedItem="SelectedPriceItem" SortLabel="Sort By">
     <ToolBarContent>
         <MudIcon Icon="@Icons.Material.Filled.PriceCheck" Color="Color.Success"/>
-        <MudText Typo="Typo.h6" Style="text-indent: 2ch;">价格页面</MudText>
-        <MudText Typo="Typo.body2" Style="text-indent: 2ch;">可以用于模糊搜索物品价格, 以及快速购买物品</MudText>
+        <MudText Typo="Typo.h6" Style="text-indent: 2ch;">@I18N.WebUILocal.PriceTitle</MudText>
+        <MudText Typo="Typo.body2" Style="text-indent: 2ch;">@I18N.WebUILocal.PricePageDesc</MudText>
 
         <MudContainer Style="display: flex">
-            <MudTextField Typo="Typo.body1" @bind-Value="Query" Label="名称" Variant="Variant.Filled" Clearable="true"
+            <MudTextField Typo="Typo.body1" @bind-Value="Query" Label="@I18N.WebUILocal.Name" Variant="Variant.Filled" Clearable="true"
                           Adornment="Adornment.End" AdornmentColor="Color.Primary"/>
             <MudNumericField Typo="Typo.body1" @bind-Value="TopN" Label="TopN" Variant="Variant.Filled" Min="1"
                              Max="50"/>
@@ -41,21 +42,21 @@
         <col style="min-width: 15ch"/>
     </ColGroup>
     <HeaderContent>
-        <MudTh>名称</MudTh>
+        <MudTh>@I18N.WebUILocal.Name</MudTh>
         <MudTh>Tpl</MudTh>
         <MudTh>
-            模组价格(rub)
-            <MudText Typo="Typo.body2">市场平均价格</MudText>
+            @(I18N.WebUILocal.ModPrice)(rub)
+            <MudText Typo="Typo.body2">@I18N.WebUILocal.RagfairAveragePrice</MudText>
         </MudTh>
-        <MudTh>动态价格(rub)</MudTh>
-        <MudTh>手册价格(rub)</MudTh>
+        <MudTh>@(I18N.WebUILocal.DynPrice)(rub)</MudTh>
+        <MudTh>@(I18N.WebUILocal.HandbookPrice)(rub)</MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<PriceItem, object>(x => x.Similarity)">
-                相似度得分
+                @I18N.WebUILocal.Similarity
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            工具栏
+            @I18N.WebUILocal.ToolBar
         </MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -69,34 +70,30 @@
         <MudTd>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Payment" Color="Color.Info"
                        Onclick="@(() => OnQuickBuyItem(context))">
-                购买这个物品
+                @I18N.WebUILocal.BuyThisItem
             </MudButton>
         </MudTd>
     </RowTemplate>
     <PagerContent>
-        <MudTablePager RowsPerPageString="每页行数:" InfoFormat="{first_item}-{last_item} / {all_items}"
+        <MudTablePager RowsPerPageString="@I18N.WebUILocal.TablePagerRowsPerPageString" InfoFormat="@I18N.WebUILocal.TablePagerInfoFormat"
                        PageSizeOptions="new[] { 10, 1, 5, 20, 50, 100 }"/>
     </PagerContent>
 </MudTable>
 
-<MudMessageBox @ref="QuickBuyItemMegBox" Title="Info" CancelText="取消">
+<MudMessageBox @ref="QuickBuyItemMegBox" Title="Info" CancelText="@I18N.WebUILocal.Cancel">
     <MessageContent>
         <MudText>
-            输入购买@(WillBuy?.Name)的数量:
-            <MudText Typo="Typo.body2" Color="Color.Warning">
-                此处不会处理带有内置槽位的物品, 请不要购买带有内置槽位的物品
-            </MudText>
-            <MudText Typo="Typo.body2" Color="Color.Info">
-                这是消耗你存档的卢布进行购买, 不是零元购
-            </MudText>
+            @I18N.DumpFormatStrLocal(I18N.WebUILocal.BuyItemTitle, new { WillBuy?.Name })
+            <MudText Typo="Typo.body2" Color="Color.Warning">@I18N.WebUILocal.BuyItemWarn1</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Info">@I18N.WebUILocal.BuyItemWarn2</MudText>
         </MudText>
-        <MudText>当前单价: @(WillBuy?.AvgPrice ?? 0)rub</MudText>
+        <MudText>@I18N.WebUILocal.PerPrice: @(WillBuy?.AvgPrice ?? 0)rub</MudText>
         <MudNumericField @bind-Value="_num" Variant="Variant.Text" Min="1" Max="10000"/>
     </MessageContent>
 
     <YesButton>
         <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Commit"
-                   OnClick="@(() => YesBuy())">确认付款
+                   OnClick="@(() => YesBuy())">@I18N.WebUILocal.ConfirmPayment
         </MudButton>
     </YesButton>
 
@@ -130,9 +127,16 @@
                 return;
             }
 
+            string buySuccess = I18N.DumpFormatStrLocal(I18N.WebUILocal.SuccessBuyItemMsg,
+            new {
+                WillBuy?.Name,
+                StackObjectsCount = _num,
+                TotalPrice
+            });
+
             List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
                 WebData.CurrAccount,
-                "您已购买物资",
+                buySuccess,
                 ItemHelper.SplitStackIntoSeparateItems(new Item
                 {
                     Id = new MongoId(),
@@ -155,7 +159,7 @@
                 }
                 return;
             }
-            Snackbar.Add($"已成功购买物品: {WillBuy?.Name} x{_num}, 消耗{TotalPrice}rub");
+            Snackbar.Add(buySuccess);
         }
     }
 </MudMessageBox>

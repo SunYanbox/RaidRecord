@@ -1,7 +1,10 @@
 @using SPTarkov.Server.Core.Models.Eft.Profile
+
+@inject I18N I18N
+
 <MudCard>
     <MudCardContent Class="curt-profile-card-context">
-        <MudText>当前存档信息</MudText>
+        <MudText>@I18N.WebUILocal.Link(I18N.WebUILocal.Curr, I18N.WebUILocal.Profile, I18N.WebUILocal.Info)</MudText>
         @if (SptProfile is null)
         {
             <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
@@ -9,7 +12,7 @@
         else
         {
             <MudText Typo="Typo.body2">Aid: @SptProfile.ProfileInfo?.Aid</MudText>
-            <MudText Typo="Typo.body2">名称: @SptProfile.ProfileInfo?.Username</MudText>
+            <MudText Typo="Typo.body2">@I18N.WebUILocal.Name: @SptProfile.ProfileInfo?.Username</MudText>
             <MudText Typo="Typo.body2">PMC Id: @SptProfile.ProfileInfo?.ProfileId</MudText>
             <MudText Typo="Typo.body2">Scav Id: @SptProfile.ProfileInfo?.ScavengerId</MudText>
 

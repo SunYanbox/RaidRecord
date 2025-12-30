@@ -9,6 +9,8 @@ using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Utils;
+using SPTarkov.Server.Core.Utils.Cloners;
 using Path = System.IO.Path;
 // ReSharper disable ClassNeverInstantiated.Global
 
@@ -19,6 +21,8 @@ namespace RaidRecord.Core.Locals;
 /// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
 public class I18N(
+    ICloner cloner,
+    JsonUtil jsonUtil,
     ModHelper modHelper,
     ModConfig modConfig,
     ISptLogger<I18N> logger,
@@ -39,10 +43,17 @@ public class I18N(
         set
         {
             if (!_allTrans.ContainsKey(value)) return;
-            if (_currentLang != value)
-                _sptLocals = null;
             _currentLang = value;
+            ReInitLang();
         }
+    }
+
+    /// <summary> 重新初始化当前语言 </summary>
+    public void ReInitLang()
+    {
+        _sptLocals = null;
+        DatabaseTables tables = databaseServer.GetTables();
+        InitI18N(tables.Locations, tables.Locales);
     }
     
     /// <summary> 当前语言 </summary>
@@ -99,6 +110,8 @@ public class I18N(
                 {
                     _allTrans[fileName] = modHelper.GetJsonDataFromFile<I18NData>(localsDir, $"{fileName}.json");
                     _allTrans[fileName].WebUI ??= new WebUILocal();
+                    string? json = jsonUtil.Serialize(_allTrans[fileName], true);
+                    if (!string.IsNullOrEmpty(json)) File.WriteAllTextAsync(file, json);
                 }
                 catch (Exception e)
                 {
@@ -135,9 +148,6 @@ public class I18N(
                 }
             }
         }
-
-        DatabaseTables tables = databaseServer.GetTables();
-        InitI18N(tables.Locations, tables.Locales);
         return Task.CompletedTask;
     }
 
@@ -167,30 +177,40 @@ public class I18N(
     }
 
     /// <summary>
-    /// 处理带参数的本地化字符串
-    /// 将{{属性名}}替换为参数对象的属性值
+    /// 获取带参数的格式化字符串
+    /// <remarks>字符串中的参数必须是{{变量名}}格式</remarks>
     /// </summary>
-    protected string GetLocalised(string key, object? args)
+    /// <param name="msg">有参数格式化字符串</param>
+    /// <param name="args">参数对象</param>
+    public string DumpFormatStrLocal(string msg, object args)
     {
-        string rawLocalizedString = GetLocalisedValue(key);
-        if (args == null) return rawLocalizedString;
-
+        string localMsg = cloner.Clone(msg) ?? msg;
         PropertyInfo[] typeProperties = args.GetType().GetProperties();
 
         foreach (PropertyInfo propertyInfo in typeProperties)
         {
             // 获取JSON属性名（支持[JsonProperty]特性）
             string localizedName = $"{{{{{propertyInfo.GetJsonName()}}}}}";
-            if (rawLocalizedString.Contains(localizedName))
+            if (localMsg.Contains(localizedName))
             {
-                rawLocalizedString = rawLocalizedString.Replace(
-                    localizedName,
-                    propertyInfo.GetValue(args)?.ToString() ?? string.Empty
+                localMsg = localMsg.Replace(
+                localizedName,
+                propertyInfo.GetValue(args)?.ToString() ?? string.Empty
                 );
             }
         }
-
-        return rawLocalizedString;
+        
+        return localMsg;
+    }
+    
+    /// <summary>
+    /// 处理带参数的本地化字符串
+    /// 将{{属性名}}替换为参数对象的属性值
+    /// </summary>
+    protected string GetLocalised(string key, object? args)
+    {
+        string rawLocalizedString = GetLocalisedValue(key);
+        return args == null ? rawLocalizedString : DumpFormatStrLocal(rawLocalizedString, args);
     }
 
     /// <summary>

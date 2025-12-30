@@ -15,8 +15,8 @@
           @bind-SelectedItem="SelectedArchiveIndexed" SortLabel="Sort By">
     <ToolBarContent>
         <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Success"/>
-        <MudText Typo="Typo.h6" Style="text-indent: 2ch;">历史战绩</MudText>
-        <MudSwitch Label="点击信息按钮后跳转" @bind-Value="_jump2DetailPage" Color="Color.Success"/>
+        <MudText Typo="Typo.h6" Style="text-indent: 2ch;">@I18N.WebUILocal.ListTitle</MudText>
+        <MudSwitch Label="@I18N.WebUILocal.WillClickOpenJump" @bind-Value="_jump2DetailPage" Color="Color.Success"/>
     </ToolBarContent>
     <ColGroup>
         <col style="min-width: 8ch"/>
@@ -39,51 +39,51 @@
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            阵营
+            @I18N.WebUILocal.Side
         </MudTh>
         <MudTh>
-            地图
+            @I18N.WebUILocal.Map
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.CreateTime)">
-                创建时间
+                @I18N.WebUILocal.CreateTime
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.PreRaidValue)">
-                入局带入(rub)
+                @(I18N.WebUILocal.PreRaidValue)(rub)
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.EquipmentValue)">
-                战备价值(rub)
+                @(I18N.WebUILocal.EquipmentValue)(rub)
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.GrossProfit)">
-                毛收益(rub)
+                @(I18N.WebUILocal.GrossProfit)(rub)
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.CombatLosses)">
-                战损(rub)
+                @(I18N.WebUILocal.CombatLoss)(rub)
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => DataFormat.GetNetProfit(x.Archive))">
-                净利润(rub)
+                @(I18N.WebUILocal.NetProfit)(rub)
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => DataFormat.GetKillCount(x.Archive))">
-                击杀数
+                @I18N.WebUILocal.KillCount
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            结果
+            @I18N.WebUILocal.Result
         </MudTh>
         <MudTh>
-            工具栏
+            @I18N.WebUILocal.ToolBar
         </MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -101,27 +101,27 @@
         <MudTd Style="display: flex; align-content: center">
             <MudButton Variant="Variant.Text" Color="Color.Info"
                        Onclick="@(() => LookDetails(context!))">
-                信息
+                @I18N.WebUILocal.Info
             </MudButton>
             <MudButton Variant="Variant.Text" Color="Color.Success"
                        Onclick="@(() => LookQuickEquip(context!))">
-                快速起装
+                @I18N.WebUILocal.QuickEquip
             </MudButton>
         </MudTd>
     </RowTemplate>
     <PagerContent>
-        <MudTablePager RowsPerPageString="每页行数:" InfoFormat="{first_item}-{last_item} / {all_items}"
+        <MudTablePager RowsPerPageString="@I18N.WebUILocal.TablePagerRowsPerPageString" InfoFormat="@I18N.WebUILocal.TablePagerInfoFormat"
                        PageSizeOptions="new[] { 10, 1, 5, 20, 50, 100 }"/>
     </PagerContent>
 </MudTable>
 
 <MudOverlay @bind-Visible="_visible" DarkBackground="true" AutoClose="true">
     <MudContainer @onclick:stopPropagation="true" Style="background-color: white">
-        <MudText Typo="Typo.h5">快速起装</MudText>
-        <MudText Typo="Typo.inherit">点击其他区域关闭</MudText>
+        <MudText Typo="Typo.h5">@I18N.WebUILocal.QuickEquip</MudText>
+        <MudText Typo="Typo.inherit">@I18N.WebUILocal.ClickOtherZoneToClose</MudText>
         @if (QuickEquipArchive is null)
         {
-            <MudText>选择的战绩不存在</MudText>
+            <MudText>@I18N.WebUILocal.ChoiceArchiveNotExist</MudText>
         }
         else
         {
@@ -172,12 +172,12 @@
         {
             if (WebData.LookingServerIds.Add(archiveIndexed))
             {
-                Snackbar.Add($"已将索引{archiveIndexed.Index}(ServerId:{archiveIndexed.Archive.ServerId})加入详情信息标签页");
+                Snackbar.Add(I18N.DumpFormatStrLocal(I18N.WebUILocal.AddInfoTabSuccess, new { archiveIndexed.Index, archiveIndexed.Archive.ServerId }));
                 if (_jump2DetailPage) Navigation.NavigateTo("/RaidRecord/Info", true);
             }
             else
             {
-                Snackbar.Add($"添加索引{archiveIndexed.Index}(ServerId:{archiveIndexed.Archive.ServerId})失败, 可能是再尝试重复添加");
+                Snackbar.Add(I18N.DumpFormatStrLocal(I18N.WebUILocal.AddInfoTabFail, new { archiveIndexed.Index, archiveIndexed.Archive.ServerId }));
             }
         }
         catch (Exception e)

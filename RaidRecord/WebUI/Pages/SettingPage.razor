@@ -9,21 +9,21 @@
 <MainLayout/>
 
 <MudPaper>
-    <MudText Typo="Typo.h4">模组配置</MudText>
+    <MudText Typo="Typo.h4">@I18N.WebUILocal.SettingTitle</MudText>
     <MudSelect @bind-Value="Local"
                Style="width: auto"
-               Label="选择语言"
+               Label="@I18N.WebUILocal.SelectLang"
                AdornmentColor="Color.Secondary">
         @foreach (string lang in I18N.AvailableLang)
         {
             <MudSelectItem Value="@lang">@lang</MudSelectItem>
         }
     </MudSelect>
-    <MudSwitch @bind-Value="AutoUnloadOtherLang" Label="自动卸载多余语言包信息" Color="Color.Secondary"/>
-    <MudNumericField @bind-Value="PriceCacheUpdateMinTime" Label="价格缓存更新间隔" Variant="Variant.Text" Min="1" Max="604800000"/>
+    <MudSwitch @bind-Value="AutoUnloadOtherLang" Label="@I18N.WebUILocal.AutoUnloadLang" Color="Color.Secondary"/>
+    <MudNumericField @bind-Value="PriceCacheUpdateMinTime" Label="@I18N.WebUILocal.PriceCacheUpdateMinTime" Variant="Variant.Text" Min="1" Max="604800000"/>
 
-    <MudButton OnClick="@(() => OnSaveConfig())">保存设置</MudButton>
-    <MudButton OnClick="@(() => CancelSaveConfig())">取消设置</MudButton>
+    <MudButton OnClick="@(() => OnSaveConfig())">@I18N.WebUILocal.SaveConfigChange</MudButton>
+    <MudButton OnClick="@(() => CancelSaveConfig())">@I18N.WebUILocal.CancelConfigChange</MudButton>
 </MudPaper>
 
 @code {
@@ -38,7 +38,6 @@
                 || !I18N.AvailableLang.Contains(value)
                 || I18N.CurrLang == value) return;
             _local = value;
-            I18N.CurrLang = value;
         }
     }
 
@@ -48,11 +47,15 @@
 
     private void OnSaveConfig()
     {
-        if (!string.IsNullOrEmpty(_local) && _local.Length == 2) ModConfig.Configs.Local = _local;
+        if (!string.IsNullOrEmpty(_local) && _local.Length == 2)
+        {
+            ModConfig.Configs.Local = _local;
+            Task.Run(() => { I18N.CurrLang = _local; });
+        }
         ModConfig.Configs.AutoUnloadOtherLang = AutoUnloadOtherLang;
         ModConfig.Configs.PriceCacheUpdateMinTime = PriceCacheUpdateMinTime;
         _ = ModConfig.SaveConfig();
-        Snackbar.Add($"保存成功 当前语言为 {I18N.CurrLang}");
+        Snackbar.Add(I18N.DumpFormatStrLocal(I18N.WebUILocal.SaveConfigSuccess, new { CurrLang = _local }));
     }
 
     private void CancelSaveConfig()

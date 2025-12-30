@@ -1,6 +1,9 @@
 using MudBlazor;
 using RaidRecord.Core.Locals;
+using RaidRecord.Core.Models;
+using RaidRecord.Core.Models.Tree;
 using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 
 namespace RaidRecord.Core.Services;
@@ -78,19 +81,83 @@ public class AlgorithmService(I18N i18N)
         return pq;
     }
 
-    /// <summary> 将Item[]构建为TreeItemData树 </summary>
-    public List<TreeItemData<string>> GetTreeItems(Item[] items)
+    /// <summary>
+    /// 构建泛型树
+    /// </summary>
+    /// <param name="item">根物品</param>
+    /// <param name="items">所有物品</param>
+    /// <param name="getId">获取物品ID的函数</param>
+    /// <param name="judgeIsParent">判断目标物品是否为父物品的子物品的函数</param>
+    /// <param name="nodeMap">ID->每一个节点的映射</param>
+    /// <param name="depth">树深度</param>
+    /// <param name="maxDepth">最大树深度</param>
+    /// <typeparam name="T">树节点的数据类型</typeparam>
+    /// <returns></returns>
+    public TreeNode<T>? BuildTree<T>(T item, T[] items, 
+        Func<T, MongoId> getId, 
+        Func<(T father, T target), bool> judgeIsParent,
+        Dictionary<MongoId, TreeNode<T>> nodeMap, int depth = 0, int maxDepth = 15)
     {
-        if (items.Length == 0) return [];
-        List<Item> rootItems = GetRootItems(items);
+        if (depth >= maxDepth) return null;
+        MongoId id = getId(item);
+        TreeNode<T> node = new() {
+            Id = id,
+            ParentId = null,
+            Data = item,
+            Children = []
+        };
+        
+        nodeMap[id] = node;
 
-        List<TreeItemData<string>> treeItems = [];
-        foreach (Item root in rootItems)
+        List<T> children = items.Where(x => judgeIsParent((item, x))).ToList();
+
+        foreach (T child in children)
         {
-            TreeItemData<string>? node = BuildTreeNode(root, 0, items, 15);
-            if (node != null) treeItems.Add(node);
+            TreeNode<T>? childNode = BuildTree(child, items, getId, judgeIsParent, nodeMap, depth + 1, maxDepth);
+            if (childNode == null) continue;
+            childNode.ParentId = id;
+            node.Children.Add(childNode);
         }
-        return treeItems;
+        return node;
+    }
+
+    /// <summary> 将TreeNode树转换为TreeItemData树 </summary>
+    public List<RRTreeItemData> ConvertToTreeItems(List<TreeNode<Item>> nodes) 
+    {
+        return nodes.Select(CreateTreeItem).ToList();
+
+        RRTreeItemData CreateTreeItem(TreeNode<Item> node)
+        {
+            RRTreeItemData treeItem = new(node.Data.Id, node.Data.Template, i18N);
+            if (node.Children.Count > 0)
+            {
+                treeItem.Children = node.Children.Select(CreateTreeItem).ToList();
+            }
+            
+            return treeItem;
+        }
+    }
+    
+    /// <summary> 将Item[]构建为TreeNode树, 并获取维护的节点字典 </summary>
+    public (List<TreeNode<Item>>, Dictionary<MongoId, TreeNode<Item>>) GetTreeItems(Item[] items)
+    {
+        if (items.Length == 0) return ([], []);
+        List<Item> rootItems = GetRootItems(items);
+        Dictionary<MongoId, TreeNode<Item>> nodeMap = [];
+
+        List<TreeNode<Item>> treeItems = [];
+        foreach (Item rootItem in rootItems)
+        {
+            TreeNode<Item>? node = BuildTree(rootItem, items, 
+            i => i.Id, 
+            pair 
+                => pair.target.ParentId is { Length: 24 }
+                   && pair.target.ParentId == pair.father.Id, 
+            nodeMap);
+            if (node == null) continue;
+            treeItems.Add(node);
+        }
+        return (treeItems, nodeMap);
     }
 
     /// <summary> 获取Item[]中所有根物品 </summary>
@@ -133,35 +200,5 @@ public class AlgorithmService(I18N i18N)
 
         return Enumerable.Range(0, text.Length - n + 1)
             .Select(i => text.Substring(i, n));
-    }
-
-    /// <summary>
-    /// 递归构建树节点
-    /// </summary>
-    private TreeItemData<string>? BuildTreeNode(Item item, int depth, Item[] items, int maxDepth = 15)
-    {
-        if (depth >= maxDepth) return null;
-
-        string value = item.Template.ToString();
-        string text = i18N.GetItemName(item.Template);
-
-        var node = new TreeItemData<string>
-        {
-            Value = value,
-            Text = text,
-            Children = []
-        };
-
-        List<Item> children = items.Where(x => x.ParentId != null && x.ParentId == item.Id).ToList();
-        foreach (Item child in children)
-        {
-            TreeItemData<string>? childNode = BuildTreeNode(child, depth + 1, items, maxDepth);
-            if (childNode != null)
-            {
-                node.Children?.Add(childNode);
-            }
-        }
-
-        return node;
     }
 }

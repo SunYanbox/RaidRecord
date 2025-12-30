@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject ModMetadata ModMetadata
+@inject I18N I18N
 
 <HeadContent>
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
@@ -19,13 +20,13 @@
 <MudLayout>
     <MudAppBar Elevation="2" Style="width: 100%">
         <MudText Typo="Typo.body1" Style="min-width: 18ch">@NameAndVersion</MudText>
-        <MudNavLink Class="mud-nav-link" Href="/RaidRecord" Match="NavLinkMatch.All">主页</MudNavLink>
-        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/List" Match="NavLinkMatch.All">战绩列表</MudNavLink>
-        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Info" Match="NavLinkMatch.All">战绩详情</MudNavLink>
-        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Price" Match="NavLinkMatch.All">价格页面</MudNavLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord" Match="NavLinkMatch.All">@I18N.WebUILocal.NavLinkHome</MudNavLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/List" Match="NavLinkMatch.All">@I18N.WebUILocal.NavLinkList</MudNavLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Info" Match="NavLinkMatch.All">@I18N.WebUILocal.NavLinkInfo</MudNavLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Price" Match="NavLinkMatch.All">@I18N.WebUILocal.NavLinkPrice</MudNavLink>
         <MudSpacer/>
-        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Setting" Match="NavLinkMatch.All">设置</MudNavLink>
-        <MudLink Class="mud-nav-link" Color="Color.Default" Target="_blank" Href="@Url">关于</MudLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Setting" Match="NavLinkMatch.All">@I18N.WebUILocal.NavLinkSettings</MudNavLink>
+        <MudLink Class="mud-nav-link" Color="Color.Default" Target="_blank" Href="@Url">@I18N.WebUILocal.NavLinkAbout</MudLink>
         <style>
             .mud-nav-link {
                 width: fit-content;

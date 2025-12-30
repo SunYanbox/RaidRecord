@@ -1,17 +1,20 @@
 @using SPTarkov.Server.Core.Models.Eft.Profile
+
+@inject I18N I18N
+
 <MudCardContent Class="spt-info-mud-card-content">
-    <MudText>创建存档时的SPT版本</MudText>
+    <MudText>@I18N.WebUILocal.TitleCreateProfileSptVersion</MudText>
     <MudText Class="two-char-indent" Typo="Typo.body2">Version: @SptProfile?.SptData?.Version</MudText>
-    <MudText>历史加载模组信息</MudText>
+    <MudText>@I18N.WebUILocal.HistoryLoadModInfo</MudText>
     @{
         List<ModDetails> mods = SptProfile?.SptData?.Mods ?? [];
         IEnumerable<ModDetails> displayMods = _modInfoShowAll ? mods : mods.Take(5);
         foreach (ModDetails detail in displayMods)
         {
             <div style="display: flex">
-                <MudText Class="two-char-indent">名字: @detail.Name</MudText>
-                <MudText Class="two-char-indent">版本: @detail.Version</MudText>
-                <MudText Class="two-char-indent">作者: @detail.Author</MudText>
+                <MudText Class="two-char-indent">@I18N.WebUILocal.Name: @detail.Name</MudText>
+                <MudText Class="two-char-indent">@I18N.WebUILocal.Version: @detail.Version</MudText>
+                <MudText Class="two-char-indent">@I18N.WebUILocal.Author: @detail.Author</MudText>
                 @if (!string.IsNullOrEmpty(detail.Url))
                 {
                     <MudLink Class="two-char-indent" Href="@detail.Url" Target="_blank">@detail.Name</MudLink>
@@ -40,11 +43,17 @@
     public SptProfile? SptProfile { get; set; }
 
     private bool _modInfoShowAll;
-    private string _modInfoShowAllText = "查看全部";
+    private string? _modInfoShowAllText;
 
     private void ToggleShowAll()
     {
         _modInfoShowAll = !_modInfoShowAll;
-        _modInfoShowAllText = _modInfoShowAll ? "收起详情" : "查看全部";
+        _modInfoShowAllText = _modInfoShowAll ? I18N.WebUILocal.Collapse : I18N.WebUILocal.Expand;
+    }    
+    
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _modInfoShowAllText = I18N.WebUILocal.Expand;
     }
 }
