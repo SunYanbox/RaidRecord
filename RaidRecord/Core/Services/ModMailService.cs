@@ -167,10 +167,10 @@ public class ModMailService(
                     Template = Money.ROUBLES,
                     Upd = new Upd
                     {
-                        StackObjectsCount = amount
+                        StackObjectsCount = amount,
+                        SpawnedInSession = true
                     }
-                }).SelectMany(x => x).ToList(),
-                isFiRItem: true);
+                }).SelectMany(x => x).ToList());
             if (warnings != null)
             {
                 foreach (Warning warning in warnings)
@@ -199,14 +199,12 @@ public class ModMailService(
     /// <param name="sessionId">玩家sessionId</param>
     /// <param name="msg">提示信息</param>
     /// <param name="items">物品列表</param>
-    /// <param name="isFiRItem">是否令所有物品为突袭中发现物品</param>
     /// <param name="maxStorageTimeSeconds">默认为2天</param>
     /// <returns>如果未成功则返回警告列表</returns>
     public List<Warning>? SendItemsToPlayer(
         MongoId sessionId,
         string msg,
         List<Item>? items,
-        bool isFiRItem,
         long? maxStorageTimeSeconds = 172800L)
     {
         try
@@ -221,12 +219,12 @@ public class ModMailService(
                     }
                 ];
             }
-            if (isFiRItem)
+            if (modConfig.Configs.ModGiveIsFIR)
             {
                 foreach (Item item in items ?? [])
                 {
                     item.Upd ??= new Upd();
-                    item.Upd.SpawnedInSession = isFiRItem;
+                    item.Upd.SpawnedInSession = modConfig.Configs.ModGiveIsFIR;
                 }
             }
             mailSendService.SendSystemMessageToPlayer(

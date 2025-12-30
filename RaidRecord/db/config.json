@@ -2,5 +2,6 @@
   "local": "ch",
   "logPath": "log.log",
   "autoUnloadOtherLang": false,
-  "priceCacheUpdateMinTime": 360000
+  "priceCacheUpdateMinTime": 360000,
+  "modGiveIsFIR": true
 }

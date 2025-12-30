@@ -303,6 +303,9 @@ public class WebUILocal
     /// <summary>自动卸载多余语言包信息</summary>
     [JsonPropertyName("autoUnloadOtherLang")]
     public string AutoUnloadLang { get; set; } = "自动卸载多余语言包信息";
+    /// <summary>自动卸载多余语言包提示信息</summary>
+    [JsonPropertyName("autoUnloadOtherLangDesc")]
+    public string AutoUnloadLangDesc { get; set; } = "在模组加载完毕后卸载当前语言与中文以外的语言包内存以节省空间";
     /// <summary>价格缓存更新间隔(毫秒)</summary>
     [JsonPropertyName("priceCacheUpdateMinTime")]
     public string PriceCacheUpdateMinTime { get; set; } = "价格缓存更新间隔(毫秒)";
@@ -315,7 +318,18 @@ public class WebUILocal
     /// <summary>取消配置修改</summary>
     [JsonPropertyName("cancelConfigChange")]
     public string CancelConfigChange { get; set; } = "取消配置修改";
-    
+    /// <summary>ModGiveIsFIR</summary>
+    [JsonPropertyName("modGiveIsFIR")]
+    public string ModGiveIsFIR { get; set; } = "模组购买FIR为状态";
+    /// <summary>ModGiveIsFIRDesc</summary>
+    [JsonPropertyName("modGiveIsFIRDesc")]
+    public string ModGiveIsFIRDesc { get; set; } = "模组给的物资(在模组购买物品, 快速起装)是否是FIR(对局中发现(带勾))状态";
+    /// <summary>重新初始化语言</summary>
+    [JsonPropertyName("reInitLang")]
+    public string ReInitLang { get; set; } = "重新初始化语言";
+    /// <summary>重新初始化语言</summary>
+    [JsonPropertyName("reInitLangDesc")]
+    public string ReInitLangDesc { get; set; } = "重新初始化语言, 重新构建本地化字典, 重新获取SPT本地化数据";
     #endregion
     
     #region 导航栏链接文本

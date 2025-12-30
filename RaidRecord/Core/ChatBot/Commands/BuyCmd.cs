@@ -111,8 +111,7 @@ public class BuyCmd: CommandBase
         List<Warning>? warnings2 = _modMailService.SendItemsToPlayer(
             parametric.SessionId,
             successMsg,
-            equipments.ToList(),
-            isFiRItem: true);
+            equipments.ToList());
 
         return warnings2?.Count > 0 ? string.Join("\n", warnings2.Select(x => x.ErrorMessage)) : successMsg;
 

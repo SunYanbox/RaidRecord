@@ -188,8 +188,7 @@
         List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
         WebDataContext.CurrAccount,
         buySuccess,
-        items.ToList(),
-        true);
+        items.ToList());
 
         if (warnings2?.Count > 0)
         {

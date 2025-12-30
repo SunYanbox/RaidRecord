@@ -99,14 +99,16 @@
         <MudTd>@DataFormat.GetKillCount(context!.Archive)</MudTd>
         <MudTd>@DataFormat.GetResultStr(context!.Archive)</MudTd>
         <MudTd Style="display: flex; align-content: center">
-            <MudButton Variant="Variant.Text" Color="Color.Info"
-                       Onclick="@(() => LookDetails(context!))">
-                @I18N.WebUILocal.Info
-            </MudButton>
-            <MudButton Variant="Variant.Text" Color="Color.Success"
-                       Onclick="@(() => LookQuickEquip(context!))">
-                @I18N.WebUILocal.QuickEquip
-            </MudButton>
+            <MudStack Row="true">
+                <MudButton Variant="Variant.Text" Color="Color.Info"
+                           Onclick="@(() => LookDetails(context!))">
+                    @I18N.WebUILocal.Info
+                </MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Success"
+                           Onclick="@(() => LookQuickEquip(context!))">
+                    @I18N.WebUILocal.QuickEquip
+                </MudButton>
+            </MudStack>
         </MudTd>
     </RowTemplate>
     <PagerContent>

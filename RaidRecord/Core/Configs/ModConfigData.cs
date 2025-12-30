@@ -25,4 +25,9 @@ public record ModConfigData
     /// </summary>
     [JsonPropertyName("priceCacheUpdateMinTime")]
     public long PriceCacheUpdateMinTime { get; set; } = 6 * 60 * 1000;
+    /// <summary>
+    /// 模组给的物资(在模组购买物品, 快速起装)是否是FIR(对局中发现)状态
+    /// </summary>
+    [JsonPropertyName("modGiveIsFIR")]
+    public bool ModGiveIsFIR { get; set; } = true;
 }

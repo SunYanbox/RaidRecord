@@ -7,20 +7,25 @@
 原版游戏仅保存有限统计数据(总览页面), 而本模组精准记录每一场对局的完整战斗日志, 包括:
 
 **击杀**
-> 使用`info index [需要查看的对局]`即可查看
+
+对局详情页面查看
+
 - 使用的具体武器
 - 命中部位(头部、胸部、四肢等)
 - 击杀目标类型(PMC、Scav、Boss、Scav Boss、Boss 带的守卫等)
 -  击杀目标的时间
 
 **物资**
+
+对局详情页面查看
+
 - 带入对局的物品与带出对局的物品清单
-  > 使用`items index [需要查看的对局] mode all`来查看
 - 这场对局中新搜到的物资, 损失的物资, 变化的物资(子弹数量增加, 药品与武器耐久减少等)
-  > 使用`items index [需要查看的对局] (mode change)`(圆括号内可省略)来查看
 
 **对局收益**
-> 使用`info index [需要查看的对局]`即可查看
+
+对局详情页面查看 / 战绩列表页面查看
+
 - 对局地图信息, 对局游玩时间
 - 对局入场时的
     - 战备价值(类似三角洲行动, 计算武器, 弹挂, 背包, 护甲等装备的价值和)
@@ -47,17 +52,42 @@
 - 其他情况: 被哪个阵营的哪个敌人(除了boss, 名称不重要)使用什么武器命中你哪个肢体淘汰你的信息
 
 **价格**
-> 使用`price name "[物品名称关键词]"`(如果关键词中没有空格, 回车等字符, 可以省略双引号)即可查看
-> 该功能偏向调试, 主要用于验证模组计算的价格是否正确, 也可以用于模糊搜索与关键词相关的物品名称与ID
+
+在价格页面查看
+
+> 该功能偏向调试, 主要用于验证模组计算的价格是否正确, 也可以用于模糊搜索与关键词相关的物品名称与ID, 以及购买FIR物品过任务
+
+```
+![Quick buy](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/webui_price_ch.png?raw=true)
+```
 
 **快捷起装**
-> 使用`buy [index: int]`快速购买指定对局进入对局时的装备
-> 使用`buy [page: int] [limit: int] list`列出支持快捷起装的对局的列表(list可缩写为ls)
-> 使用`buy [index: int] preview`列出指定支持快捷起装的对局的装备与对应售价列表(preview可缩写为pv)
+
+对局详情页面查看 / 战绩列表页面查看
+
+> 可以快速购买指定对局进入对局时的装备
+> 可以筛选指定需要的装备类别
+
+```
+![Quick buy](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/webui_quickEquip_ch.png?raw=true)
+```
 
 **意外情况处理**
+
 - 模组会在服务端记录数据, 如果对局结束前服务端在非本模组原因下崩溃, 只要不是客户端刚对局结束时服务端就崩溃, 重启服务端仍然有概率(>90%)正确记录对局数据
 - 对局启动后Alt+F4或者客户端崩溃, 下一次启动战局后会导致记录的该战局的缓存对局结果被记录为未知结局
+
+**对局列表页面**
+
+```
+![Quick buy](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/webui_list_ch.png?raw=true)
+```
+
+**WebUI主页**
+
+```
+![Quick buy](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/webui_home_ch.png?raw=true)
+```
 
 ### 安装方式
 
@@ -77,12 +107,18 @@
 
 ### 设置
 
-1. 前往…/SPT/user/mods/RaidRecord/db 并打开“config.json”
-2. 设置`local`为db/locals文件夹下存在的翻译文件的二位名称, 例如"cn"
+1. 推荐方案, 直接在WebUI更改
+
+   ```
+   ![Quick buy](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/webui_setting_ch.png?raw=true)
+   ```
+2. 前往…/SPT/user/mods/RaidRecord/db 并打开“config.json”
+3. 设置`local`为db/locals文件夹下存在的翻译文件的二位名称, 例如"cn"
    > 更改任何语言后如果无效, 应该在Launcher清理本地缓存后再启动客户端
-3. 设置`logPath`以更改模组内一些日志的输出目录(这是为了避免模组报错信息导致SPT服务端日志过于繁琐的问题)
-4. 设置`autoUnloadOtherLanguages`, 以启用`0.6.4`开始的对多语言化的优化功能
-5. 设置`priceCacheUpdateMinTime`, 以更改模组价格缓存的更新间隔, 该设置不会影响`price`命令, `price`只会立刻获取当前模组计算的价格
+4. 设置`logPath`以更改模组内一些日志的输出目录(这是为了避免模组报错信息导致SPT服务端日志过于繁琐的问题)
+5. 设置`autoUnloadOtherLanguages`, 以启用`0.6.4`开始的对多语言化的优化功能
+6. 设置`priceCacheUpdateMinTime`, 以更改模组价格缓存的更新间隔, 该设置不会影响`price`命令, `price`只会立刻获取当前模组计算的价格
+7. 设置`modGiveIsFIR`, 以修改模组给的物资(在模组购买物品, 快速起装)是否是FIR(对局中发现(带勾))状态
 
 ### 数据库说明
 
@@ -112,7 +148,7 @@ config.json保存模组配置
 - items: 获取指定对局物资变化或带入带出清单, 可以限定只输出价格变化量处于[ge, le]之间的物品清单
 - list: 列出当前已有的所有对局记录, 页数越靠后, 对局越新; 可以通过`limit`参数调整每页显示数量
 - price: 获取指定物品价值, 或者通过名称模糊搜索多个物品价值
-- buy: 快速购买指定对局进入对局时的装备
+- buy: 快速购买指定对局进入对局时的装备(局内可以输入一个buy快速购买上局装备)
 
 ### 本地化方式
 
@@ -131,68 +167,5 @@ config.json保存模组配置
     - "armorZone": 搜索`DeathInfo`, `Collider Type`(推荐), `Armor Zone`, `HeadSegment`
 2. 急需使用命令, 优先翻译"translations"下的值
 3. 急需查看服务端输出的日志, 优先翻译"serverMessage"下的值
-
-## 使用示例图
-
-```markdown
-### Example Images
-
-#### Load mod
-![Load mod](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/modLoad_en.png?raw=true)
-
-#### cls cmd
-![Use cls cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/cls_en.png?raw=true)
-
-#### list cmd
-![Use list cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/list_en.png?raw=true)
-
-#### items cmd
-![Use items cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/items_en.png?raw=true)
-
-#### info cmd
-![Use info cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/info_en.png?raw=true)
-
-![Use info cmd too](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/info_kill_en.png?raw=true)
-> The previous image did not eliminate any bots; here’s an additional one as a supplement.
-
-#### price cmd
-
-![Use price cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/price_en.png?raw=true)
-
-#### buy cmd
-
-![Use buy cmd](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/buy_en.png?raw=true)
-
-### 示例图片
-
-#### 模组加载时
-![模组加载时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/modLoad_ch.png?raw=true)
-
-#### cls命令
-![使用cls命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/cls_ch.png?raw=true)
-
-#### list命令
-![使用list命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/list_ch.png?raw=true)
-
-#### items命令
-![使用items命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/items_ch.png?raw=true)
-
-#### info命令
-![使用info命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/info_ch.png?raw=true)
-
-![使用info命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/info_kill_ch.png?raw=true)
-> 上一份图片中未击杀任何人机, 额外补一张
-
-#### price命令
-
-![使用price命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/price_ch.png?raw=true)
-
-#### buy命令
-
-![使用buy命令时](https://github.com/SunYanbox/RaidRecord-ImageHosting/blob/main/buy_ch.png?raw=true)
-
-> 你可以只输入`buy`以快速购买上一把入局的装备
-
-```
 
 {.endtabset}

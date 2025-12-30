@@ -253,6 +253,9 @@ public class I18N(
     {
         Dictionary<string, string>? localesMap = locales.Global[CurrLang].Value;
         string warnMsg = "";
+        
+        MapNames.Clear();
+        ExitNames.Clear();
 
         // 获取地图的本地化表示
         foreach (string mapName in _mapNames)

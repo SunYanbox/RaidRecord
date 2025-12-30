@@ -333,6 +333,14 @@ public class DataGetterService(
         }
     }
 
+    /// <summary>
+    /// 重新初始化Name2Id
+    /// </summary>
+    public void ReInitName2Id()
+    {
+        _name2Id = null;
+    }
+
     public Dictionary<string, string> Name2Id
     {
         get
