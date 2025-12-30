@@ -29,6 +29,11 @@ public class I18NData
     /// </summary>
     [JsonPropertyName("roleNames")]
     public Dictionary<string, string> RoleNames { get; set; } = new();
+    /// <summary>
+    /// WebUI的本地化
+    /// </summary>
+    [JsonPropertyName("webUI")]
+    public WebUILocal? WebUI { get; set; } = new();
 
     [JsonIgnore]
     private Dictionary<string, string>? _allTransCache;
@@ -56,6 +61,11 @@ public class I18NData
                 _allTransCache.Add(key, value);
             }
             foreach ((string key, string value) in RoleNames)
+            {
+                _allTransCache.Add(key, value);
+            }
+            WebUI ??= new WebUILocal();
+            foreach ((string key, string value) in WebUI.ToDictionary())
             {
                 _allTransCache.Add(key, value);
             }

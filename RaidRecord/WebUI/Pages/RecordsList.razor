@@ -154,7 +154,7 @@
     {
         try
         {
-            return DataGetter.GetArchivesIndexed(WebData.CurrentAccount);
+            return DataGetter.GetArchivesIndexed(WebData.CurrAccount);
         }
         catch (Exception e)
         {
@@ -205,7 +205,7 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        if (string.IsNullOrEmpty(WebData.CurrentAccount))
+        if (string.IsNullOrEmpty(WebData.CurrAccount))
         {
             Navigation.NavigateTo("/RaidRecord", true);
         }

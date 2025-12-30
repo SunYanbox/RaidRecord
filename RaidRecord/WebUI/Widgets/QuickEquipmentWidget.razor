@@ -103,13 +103,13 @@
     {
         Item[] items = GetChoiceItems();
         double totalPrice = GetChoiceAllPrice();
-        PmcData? pmcData = DataGetter.GetPmcData(WebDataContext.CurrentAccount);
+        PmcData? pmcData = DataGetter.GetPmcData(WebDataContext.CurrAccount);
         if (pmcData == null | items.Length <= 0)
         {
             ModConfig.Warn("购买物品失败: 玩家数据获取失败");
             return;
         }
-        List<Warning>? warnings = ModMailService.Payment(WebDataContext.CurrentAccount, Convert.ToInt64(totalPrice), pmcData);
+        List<Warning>? warnings = ModMailService.Payment(WebDataContext.CurrAccount, Convert.ToInt64(totalPrice), pmcData);
 
         if (warnings?.Count > 0)
         {
@@ -118,7 +118,7 @@
         }
 
         List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
-        WebDataContext.CurrentAccount,
+        WebDataContext.CurrAccount,
         "您已购买物资",
         items.ToList(),
         true);
@@ -126,7 +126,7 @@
         if (warnings2?.Count > 0)
         {
             ModConfig.Warn($"发送物品失败: {string.Join("\n", warnings2.Select(x => x.ErrorMessage))}; 将回退扣费");
-            List<Warning>? warnings3 = ModMailService.SendMoney(WebDataContext.CurrentAccount, "回退资金", totalPrice);
+            List<Warning>? warnings3 = ModMailService.SendMoney(WebDataContext.CurrAccount, "回退资金", totalPrice);
 
             if (warnings3?.Count > 0)
             {

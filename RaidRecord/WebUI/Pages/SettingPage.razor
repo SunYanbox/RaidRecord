@@ -14,12 +14,12 @@
                Style="width: auto"
                Label="选择语言"
                AdornmentColor="Color.Secondary">
-        @foreach (string lang in I18N.AvailableLanguages)
+        @foreach (string lang in I18N.AvailableLang)
         {
             <MudSelectItem Value="@lang">@lang</MudSelectItem>
         }
     </MudSelect>
-    <MudSwitch @bind-Value="AutoUnloadOtherLanguages" Label="自动卸载多余语言包信息" Color="Color.Secondary"/>
+    <MudSwitch @bind-Value="AutoUnloadOtherLang" Label="自动卸载多余语言包信息" Color="Color.Secondary"/>
     <MudNumericField @bind-Value="PriceCacheUpdateMinTime" Label="价格缓存更新间隔" Variant="Variant.Text" Min="1" Max="604800000"/>
 
     <MudButton OnClick="@(() => OnSaveConfig())">保存设置</MudButton>
@@ -35,40 +35,40 @@
         set
         {
             if (string.IsNullOrEmpty(value)
-                || !I18N.AvailableLanguages.Contains(value)
-                || I18N.CurrentLanguage == value) return;
+                || !I18N.AvailableLang.Contains(value)
+                || I18N.CurrLang == value) return;
             _local = value;
-            I18N.CurrentLanguage = value;
+            I18N.CurrLang = value;
         }
     }
 
-    public bool AutoUnloadOtherLanguages { get; set; }
+    public bool AutoUnloadOtherLang { get; set; }
 
     public long PriceCacheUpdateMinTime { get; set; }
 
     private void OnSaveConfig()
     {
         if (!string.IsNullOrEmpty(_local) && _local.Length == 2) ModConfig.Configs.Local = _local;
-        ModConfig.Configs.AutoUnloadOtherLanguages = AutoUnloadOtherLanguages;
+        ModConfig.Configs.AutoUnloadOtherLang = AutoUnloadOtherLang;
         ModConfig.Configs.PriceCacheUpdateMinTime = PriceCacheUpdateMinTime;
         _ = ModConfig.SaveConfig();
-        Snackbar.Add($"保存成功 当前语言为 {I18N.CurrentLanguage}");
+        Snackbar.Add($"保存成功 当前语言为 {I18N.CurrLang}");
     }
 
     private void CancelSaveConfig()
     {
         _local = ModConfig.Configs.Local;
-        AutoUnloadOtherLanguages = ModConfig.Configs.AutoUnloadOtherLanguages;
+        AutoUnloadOtherLang = ModConfig.Configs.AutoUnloadOtherLang;
         PriceCacheUpdateMinTime = ModConfig.Configs.PriceCacheUpdateMinTime;
     }
 
     protected override void OnInitialized()
     {
         _local = ModConfig.Configs.Local;
-        AutoUnloadOtherLanguages = ModConfig.Configs.AutoUnloadOtherLanguages;
+        AutoUnloadOtherLang = ModConfig.Configs.AutoUnloadOtherLang;
         PriceCacheUpdateMinTime = ModConfig.Configs.PriceCacheUpdateMinTime;
         base.OnInitialized();
-        if (string.IsNullOrEmpty(WebData.CurrentAccount))
+        if (string.IsNullOrEmpty(WebData.CurrAccount))
         {
             Navigation.NavigateTo("/RaidRecord", true);
         }

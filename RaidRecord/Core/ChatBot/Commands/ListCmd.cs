@@ -48,7 +48,7 @@ public class ListCmd: CommandBase
         {
             ResultCount = countAfterCheck,
             TotalCount = countAfterCheck + results.JumpData,
-            PageCurrent = results.Page,
+            PageCurr = results.Page,
             PageTotal = results.PageMax
         });
         // string msg = $"历史战绩(共{countAfterCheck}/{totalCount}条, 第{page}页/共{(int)Math.Ceiling((double)totalCount / numberLimit)}页):\n";

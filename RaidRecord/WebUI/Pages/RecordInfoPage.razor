@@ -56,7 +56,7 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        if (string.IsNullOrEmpty(WebData.CurrentAccount))
+        if (string.IsNullOrEmpty(WebData.CurrAccount))
         {
             Navigation.NavigateTo("/RaidRecord", true);
         }
@@ -66,9 +66,9 @@
     {
         try
         {
-            return string.IsNullOrEmpty(WebData.CurrentAccount)
+            return string.IsNullOrEmpty(WebData.CurrAccount)
                 ? 0
-                : DataGetter.GetArchivesBySession(WebData.CurrentAccount).Count - 1;
+                : DataGetter.GetArchivesBySession(WebData.CurrAccount).Count - 1;
         }
         catch (Exception e)
         {
@@ -81,7 +81,7 @@
     {
         try
         {
-            WebData.LookingServerIds.Add(new ArchiveIndexed(DataGetter.GetArchiveWithIndex(index, WebData.CurrentAccount), index));
+            WebData.LookingServerIds.Add(new ArchiveIndexed(DataGetter.GetArchiveWithIndex(index, WebData.CurrAccount), index));
         }
         catch (Exception e)
         {

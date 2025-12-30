@@ -171,7 +171,7 @@ public class BuyCmd: CommandBase
         {
             ResultCount = countAfterCheck,
             TotalCount = totalCount,
-            PageCurrent = page,
+            PageCurr = page,
             PageTotal = pageTotal
         });
         int jump = countBeforeCheck - countAfterCheck;

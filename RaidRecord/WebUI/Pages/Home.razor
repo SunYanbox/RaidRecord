@@ -13,7 +13,7 @@
 
 <MainLayout/>
 
-<MudSelect @bind-Value="WebData.CurrentAccount"
+<MudSelect @bind-Value="WebData.CurrAccount"
            Style="width: auto"
            Label="选择存档"
            AdornmentColor="Color.Secondary">
@@ -23,7 +23,7 @@
     }
 </MudSelect>
 
-<ProfileInfoWidget SptProfile="GetCurrentSptProfile()"></ProfileInfoWidget>
+<ProfileInfoWidget SptProfile="GetCurrSptProfile()"></ProfileInfoWidget>
 
 @code {
     private string GetName(MongoId session)
@@ -34,16 +34,16 @@
 
     private ReadOnlySet<MongoId> AccountAllExist => DataGetter.GetAllAccounts();
 
-    private SptProfile? GetCurrentSptProfile()
+    private SptProfile? GetCurrSptProfile()
     {
-        if (!MongoId.IsValidMongoId(WebData.CurrentAccount)) return null;
+        if (!MongoId.IsValidMongoId(WebData.CurrAccount)) return null;
         try
         {
-            return SaveServer.GetProfile(WebData.CurrentAccount);
+            return SaveServer.GetProfile(WebData.CurrAccount);
         }
         catch (Exception e)
         {
-            ModConfig.Warn($"无法获取到{WebData.CurrentAccount}的存档信息: {e.Message}");
+            ModConfig.Warn($"无法获取到{WebData.CurrAccount}的存档信息: {e.Message}");
             return null;
         }
     }
@@ -53,7 +53,7 @@
     /// </summary>
     protected override void OnInitialized()
     {
-        if (!string.IsNullOrEmpty(WebData.CurrentAccount)) return;
+        if (!string.IsNullOrEmpty(WebData.CurrAccount)) return;
         MongoId? choice = null;
         int recordsCount = 0;
         foreach (MongoId mongoId in AccountAllExist)
@@ -65,7 +65,7 @@
         }
         if (!string.IsNullOrEmpty(choice?.ToString()))
         {
-            WebData.CurrentAccount = choice.ToString()!;
+            WebData.CurrAccount = choice.ToString()!;
         }
     }
 }

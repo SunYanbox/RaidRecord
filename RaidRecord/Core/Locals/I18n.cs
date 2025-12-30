@@ -33,22 +33,28 @@ public class I18N(
     public Dictionary<string, string>? SptLocals => _sptLocals ??= GetSptLocals();
 
     /// <summary> 当前语言 </summary>
-    public string CurrentLanguage
+    public string CurrLang
     {
-        get => _currentLanguage;
+        get => _currentLang;
         set
         {
             if (!_allTrans.ContainsKey(value)) return;
-            if (_currentLanguage != value)
+            if (_currentLang != value)
                 _sptLocals = null;
-            _currentLanguage = value;
+            _currentLang = value;
         }
     }
-
+    
+    /// <summary> 当前语言 </summary>
+    public I18NData CurrLangData => _allTrans[_currentLang];
+    
+    /// <summary> 当前WebUILocal <remarks>获取不到WebUI回退到中文</remarks>> </summary>
+    public WebUILocal WebUILocal => CurrLangData.WebUI ??= new WebUILocal();
+    
     /// <summary> 只读属性, 查看支持的语言 </summary>
-    public List<string> AvailableLanguages => _allTrans.Keys.ToList();
+    public List<string> AvailableLang => _allTrans.Keys.ToList();
 
-    private string _currentLanguage = "ch"; // 默认语言
+    private string _currentLang = "ch"; // 默认语言
 
     // 所有的地图名称
     private readonly string[] _mapNames =
@@ -92,6 +98,7 @@ public class I18N(
                 try
                 {
                     _allTrans[fileName] = modHelper.GetJsonDataFromFile<I18NData>(localsDir, $"{fileName}.json");
+                    _allTrans[fileName].WebUI ??= new WebUILocal();
                 }
                 catch (Exception e)
                 {
@@ -99,15 +106,15 @@ public class I18N(
                 }
             }
 
-            CurrentLanguage = modConfig.Configs.Local;
+            CurrLang = modConfig.Configs.Local;
 
             // 从这里加载完毕
             modConfig.Info(GetText("I18N-Info.已加载语言信息", new
             {
-                AvailableLanguages = string.Join(", ", AvailableLanguages),
-                CurrentLanguage
+                AvailableLang = string.Join(", ", AvailableLang),
+                CurrLang
             }));
-            // modConfig.Info($"已加载语言: {string.Join(", ", AvailableLanguages)}");
+            // modConfig.Info($"已加载语言: {string.Join(", ", AvailableLang)}");
         }
         else
         {
@@ -117,12 +124,12 @@ public class I18N(
         }
 
 
-        if (modConfig.Configs.AutoUnloadOtherLanguages)
+        if (modConfig.Configs.AutoUnloadOtherLang)
         {
             // 卸载不用的语言内存
             foreach (string language in _allTrans.Keys.ToArray())
             {
-                if (language != "ch" && language != CurrentLanguage)
+                if (language != "ch" && language != CurrLang)
                 {
                     _allTrans.Remove(language);
                 }
@@ -142,7 +149,7 @@ public class I18N(
     {
         string errorKey = $"[Error {key}]";
         // 获取当前区域的本地化字典
-        if (!_allTrans.TryGetValue(CurrentLanguage, out I18NData? locales))
+        if (!_allTrans.TryGetValue(CurrLang, out I18NData? locales))
         {
             return !_allTrans.TryGetValue("ch", out I18NData? defaults1)
                 ? errorKey
@@ -219,12 +226,12 @@ public class I18N(
     /// </summary>
     public Dictionary<string, string>? GetSptLocals()
     {
-        return databaseServer.GetTables().Locales.Global[CurrentLanguage].Value;
+        return databaseServer.GetTables().Locales.Global[CurrLang].Value;
     }
 
     protected void InitI18N(Locations locations, LocaleBase locales)
     {
-        Dictionary<string, string>? localesMap = locales.Global[CurrentLanguage].Value;
+        Dictionary<string, string>? localesMap = locales.Global[CurrLang].Value;
         string warnMsg = "";
 
         // 获取地图的本地化表示
@@ -307,7 +314,7 @@ public class I18N(
     /// </summary>
     public string GetArmorZoneName(string key)
     {
-        return _allTrans[CurrentLanguage].ArmorZone.GetValueOrDefault(key, key);
+        return _allTrans[CurrLang].ArmorZone.GetValueOrDefault(key, key);
     }
 
     /// <summary>
@@ -315,6 +322,6 @@ public class I18N(
     /// </summary>
     public string GetRoleName(string key)
     {
-        return _allTrans[CurrentLanguage].RoleNames.GetValueOrDefault(key, key);
+        return _allTrans[CurrLang].RoleNames.GetValueOrDefault(key, key);
     }
 }

@@ -1,6 +1,6 @@
 {
   "local": "ch",
   "logPath": "log.log",
-  "autoUnloadOtherLanguages": false,
+  "autoUnloadOtherLang": false,
   "priceCacheUpdateMinTime": 360000
 }

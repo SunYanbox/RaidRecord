@@ -18,8 +18,8 @@ public record ModConfigData
     /// <summary>
     /// 在I18NManager加载完毕后卸载除了当前语言和ch的其他语言数据, 节省内存
     /// </summary>
-    [JsonPropertyName("autoUnloadOtherLanguages")]
-    public bool AutoUnloadOtherLanguages { get; set; } = true;
+    [JsonPropertyName("autoUnloadOtherLang")]
+    public bool AutoUnloadOtherLang { get; set; } = true;
     /// <summary>
     /// 价格缓存更新的最低时间
     /// </summary>

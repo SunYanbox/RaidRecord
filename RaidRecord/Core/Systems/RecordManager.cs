@@ -141,7 +141,7 @@ public class RecordManager(
                     "RecordManager-Error.加载记录数据时发生错误",
                     new
                     {
-                        CurrentVersion = modConfig.Metadata.Version.ToString(),
+                        CurrVersion = modConfig.Metadata.Version.ToString(),
                         FilePath = file,
                         ErrorMessage = e.Message
                     }
