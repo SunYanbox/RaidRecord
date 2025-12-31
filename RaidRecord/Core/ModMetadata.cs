@@ -14,7 +14,7 @@ public record ModMetadata: AbstractModMetadata, IModWebMetadata {
     public override string Name { get; init; } = "RaidRecord";
     public override string Author { get; init; } = "Suntion";
     public override List<string>? Contributors { get; init; }
-    public override Version Version { get; init; } = new("0.6.8");
+    public override Version Version { get; init; } = new("0.6.9");
     public override Range SptVersion { get; init; } = new("~4.0.0");
 
     public override List<string>? Incompatibilities { get; init; }

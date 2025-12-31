@@ -156,7 +156,9 @@
     {
         try
         {
-            return DataGetter.GetArchivesIndexed(WebData.CurrAccount);
+            List<ArchiveIndexed> archivesIndexed = DataGetter.GetArchivesIndexed(WebData.CurrAccount);
+            archivesIndexed.Reverse();
+            return archivesIndexed;
         }
         catch (Exception e)
         {
