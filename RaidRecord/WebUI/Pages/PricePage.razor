@@ -3,6 +3,7 @@
 @using SPTarkov.Server.Core.Models.Eft.Common
 @using SPTarkov.Server.Core.Models.Eft.Common.Tables
 @using SPTarkov.Server.Core.Models.Eft.ItemEvent
+@using SPTarkov.Server.Core.Servers
 @using Color = MudBlazor.Color
 
 @inject I18N I18N
@@ -126,14 +127,19 @@
                 ModConfig.Warn("购买物品失败: 物资模版ID为空");
                 return;
             }
-
+            if (WillBuy?.TplId is null)
+            {
+                ModConfig.Warn("发送物品失败: 选择的物品模版ID为空");
+                return;
+            }
             string buySuccess = I18N.DumpFormatStrLocal(I18N.WebUILocal.SuccessBuyItemMsg,
             new {
                 WillBuy?.Name,
                 StackObjectsCount = _num,
                 TotalPrice
             });
-
+            Upd upd = ItemHelper.GenerateUpdForItem(DbServer.GetTables().Templates.Items[WillBuy?.TplId!]);
+            upd.StackObjectsCount = _num;
             List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
                 WebData.CurrAccount,
                 buySuccess,
@@ -141,10 +147,7 @@
                 {
                     Id = new MongoId(),
                     Template = WillBuy?.TplId ?? "",
-                    Upd = new Upd
-                    {
-                        StackObjectsCount = _num
-                    }
+                    Upd = upd
                 }).SelectMany(x => x).ToList());
 
             if (warnings2?.Count > 0)
@@ -166,6 +169,8 @@
 @code 
 {
     public required MudMessageBox QuickBuyItemMegBox;
+    
+    [Inject] public required DatabaseServer DbServer { get; set; }
 
     public void OnQuickBuyItem(PriceItem item)
     {
