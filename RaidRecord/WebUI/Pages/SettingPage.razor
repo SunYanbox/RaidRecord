@@ -11,6 +11,8 @@
 
 <MudPaper>
     <MudText Typo="Typo.h4">@I18N.WebUILocal.SettingTitle</MudText>
+    <MudStack>
+        @* 本地化语言 *@
         <MudSelect @bind-Value="Local"
                    Style="width: auto"
                    Label="@I18N.WebUILocal.SelectLang"
@@ -20,14 +22,23 @@
                 <MudSelectItem Value="@lang">@lang</MudSelectItem>
             }
         </MudSelect>
-    <MudTooltip Text="@I18N.WebUILocal.AutoUnloadLangDesc">
-        <MudSwitch @bind-Value="AutoUnloadOtherLang" Label="@I18N.WebUILocal.AutoUnloadLang" Color="Color.Secondary"/>
-    </MudTooltip>
-    <MudNumericField @bind-Value="PriceCacheUpdateMinTime" Label="@I18N.WebUILocal.PriceCacheUpdateMinTime" Variant="Variant.Text" Min="1" Max="604800000"/>
-    <MudTooltip Text="@I18N.WebUILocal.ModGiveIsFIRDesc">
-        <MudSwitch @bind-Value="ModGiveIsFIR" Label="@I18N.WebUILocal.ModGiveIsFIR" Color="Color.Info"/>
-    </MudTooltip>
-    <MudSwitch @bind-Value="DarkMode" Label="@I18N.WebUILocal.IsDarkMode" Color="Color.Info"/>
+        @* 自动卸载其他语言 *@
+        <MudTooltip Text="@I18N.WebUILocal.AutoUnloadLangDesc">
+            <MudSwitch @bind-Value="AutoUnloadOtherLang" Label="@I18N.WebUILocal.AutoUnloadLang" Color="Color.Secondary"/>
+        </MudTooltip>
+        @* 价格缓存更新时间 *@
+        <MudNumericField @bind-Value="PriceCacheUpdateMinTime" Label="@I18N.WebUILocal.PriceCacheUpdateMinTime" Variant="Variant.Text" Min="1" Max="604800000"/>
+        @* 模组 Give 是否为 FIR *@
+        <MudTooltip Text="@I18N.WebUILocal.ModGiveIsFIRDesc">
+            <MudSwitch @bind-Value="ModGiveIsFIR" Label="@I18N.WebUILocal.ModGiveIsFIR" Color="Color.Info"/>
+        </MudTooltip>
+        @* 深色模式 *@
+        <MudSwitch @bind-Value="DarkMode" Label="@I18N.WebUILocal.IsDarkMode" Color="Color.Info"/>
+        @* 维修耐久度 *@
+        <MudTooltip Text="@I18N.WebUILocal.IsRepairDurabilityDesc">
+            <MudSwitch @bind-Value="IsRepairDurability" Label="@I18N.WebUILocal.IsRepairDurability" Color="Color.Info"/>
+        </MudTooltip>
+    </MudStack>
     
     <MudStack Row="true">
         <MudButton OnClick="@(() => OnSaveConfig())">@I18N.WebUILocal.SaveConfigChange</MudButton>
@@ -41,7 +52,7 @@
 @code {
     string? _local;
 
-    public string? Local
+    protected string? Local
     {
         get => _local;
         set
@@ -53,13 +64,15 @@
         }
     }
 
-    public bool AutoUnloadOtherLang { get; set; }
+    protected bool AutoUnloadOtherLang { get; set; }
 
-    public long PriceCacheUpdateMinTime { get; set; }
+    protected long PriceCacheUpdateMinTime { get; set; }
 
-    public bool ModGiveIsFIR { get; set; }
+    protected bool ModGiveIsFIR { get; set; }
     
-    public bool DarkMode { get; set; }
+    protected bool DarkMode { get; set; }
+    
+    protected bool IsRepairDurability { get; set; }
     
     private void OnSaveConfig()
     {
@@ -75,6 +88,7 @@
         ModConfig.Configs.PriceCacheUpdateMinTime = PriceCacheUpdateMinTime;
         ModConfig.Configs.ModGiveIsFIR = ModGiveIsFIR;
         ModConfig.Configs.DarkMode = DarkMode;
+        ModConfig.Configs.IsRepairDurability = IsRepairDurability;
         _ = ModConfig.SaveConfig();
         Snackbar.Add(I18N.DumpFormatStrLocal(I18N.WebUILocal.SaveConfigSuccess, new { CurrLang = _local }));
     }
@@ -93,6 +107,7 @@
         PriceCacheUpdateMinTime = ModConfig.Configs.PriceCacheUpdateMinTime;
         ModGiveIsFIR = ModConfig.Configs.ModGiveIsFIR;
         DarkMode = ModConfig.Configs.DarkMode;
+        IsRepairDurability = ModConfig.Configs.IsRepairDurability;
         base.OnInitialized();
         if (string.IsNullOrEmpty(WebData.CurrAccount))
         {

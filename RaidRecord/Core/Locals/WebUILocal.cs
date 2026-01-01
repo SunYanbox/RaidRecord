@@ -252,6 +252,9 @@ public class WebUILocal
     /// <summary>请确认是否消耗{{TotalPrice}}rub购买装备</summary>
     [JsonPropertyName("beforePaymentTip")]
     public string BeforePaymentTip { get; set; } = "请确认是否消耗{{TotalPrice}}rub购买装备";
+    /// <summary>已启用修复耐久</summary>
+    [JsonPropertyName("alreadyEnableDurabilityRepair")]
+    public string AlreadyEnableDurabilityRepair { get; set; } = "已启用修复耐久";
     #endregion
     
     #region 价格页面
@@ -333,6 +336,12 @@ public class WebUILocal
     /// <summary>是否使用暗色模式</summary>
     [JsonPropertyName("isDarkMode")]
     public string IsDarkMode { get; set; } = "是否使用暗色模式";
+    /// <summary>快速起装页面购买物品时是否修复物品耐久</summary>
+    [JsonPropertyName("isRepairDurability")]
+    public string IsRepairDurability { get; set; } = "是否修复耐久";
+    /// <summary>快速起装页面购买物品时是否修复物品耐久</summary>
+    [JsonPropertyName("isRepairDurabilityDesc")]
+    public string IsRepairDurabilityDesc { get; set; } = "快速起装页面购买物品时是否修复物品耐久";
     #endregion
     
     #region 导航栏链接文本

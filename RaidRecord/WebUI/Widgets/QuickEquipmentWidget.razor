@@ -3,9 +3,11 @@
 @using SPTarkov.Server.Core.Models.Eft.Common
 @using SPTarkov.Server.Core.Models.Eft.Common.Tables
 @using SPTarkov.Server.Core.Models.Eft.ItemEvent
-@using Color = MudBlazor.Color
+@using SPTarkov.Server.Core.Utils.Cloners
+@using Color=MudBlazor.Color
 
 @inject I18N I18N
+@inject ICloner Cloner
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig
 @inject ItemHelper ItemHelper
@@ -15,74 +17,82 @@
 @inject WebDataContext WebDataContext
 @inject AlgorithmService AlgorithmService
 
-<MudPaper Class="pa-16 ma-2" Outlined="true">
-    <MudText Typo="Typo.h4">@I18N.WebUILocal.EquipmentInfo</MudText>
-    <MudSpacer/>
-    @if (_initEd)
+<MudPaper Outlined="true" MaxHeight="@MaxHeight" Class="overflow-y-auto pa-16 ma-2">
+    @if (NeedRebuildTree)
     {
-        <MudStack>
-            <MudStack Row="true">
-                <MudText Typo="Typo.body1">@(I18N.WebUILocal.ChoiceTotalValue):</MudText>
-                <MudText Color="Color.Info">@(GetChoiceAllPriceFormat())</MudText>
-                @if (TreeView is not null)
-                {
-                    <MudButton Color="Color.Primary" OnClick="@(() => TreeView.ExpandAllAsync())" Variant="Variant.Text">@I18N.WebUILocal.Link(I18N.WebUILocal.Expand, I18N.WebUILocal.All)</MudButton>
-                    <MudButton Color="Color.Dark" OnClick="@(() => TreeView.CollapseAllAsync())" Variant="Variant.Text">@I18N.WebUILocal.Link(I18N.WebUILocal.Collapse, I18N.WebUILocal.All)</MudButton>
-                }
-            
-                @if (ProvideQuickBuy)
-                {
-                    <MudButton
-                        StartIcon="@Icons.Material.Filled.Payment"
-                        Disabled="@(GetChoiceAllPrice() <= 0)"
-                        OnClick="@(() => QuickBuyEquipmentMegBox.ShowAsync())">
-                        @I18N.WebUILocal.NowPayment
-                    </MudButton>
-                }
-            </MudStack>
-            <MudStack Row="true">
-                <MudSwitch @bind-Value="LabelSwitchWeapon" Label="@I18N.WebUILocal.Weapon" Color="Color.Success"/>
-                <MudSwitch @bind-Value="LabelSwitchWeaponMod" Label="@I18N.WebUILocal.WeaponMod" Color="Color.Success"/>
-                <MudSwitch @bind-Value="LabelSwitchHead" Label="@I18N.WebUILocal.Head" Color="Color.Success"/>
-                <MudSwitch @bind-Value="LabelSwitchArmor" Label="@I18N.WebUILocal.Armor" Color="Color.Success"/>
-                <MudSwitch @bind-Value="LabelSwitchVest" Label="@I18N.WebUILocal.Vest" Color="Color.Success"/>
-                <MudSwitch @bind-Value="LabelSwitchBackpack" Label="@I18N.WebUILocal.Backpack" Color="Color.Success"/>
-                <MudSwitch @bind-Value="LabelSwitchEquipmentMod" Label="@I18N.WebUILocal.EquipMod" Color="Color.Success"/>
-            </MudStack>
-        </MudStack>
-
-        @if (Equipments.Length == 0)
-        {
-            <MudAlert Color="Color.Warning">@I18N.WebUILocal.NoEquipInfoInThisArchive</MudAlert>
-        }
-        else
-        {
-            <MudTreeView @ref="TreeView" MaxHeight="400px" Class="overflow-y-auto" Items="@TreeItems" ReadOnly="@true" Hover="@true" Dense="@true" ExpandOnClick="@true">
-                <ItemTemplate>
-                    @{
-                        RRTreeItemData presenter = context as RRTreeItemData 
-                                                   ?? throw new InvalidOperationException("RRTreeItemData is null");
-                        <MudTreeViewItem
-                            @bind-Expanded="@presenter.Expanded"
-                            Items="@presenter.Children?.AsReadOnly()"
-                            Value="@presenter.Value"
-                            Icon="@presenter.Icon"
-                            Text="@presenter.Text"
-                            EndText="@GetEndText(presenter)"
-                            EndTextTypo="@Typo.caption"
-                            Disabled="@IsNodeDisable(presenter.ItemId)"/>
-                    }
-                </ItemTemplate>
-            </MudTreeView>
-        }
+        RebuildTree();
+    }
+    @if (!_initEd)
+    {
+        // 没加载完毕显示一个占位框
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="800px" Height="@MaxHeight"/>
+    }
+    else if (_initEd && Items.Length == 0)
+    {
+        // 没加载完毕显示一个占位框
+        <MudText Style="max-height: 50px; max-width: 800px">@I18N.WebUILocal.NoEquipInfoInThisArchive</MudText>
     }
     else
     {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7"/>
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudButton Color="Color.Primary" OnClick="@(() => ExpandAllAsync())">@I18N.WebUILocal.Link(I18N.WebUILocal.Expand, I18N.WebUILocal.All)</MudButton>
+            <MudButton Color="Color.Primary" OnClick="@(() => CollapseAllAsync())">@I18N.WebUILocal.Link(I18N.WebUILocal.Collapse, I18N.WebUILocal.All)</MudButton>
+            <MudText>@(I18N.WebUILocal.Link(I18N.WebUILocal.ChoiceTotalValue, GetAllPriceText()))</MudText>
+            @if (ProvideQuickBuy)
+            {
+                <MudButton StartIcon="@Icons.Material.Filled.Payment" OnClick="@(() => RefQuickBuyEquipmentMegBox!.ShowAsync())">@I18N.WebUILocal.ConfirmPayment</MudButton>
+            }
+            @if (IsRepair)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh"/>
+                <MudText>@I18N.WebUILocal.AlreadyEnableDurabilityRepair</MudText>
+            }
+        </MudStack>
+        <MudStack Row="true">
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Weapon]" Label="@I18N.WebUILocal.Weapon" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.WeaponMod]" Label="@I18N.WebUILocal.WeaponMod" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Head]" Label="@I18N.WebUILocal.Head" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Armor]" Label="@I18N.WebUILocal.Armor" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Vest]" Label="@I18N.WebUILocal.Vest" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Backpack]" Label="@I18N.WebUILocal.Backpack" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.EquipmentMod]" Label="@I18N.WebUILocal.EquipMod" Color="Color.Success"/>
+        </MudStack>
+        <MudTreeView @ref="RefTreeView" Items="@TreeItemsMud" Height="@MaxHeight"
+                     ReadOnly="@true" Hover="@true" Dense="@true" ExpandOnClick="@true">
+            <ItemTemplate>
+                @{
+                    RRTreeItemData presenter = context as RRTreeItemData
+                                               ?? throw new InvalidOperationException("RRTreeItemData is null");
+                    MongoId itemId = presenter.ItemId;
+                    double modify = ItemHelper.GetItemQualityModifier(TreeItemsMap![itemId].Data);
+                    Color widgetColor = GetWidgetColor(!IsNodeDisable(itemId));
+                    <MudTreeViewItem
+                        @bind-Expanded="@presenter.Expanded"
+                        Items="@presenter.Children?.AsReadOnly()"
+                        Value="@itemId"
+                        Icon="@presenter.Icon">
+                        <Content>
+                            <MudStack Row="true">
+                                @* 展开 / 折叠按钮 *@
+                                <MudTreeViewItemToggleButton @bind-Expanded="@presenter.Expanded" Visible="@(presenter.Children?.Count > 0)"/>
+                                @* 显示的名称与价格 *@
+                                <MudText Color="@widgetColor">
+                                    @I18N.WebUILocal.Link(presenter.Text!, GetNodePriceEndText(presenter))
+                                </MudText>
+                                @* 显示耐久 *@
+                                <MudText Color="@widgetColor" Typo="Typo.caption">
+                                    @($"x {modify:F4}")
+                                </MudText>
+                            </MudStack>
+                        </Content>
+                    </MudTreeViewItem>
+                }
+            </ItemTemplate>
+        </MudTreeView>
     }
 </MudPaper>
 
-<MudMessageBox @ref="QuickBuyEquipmentMegBox" Title="Info" CancelText="@I18N.WebUILocal.Cancel">
+<MudMessageBox @ref="RefQuickBuyEquipmentMegBox" Title="Info" CancelText="@I18N.WebUILocal.Cancel">
     <MessageContent>
         <MudText Typo="Typo.body2" Color="Color.Info">
             @I18N.DumpFormatStrLocal(I18N.WebUILocal.BeforePaymentTip, new { TotalPrice = GetChoiceAllPrice() })
@@ -97,72 +107,273 @@
 </MudMessageBox>
 
 @code {
+    // 对外属性
     /// <summary> 存档 </summary>
     [Parameter] public required RaidArchive Archive { get; set; }
-    /// <summary> 是否提供快速购买按钮 </summary>
-    [Parameter] public bool ProvideQuickBuy { get; set; }
     /// <summary> 初始化的异步延迟 用来避免其他控件卡住 </summary>
     [Parameter] public int InitDelay { get; set; } = 200;
+    /// <summary> 是否提供快速购买按钮 </summary>
+    [Parameter] public bool ProvideQuickBuy { get; set; } = true;
+    /// <summary> 控件显示的最大高度 </summary>
+    [Parameter] public string MaxHeight { get; set; } = "500px";
+    /// <summary> 启用的物品的颜色 </summary>
+    [Parameter] public Color EnableColor { get; set; } = Color.Info;
+    /// <summary> 排除的物品的颜色 </summary>
+    [Parameter] public Color ExcludeColor { get; set; } = Color.Error;
 
-    /// <summary> 控制是否需要构建树 </summary>
-    private bool _needInitTree = true;
+    private bool _isRepair;
+    protected bool NeedRebuildTree;
+
+    /// <summary> 是否修复物品耐久 </summary>
+    protected bool IsRepair
+    {
+        get => _isRepair;
+        set
+        {
+            if (_isRepair == value) return;
+            NeedRebuildTree = true;
+            _isRepair = value;
+        }
+    }
+
+    /// <summary> 对局ServerId(必须提供) </summary>
+    protected string ServerId => Archive.ServerId;
+
+    /// <summary> 原始物品列表 </summary>
+    protected Item[]? OriginalItems;
+
+    /// <summary> 修复后的物品列表 </summary>
+    protected Item[]? RepairItems;
+
+    protected void RebuildTree()
+    {
+        OriginalItems = Archive.EquipmentItems ?? [];
+        RepairItems = GetRepairItems(OriginalItems).ToArray();
+        (TreeItems, TreeItemsMap) = AlgorithmService.GetTreeItems(Items);
+        TreeItemsMud = AlgorithmService.ConvertToTreeItems(TreeItems);
+        NeedRebuildTree = false;
+    }
+
+    /// <summary> 物品列表(必须提供) </summary>
+    protected Item[] Items => IsRepair ? RepairItems! : OriginalItems!;
+
     /// <summary> ref MudMessageBox </summary>
-    public required MudMessageBox QuickBuyEquipmentMegBox;
-    /// <summary> ref MudTreeView </summary>
-    public required MudTreeView<MongoId>? TreeView;
-    /// <summary> 用于延迟数据加载 </summary>
-    private bool _initEd;
-    private bool LabelSwitchWeapon { get; set; } = true;
-    private bool LabelSwitchWeaponMod { get; set; } = true;
-    private bool LabelSwitchHead { get; set; } = true;
-    private bool LabelSwitchArmor { get; set; } = true;
-    private bool LabelSwitchBackpack { get; set; } = true;
-    private bool LabelSwitchVest { get; set; } = true;
-    private bool LabelSwitchEquipmentMod { get; set; } = true;
-    
-    protected override void OnParametersSet()
-    {
-        _needInitTree = true;
-    }
-    
-    /// <summary> 物品节点树 </summary>
-    private List<TreeNode<Item>>? _treeItems;
-    /// <summary> ID->节点的映射 </summary>
-    private Dictionary<MongoId, TreeNode<Item>>? _treeItemsMap;
-    /// <summary> 给MudTreeView使用的 </summary>
-    private List<RRTreeItemData>? _treeItemsMud;
-    
-    public List<RRTreeItemData> TreeItems => GetTreeItems();
+    protected MudMessageBox? RefQuickBuyEquipmentMegBox;
 
-    /// <summary>
-    /// 初始化树节点 除非把_needInitTree设置为true, 否则不会初始化
-    /// </summary>
-    public void InitAllTree()
+    /// <summary> ref MudTreeView </summary>
+    protected MudTreeView<MongoId>? RefTreeView;
+
+    /// <summary> 修复物品列表 </summary>
+    protected IEnumerable<Item> GetRepairItems(IEnumerable<Item> items)
     {
-        if (_needInitTree)
+        // 创建副本
+        items = items.Select(x => Cloner.Clone(x)) // 创建副本
+            .Where(x => x is not null) // 排除空值
+            .Cast<Item>(); // 强制转换
+        // 修复物品耐久
+        IEnumerable<Item> repairItems = items as Item[] ?? items.ToArray();
+        foreach (Item item in repairItems)
         {
-            _treeItems = null;
-            _treeItemsMap = null;
-            _treeItemsMud = null;
-            _needInitTree = false;
+            // ModConfig.Info($"Repairing item: {item.Template}");
+            TemplateItem? itemDetails = ItemHelper.GetItem(item.Template).Value;
+            if (itemDetails?.Properties is null)
+            {
+                ModConfig.Warn($"Item: {item.Template} lacks properties, cannot ascertain quality level, assuming 100%");
+                continue;
+            }
+            if (item.Upd is null) continue;
+            TemplateItemProperties itemProperties = itemDetails.Properties;
+            if (item.Upd.MedKit is not null)
+            {
+                // Meds
+                item.Upd.MedKit.HpResource = itemProperties.MaxHpResource;
+            }
+            else if (item.Upd.Repairable is not null)
+            {
+                double? maxPossibleDurability = itemProperties.MaxDurability ?? item.Upd.Repairable.MaxDurability;
+                item.Upd.Repairable.Durability = maxPossibleDurability;
+            }
+            else if (item.Upd.FoodDrink is not null)
+            {
+                item.Upd.FoodDrink.HpPercent = itemProperties.MaxResource;
+            }
+            else if (item.Upd.Key?.NumberOfUsages > 0 && itemProperties.MaximumNumberOfUsage > 0)
+            {
+                // keys - keys count upwards, not down like everything else
+                int? maxNumOfUsages = itemProperties.MaximumNumberOfUsage.GetValueOrDefault(0);
+                item.Upd.Key.NumberOfUsages = maxNumOfUsages;
+            }
+            else if (item.Upd.Resource?.UnitsConsumed > 0) // Item is less than 100% usage
+            {
+                // E.g. fuel tank
+                item.Upd.Resource.Value = itemProperties.MaxResource;
+            }
+            else if (item.Upd.RepairKit is not null)
+            {
+                item.Upd.RepairKit.Resource = itemProperties.MaxRepairResource;
+            }
         }
-        if (_treeItems == null || _treeItemsMap == null)
+        return repairItems;
+    }
+
+    /// <summary>获取所有选择的可用物品(未排除的)</summary>
+    public IEnumerable<Item> GetChoiceEnableItems()
+    {
+        return Items
+            .Where(item => !IsNodeDisable(item.Id))
+            .Select(x => Cloner.Clone(x)) // 创建副本
+            .Where(x => x is not null) // 排除空值
+            .Cast<Item>(); // 强制转换
+    }
+
+    /// <summary>获取当前节点物品的价值</summary>
+    private double GetNodePrice(RRTreeItemData node)
+    {
+        double baseValue = PriceSystem.GetItemValueWithCache(node.TplId);
+        if (!TreeItemsMap!.TryGetValue(node.ItemId, out TreeNode<Item>? nodeItem)) return 0;
+        double modify = ItemHelper.GetItemQualityModifier(nodeItem.Data);
+        if (IsRepair) return baseValue;
+        return baseValue * modify;
+    }
+
+    /// <summary> 展开所有节点 </summary>
+    public async Task ExpandAllAsync()
+    {
+        await RefTreeView!.ExpandAllAsync();
+    }
+
+    /// <summary> 收缩所有节点 </summary>
+    public async Task CollapseAllAsync()
+    {
+        await RefTreeView!.CollapseAllAsync();
+    }
+
+    private string GetAllPriceText() => $"{GetChoiceAllPrice():F2}rub";
+
+    private string GetNodePriceEndText(RRTreeItemData node) => $"{GetNodePrice(node):F2}rub";
+
+    private Color GetWidgetColor(bool isEnable) => isEnable ? EnableColor : ExcludeColor;
+
+    public enum ItemType
+    {
+        /// <summary> 武器 </summary>
+        Weapon,
+
+        /// <summary> 武器配件 </summary>
+        WeaponMod,
+
+        /// <summary> 头部装备 </summary>
+        Head,
+
+        /// <summary> 护甲 </summary>
+        Armor,
+
+        /// <summary> 胸挂 </summary>
+        Vest,
+
+        /// <summary> 背包 </summary>
+        Backpack,
+
+        /// <summary> 配件 </summary>
+        EquipmentMod
+    }
+
+    /// <summary> 启用的物品类型 </summary>
+    public readonly Dictionary<ItemType, bool> EnabledItemTypes = Enum.GetValues<ItemType>().ToDictionary(x => x, _ => true);
+
+    /// <summary> 物品节点树 </summary>
+    protected List<TreeNode<Item>>? TreeItems;
+
+    /// <summary> ID->节点的映射 </summary>
+    protected Dictionary<MongoId, TreeNode<Item>>? TreeItemsMap;
+
+    /// <summary> 给MudTreeView使用的缓存 </summary>
+    protected List<RRTreeItemData>? TreeItemsMud;
+
+    /// <summary> 用于确认初始化延迟是否结束 </summary>
+    private bool _initEd;
+
+    /// <summary> 判断一个ItemId对应的节点是否被排除 </summary>
+    private bool IsNodeDisable(MongoId itemId)
+    {
+        return !TreeItemsMap!.TryGetValue(itemId, out TreeNode<Item>? itemNode)
+               || AnyFatherClassesExclude(itemNode);
+    }
+
+    /// <summary> 判断一个节点或他的任意一个父节点的模板ID分类被排除 </summary>
+    private bool AnyFatherClassesExclude(TreeNode<Item> node)
+    {
+        return AnyFatherNode(node, treeNode => IsClassesExclude(treeNode.Data.Template));
+
+        bool IsClassesExclude(MongoId tplId)
         {
-            (_treeItems, _treeItemsMap) = 
-                AlgorithmService.GetTreeItems(Archive.EquipmentItems ?? []);
+            if (!EnabledItemTypes[ItemType.Weapon] && ItemHelper.IsOfBaseclasses(tplId, DataGetter.WeaponClassesAlls)) return true;
+
+            if (!EnabledItemTypes[ItemType.WeaponMod] && ItemHelper.IsOfBaseclasses(tplId, DataGetter.WeaponModClassesAll)) return true;
+
+            if (!EnabledItemTypes[ItemType.Head] && ItemHelper.IsOfBaseclasses(tplId, DataGetter.HeadClassesAlls)) return true;
+
+            if (!EnabledItemTypes[ItemType.Armor] && ItemHelper.IsOfBaseclasses(tplId, DataGetter.ArmorClassesAlls)) return true;
+
+            if (!EnabledItemTypes[ItemType.Vest] && ItemHelper.IsOfBaseclasses(tplId, DataGetter.VestClassesAlls)) return true;
+
+            if (!EnabledItemTypes[ItemType.Backpack] && ItemHelper.IsOfBaseclasses(tplId, DataGetter.BackpackClassesAlls)) return true;
+
+            if (!EnabledItemTypes[ItemType.EquipmentMod] && ItemHelper.IsOfBaseclasses(tplId, DataGetter.EquipmentModClassesAll)) return true;
+
+            return false;
         }
-        _treeItemsMud ??= AlgorithmService.ConvertToTreeItems(_treeItems);
     }
-    
-    public List<RRTreeItemData> GetTreeItems()
+
+    /// <summary> 判断一个节点或他的任意一个父节点是否满足条件 </summary>
+    private bool AnyFatherNode(TreeNode<Item> node, Func<TreeNode<Item>, bool> predicate)
     {
-        InitAllTree();
-        return _treeItemsMud!;
+        if (predicate(node)) return true;
+        MongoId? fatherId = node.ParentId;
+        while (fatherId != null)
+        {
+            if (!TreeItemsMap!.TryGetValue(fatherId.Value, out TreeNode<Item>? fatherNode))
+                return false;
+            if (predicate(fatherNode)) return true;
+            fatherId = fatherNode.ParentId;
+        }
+        return false;
     }
-    
-    public void QuickBuy()
+
+    protected async override Task OnInitializedAsync()
     {
-        Item[] items = GetChoiceItems();
+        if (!_initEd)
+        {
+            await Task.Delay(InitDelay);
+            try
+            {
+                RebuildTree();
+                _initEd = true;
+                IsRepair = ModConfig.Configs.IsRepairDurability;
+            }
+            catch (Exception e)
+            {
+                ModConfig.Error($"ItemTreeViewWidget在OnInitializedAsync中初始化时出错: ", e);
+                throw;
+            }
+        }
+        await base.OnInitializedAsync();
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        IsRepair = ModConfig.Configs.IsRepairDurability;
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private double GetChoiceAllPrice()
+    {
+        return GetChoiceEnableItems().Sum(x => PriceSystem.GetItemValueWithCache(x));
+    }
+
+    private void QuickBuy()
+    {
+        Item[] items = GetChoiceEnableItems().ToArray();
         double totalPrice = GetChoiceAllPrice();
         PmcData? pmcData = DataGetter.GetPmcData(WebDataContext.CurrAccount);
         if (pmcData == null | items.Length <= 0)
@@ -177,16 +388,17 @@
             ModConfig.Warn($"购买物品失败: {string.Join("\n", warnings.Select(x => x.ErrorMessage))}");
             return;
         }
-        
+
         string buySuccess = I18N.DumpFormatStrLocal(I18N.WebUILocal.SuccessBuyItemMsg,
         new {
-            Name = I18N.DumpFormatStrLocal(I18N.WebUILocal.EquipOwn, new { Archive.ServerId }),
+            Name = I18N.DumpFormatStrLocal(I18N.WebUILocal.EquipOwn, new {
+                ServerId
+            }),
             StackObjectsCount = items.Length,
             TotalPrice = totalPrice
         });
 
-        List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
-        WebDataContext.CurrAccount,
+        List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(WebDataContext.CurrAccount,
         buySuccess,
         items.ToList());
 
@@ -202,69 +414,5 @@
             return;
         }
         Snackbar.Add(buySuccess);
-    }
-
-    protected async override Task OnInitializedAsync()
-    {
-        if (!_initEd)
-        {
-            await Task.Delay(InitDelay);
-            _initEd = true;
-        }
-        await base.OnInitializedAsync();
-    }
-
-    /// <summary>获取所有选择的物品</summary>
-    public Item[] GetChoiceItems() => Equipments.Where(item => !IsNodeDisable(item.Id)).ToArray();
-
-    /// <summary> 获取所有选择的物品总价值 </summary>
-    public double GetChoiceAllPrice()
-    {
-        return GetChoiceItems().Sum(x => PriceSystem.GetItemValueWithCache(x.Template));
-    }
-
-    /// <summary> 获取所有选择的物品总价的字符串 </summary>
-    public string GetChoiceAllPriceFormat() => $"{GetChoiceAllPrice():F2}rub";
-
-    private string GetEndText(RRTreeItemData node) => $"{PriceSystem.GetItemValueWithCache(node.TplId):F2}rub";
-
-    public Item[] Equipments => Archive.EquipmentItems ?? [];
-
-    /// <summary> 判断节点是否禁用 </summary>
-    /// <param name="itemId">节点ID, 不可以是TempleID</param>
-    public bool IsNodeDisable(MongoId itemId)
-    {
-        if (_treeItemsMap is null) InitAllTree();
-        if (!_treeItemsMap!.TryGetValue(itemId, out TreeNode<Item>? node)) return true;
-        if (IsTplClassNotChoice(node.Data.Template)) return true;
-        MongoId? parent = node.ParentId;
-        while (parent != null)
-        {
-            if (!_treeItemsMap!.TryGetValue(parent.Value, out TreeNode<Item>? nodeParent)) 
-                continue;
-            if (IsTplClassNotChoice(nodeParent.Data.Template)) return true;
-            parent = nodeParent.ParentId;
-        }
-        return false;
-    }
-
-    /// <summary> 判断模板ID是否禁用 </summary>
-    public bool IsTplClassNotChoice(MongoId tpl)
-    {
-        if (!LabelSwitchWeapon && ItemHelper.IsOfBaseclasses(tpl, DataGetter.WeaponClassesAlls)) return true;
-
-        if (!LabelSwitchWeaponMod && ItemHelper.IsOfBaseclasses(tpl, DataGetter.WeaponModClassesAll)) return true;
-        
-        if (!LabelSwitchHead && ItemHelper.IsOfBaseclasses(tpl, DataGetter.HeadClassesAlls)) return true;
-        
-        if (!LabelSwitchArmor && ItemHelper.IsOfBaseclasses(tpl, DataGetter.ArmorClassesAlls)) return true;
-        
-        if (!LabelSwitchVest && ItemHelper.IsOfBaseclasses(tpl, DataGetter.VestClassesAlls)) return true;
-        
-        if (!LabelSwitchBackpack && ItemHelper.IsOfBaseclasses(tpl, DataGetter.BackpackClassesAlls)) return true;
-        
-        if (!LabelSwitchEquipmentMod && ItemHelper.IsOfBaseclasses(tpl, DataGetter.EquipmentModClassesAll)) return true;
-        
-        return false;
     }
 }

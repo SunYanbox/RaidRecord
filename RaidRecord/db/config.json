@@ -4,5 +4,6 @@
   "autoUnloadOtherLang": false,
   "priceCacheUpdateMinTime": 360000,
   "modGiveIsFIR": true,
-  "darkMode":true
+  "darkMode":true,
+  "isRepairDurability": true
 }

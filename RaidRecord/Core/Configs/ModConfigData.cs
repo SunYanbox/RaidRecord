@@ -35,4 +35,9 @@ public record ModConfigData
     /// </summary>
     [JsonPropertyName("darkMode")]
     public bool DarkMode { get; set; } = true;
+    /// <summary>
+    /// 是否修复物品耐久
+    /// </summary>
+    [JsonPropertyName("isRepairDurability")]
+    public bool IsRepairDurability { get; set; } = true;
 }
