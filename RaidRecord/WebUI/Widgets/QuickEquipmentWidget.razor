@@ -17,7 +17,7 @@
 @inject WebDataContext WebDataContext
 @inject AlgorithmService AlgorithmService
 
-<MudPaper Outlined="true" MaxHeight="@MaxHeight" Class="overflow-y-auto pa-16 ma-2">
+<MudPaper Outlined="true" MaxHeight="@MaxHeight" Class="overflow-y-auto pa-4 ma-2">
     @if (NeedRebuildTree)
     {
         RebuildTree();
@@ -57,7 +57,7 @@
             <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Backpack]" Label="@I18N.WebUILocal.Backpack" Color="Color.Success"/>
             <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.EquipmentMod]" Label="@I18N.WebUILocal.EquipMod" Color="Color.Success"/>
         </MudStack>
-        <MudTreeView @ref="RefTreeView" Items="@TreeItemsMud" Height="@MaxHeight"
+        <MudTreeView @ref="RefTreeView" Items="@TreeItemsMud" Height="350px"
                      ReadOnly="@true" Hover="@true" Dense="@true" ExpandOnClick="@true">
             <ItemTemplate>
                 @{
@@ -65,7 +65,7 @@
                                                ?? throw new InvalidOperationException("RRTreeItemData is null");
                     MongoId itemId = presenter.ItemId;
                     double modify = ItemHelper.GetItemQualityModifier(TreeItemsMap![itemId].Data);
-                    Color widgetColor = GetWidgetColor(!IsNodeDisable(itemId));
+                    Color widgetColor = GetWidgetColor(!(IsNodeDisable(itemId) || ExcludeItems.Contains(itemId)));
                     <MudTreeViewItem
                         @bind-Expanded="@presenter.Expanded"
                         Items="@presenter.Children?.AsReadOnly()"
@@ -89,8 +89,49 @@
                 }
             </ItemTemplate>
         </MudTreeView>
+        <MudCard Class="pa-2" Style="max-height: 300px">
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudTooltip Text="@I18N.WebUILocal.ExcludeItemDesc">
+                    <MudText>@I18N.WebUILocal.ExcludeItem</MudText>
+                </MudTooltip>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => ToggleShowAll())">
+                    @_excludeItemsShowAllText
+                </MudButton>
+            </MudStack>
+            @if (_excludeItemsShowAll)
+            {
+                <MudList T="MongoId" @bind-SelectedValues="ExcludeItems" SelectionMode="SelectionMode.MultiSelection" ReadOnly="@false" CheckBoxColor="Color.Error" Dense="true" Class="overflow-y-auto pa-2" Style="max-height: 250px">
+                    <MudListSubheader>
+                        @I18N.WebUILocal.SelectItemToExclude
+                    </MudListSubheader>
+                    @foreach (Item item in Items.OrderBy(x => -1 * PriceSystem.GetItemValueWithCache(x)))
+                    {
+                        bool disable = IsNodeDisable(item.Id) || ExcludeItems.Contains(item.Id);
+                        Color choiceColor = GetWidgetColor(!disable);
+                        <MudListItem Value="@item.Id">
+                            <ChildContent>
+                                <MudText Color="@choiceColor">@I18N.WebUILocal.Link(I18N.GetItemName(item.Template), $"{PriceSystem.GetItemValueWithCache(item):F2}rub")</MudText>
+                            </ChildContent>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+        </MudCard>
     }
 </MudPaper>
+
+@code
+{
+    private bool _excludeItemsShowAll;
+    private string? _excludeItemsShowAllText;
+
+    private void ToggleShowAll()
+    {
+        _excludeItemsShowAll = !_excludeItemsShowAll;
+        _excludeItemsShowAllText = _excludeItemsShowAll ? I18N.WebUILocal.Collapse : I18N.WebUILocal.Expand;
+    }
+    protected IReadOnlyCollection<MongoId> ExcludeItems = [];
+}
 
 <MudMessageBox @ref="RefQuickBuyEquipmentMegBox" Title="Info" CancelText="@I18N.WebUILocal.Cancel">
     <MessageContent>
@@ -115,7 +156,7 @@
     /// <summary> 是否提供快速购买按钮 </summary>
     [Parameter] public bool ProvideQuickBuy { get; set; } = true;
     /// <summary> 控件显示的最大高度 </summary>
-    [Parameter] public string MaxHeight { get; set; } = "500px";
+    [Parameter] public string MaxHeight { get; set; } = "650px";
     /// <summary> 启用的物品的颜色 </summary>
     [Parameter] public Color EnableColor { get; set; } = Color.Info;
     /// <summary> 排除的物品的颜色 </summary>
@@ -152,9 +193,11 @@
         (TreeItems, TreeItemsMap) = AlgorithmService.GetTreeItems(Items);
         TreeItemsMud = AlgorithmService.ConvertToTreeItems(TreeItems);
         NeedRebuildTree = false;
+        _excludeItemsShowAll = false;
+        _excludeItemsShowAllText = I18N.WebUILocal.Expand;
     }
 
-    /// <summary> 物品列表(必须提供) </summary>
+    /// <summary> 物品列表(修复前/后的列表) </summary>
     protected Item[] Items => IsRepair ? RepairItems! : OriginalItems!;
 
     /// <summary> ref MudMessageBox </summary>
@@ -221,6 +264,7 @@
     {
         return Items
             .Where(item => !IsNodeDisable(item.Id))
+            .Where(x => !ExcludeItems.Contains(x.Id)) // 排除的物品
             .Select(x => Cloner.Clone(x)) // 创建副本
             .Where(x => x is not null) // 排除空值
             .Cast<Item>(); // 强制转换

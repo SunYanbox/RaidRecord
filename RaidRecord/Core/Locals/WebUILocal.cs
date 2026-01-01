@@ -257,6 +257,15 @@ public class WebUILocal
     /// <summary>已启用修复耐久</summary>
     [JsonPropertyName("alreadyEnableDurabilityRepair")]
     public string AlreadyEnableDurabilityRepair { get; set; } = "已启用修复耐久";
+    /// <summary>排除物品</summary>
+    [JsonPropertyName("excludeItem")]
+    public string ExcludeItem { get; set; } = "排除物品";
+    /// <summary>在此处选中的物品将被在购买时排除</summary>
+    [JsonPropertyName("excludeItemDesc")]
+    public string ExcludeItemDesc { get; set; } = "在此处选中的物品将被在购买时排除";
+    /// <summary>选择你需要排除的物品</summary>
+    [JsonPropertyName("selectItemToExclude")]
+    public string SelectItemToExclude { get; set; } = "选择你需要排除的物品";
     #endregion
     
     #region 价格页面
