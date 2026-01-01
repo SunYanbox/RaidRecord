@@ -160,7 +160,9 @@ public class WebUILocal
     /// <summary>点击其他区域关闭</summary>
     [JsonPropertyName("clickOtherZoneToClose")]
     public string ClickOtherZoneToClose { get; set; } = "点击其他区域关闭";
-    
+    /// <summary>工具菜单</summary>
+    [JsonPropertyName("toolMenu")]
+    public string ToolMenu { get; set; } = "工具菜单";
     #endregion
 
     #region 战绩详情页面
