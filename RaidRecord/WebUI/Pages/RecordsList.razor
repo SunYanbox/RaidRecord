@@ -118,7 +118,7 @@
 </MudTable>
 
 <MudOverlay @bind-Visible="_visible" DarkBackground="true" AutoClose="true">
-    <MudContainer @onclick:stopPropagation="true" Style="background-color: white">
+    <MudContainer @onclick:stopPropagation="true">
         <MudText Typo="Typo.h5">@I18N.WebUILocal.QuickEquip</MudText>
         <MudText Typo="Typo.inherit">@I18N.WebUILocal.ClickOtherZoneToClose</MudText>
         @if (QuickEquipArchive is null)

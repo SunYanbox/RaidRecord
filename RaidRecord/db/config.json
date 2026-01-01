@@ -3,5 +3,6 @@
   "logPath": "log.log",
   "autoUnloadOtherLang": false,
   "priceCacheUpdateMinTime": 360000,
-  "modGiveIsFIR": true
+  "modGiveIsFIR": true,
+  "darkMode":true
 }

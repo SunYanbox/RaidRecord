@@ -27,6 +27,7 @@
     <MudTooltip Text="@I18N.WebUILocal.ModGiveIsFIRDesc">
         <MudSwitch @bind-Value="ModGiveIsFIR" Label="@I18N.WebUILocal.ModGiveIsFIR" Color="Color.Info"/>
     </MudTooltip>
+    <MudSwitch @bind-Value="DarkMode" Label="@I18N.WebUILocal.IsDarkMode" Color="Color.Info"/>
     
     <MudStack Row="true">
         <MudButton OnClick="@(() => OnSaveConfig())">@I18N.WebUILocal.SaveConfigChange</MudButton>
@@ -58,6 +59,8 @@
 
     public bool ModGiveIsFIR { get; set; }
     
+    public bool DarkMode { get; set; }
+    
     private void OnSaveConfig()
     {
         if (!string.IsNullOrEmpty(_local) && _local.Length == 2)
@@ -70,6 +73,8 @@
         }
         ModConfig.Configs.AutoUnloadOtherLang = AutoUnloadOtherLang;
         ModConfig.Configs.PriceCacheUpdateMinTime = PriceCacheUpdateMinTime;
+        ModConfig.Configs.ModGiveIsFIR = ModGiveIsFIR;
+        ModConfig.Configs.DarkMode = DarkMode;
         _ = ModConfig.SaveConfig();
         Snackbar.Add(I18N.DumpFormatStrLocal(I18N.WebUILocal.SaveConfigSuccess, new { CurrLang = _local }));
     }
@@ -87,6 +92,7 @@
         AutoUnloadOtherLang = ModConfig.Configs.AutoUnloadOtherLang;
         PriceCacheUpdateMinTime = ModConfig.Configs.PriceCacheUpdateMinTime;
         ModGiveIsFIR = ModConfig.Configs.ModGiveIsFIR;
+        DarkMode = ModConfig.Configs.DarkMode;
         base.OnInitialized();
         if (string.IsNullOrEmpty(WebData.CurrAccount))
         {

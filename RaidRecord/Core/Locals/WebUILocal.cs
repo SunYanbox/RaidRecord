@@ -330,6 +330,9 @@ public class WebUILocal
     /// <summary>重新初始化语言</summary>
     [JsonPropertyName("reInitLangDesc")]
     public string ReInitLangDesc { get; set; } = "重新初始化语言, 重新构建本地化字典, 重新获取SPT本地化数据";
+    /// <summary>是否使用暗色模式</summary>
+    [JsonPropertyName("isDarkMode")]
+    public string IsDarkMode { get; set; } = "是否使用暗色模式";
     #endregion
     
     #region 导航栏链接文本

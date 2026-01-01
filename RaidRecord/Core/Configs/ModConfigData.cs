@@ -30,4 +30,9 @@ public record ModConfigData
     /// </summary>
     [JsonPropertyName("modGiveIsFIR")]
     public bool ModGiveIsFIR { get; set; } = true;
+    /// <summary>
+    /// 是否是暗色模式
+    /// </summary>
+    [JsonPropertyName("darkMode")]
+    public bool DarkMode { get; set; } = true;
 }

@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject ModMetadata ModMetadata
+@inject ModConfig ModConfig
 @inject I18N I18N
 
 <HeadContent>
@@ -8,7 +9,7 @@
 </HeadContent>
 
 @* Required *@
-<MudThemeProvider/>
+<MudThemeProvider IsDarkMode="@ModConfig.Configs.DarkMode"/>
 <MudPopoverProvider/>
 
 @* Needed for dialogs *@
@@ -39,10 +40,6 @@
     </MudMainContent>
 
     <style>
-        html, body {
-            background-color: #eeeeee;
-        }
-
         .mud-main-content {
             transition: margin-left 0.3s ease;
         }
