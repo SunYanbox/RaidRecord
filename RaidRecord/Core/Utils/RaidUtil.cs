@@ -1,3 +1,4 @@
+using RaidRecord.Core.Configs;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Services;
 using RaidRecord.Core.Systems;
@@ -16,11 +17,12 @@ namespace RaidRecord.Core.Utils;
 public class RaidUtil(
     ICloner cloner,
     ItemUtil itemUtil,
+    ModConfig modConfig,
     ItemHelper itemHelper,
     PriceSystem priceSystem,
     ProfileHelper profileHelper,
     DataGetterService dataGetter,
-    RecordManager recordCacheManager)
+    RecordManager recordManager)
 {
     /// <summary>
     /// 根据开局请求初始化数据
@@ -88,7 +90,7 @@ public class RaidUtil(
         // PmcData postRaidProfile = request.Results.Profile; // 战局后角色数据(Pmc和战局进入时的物品相同)
 
         // 正确获取Scav或Pmc数据
-        PmcData pmcProfile = recordCacheManager.GetPmcDataByPlayerId(raidInfo.PlayerId);
+        PmcData pmcProfile = recordManager.GetPmcDataByPlayerId(raidInfo.PlayerId);
 
         if (isPmc)
         {
@@ -145,7 +147,7 @@ public class RaidUtil(
                 Item itemInstance = map[oldId];
                 if (!map.Remove(oldId))
                 {
-                    Console.WriteLine($"[RaidRecord] 警告 从字典删除{oldId}的过程中出错");
+                    modConfig.Warn($"从字典删除{oldId}的过程中出错");
                 }
                 itemInstance.Id = newId;
                 map[newId] = itemInstance;
@@ -174,7 +176,7 @@ public class RaidUtil(
     {
         if (pmcData.Stats == null || pmcData.Stats.Eft == null)
         {
-            Console.WriteLine($"[RaidInfo] 错误尝试获取对局结束数据时, 获取到的数据({nameof(pmcData.Stats)}和{nameof(pmcData.Stats.Eft)})全部为null");
+            modConfig.Error($"尝试获取对局结束数据时, 获取到的数据({nameof(pmcData.Stats)}和{nameof(pmcData.Stats.Eft)})全部为null");
             return;
         }
         raidInfo.State = raidInfo.State == "推测对局" ? "推测对局" : "已归档";
@@ -197,13 +199,11 @@ public class RaidUtil(
                             = raidInfo.CombatLosses = 0;
             return;
         }
-        UpdateItemsChanged(
-            raidInfo.Addition,
-            raidInfo.Remove,
-            raidInfo.Changed,
-            raidInfo.ItemsTakeIn,
-            raidInfo.ItemsTakeOut
-        );
+        UpdateItemsChanged(raidInfo.Addition,
+        raidInfo.Remove,
+        raidInfo.Changed,
+        raidInfo.ItemsTakeIn,
+        raidInfo.ItemsTakeOut);
         // 收益, 战损记录
         raidInfo.GrossProfit = itemUtil.CalculateInventoryValue(raidInfo.ItemsTakeOut, raidInfo.Addition.ToArray());
         raidInfo.CombatLosses = itemUtil.CalculateInventoryValue(raidInfo.ItemsTakeIn, raidInfo.Remove.ToArray());
@@ -213,18 +213,72 @@ public class RaidUtil(
             if (raidInfo.ItemsTakeOut.TryGetValue(itemId, out Item? newItem))
             {
                 double newValue = priceSystem.GetItemValueWithCache(newItem);
-                if (Math.Abs(newValue - oldValue) > Constants.Epsilon)
-                    raidInfo.GrossProfit += Convert.ToInt64(newValue - oldValue);
+                if (!(Math.Abs(newValue - oldValue) > Constants.Epsilon)) continue;
+                double delta = newValue - oldValue;
+                if (delta > 0)
+                    raidInfo.GrossProfit += Convert.ToInt64(delta);
                 else
-                    raidInfo.CombatLosses += Convert.ToInt64(oldValue - newValue);
+                    raidInfo.CombatLosses += Convert.ToInt64(-delta);
             }
             else
             {
-                Console.WriteLine($"[RaidRecord] 警告: 本应同时存在于ItemsTakeIn和ItemsTakeOut中的物品({itemId})不存在于第二者中");
+                modConfig.Warn($"本应同时存在于ItemsTakeIn和ItemsTakeOut中的物品({itemId})不存在于第二者中");
             }
         }
     }
 
+    /// <summary>
+    /// 重新计算Archive的收益, 战损等数据
+    /// </summary>
+    /// <returns>修复前后的 (收益变化量, 战损变化量)</returns>
+    public (long grossProfitDelta, long combatLossesDelta)  ReCalculateArchive(RaidArchive archive)
+    {
+        long grossProfitOld = archive.GrossProfit, combatLossesOld = archive.CombatLosses;
+        if (archive.ItemsTakeIn.Count == 0 && archive.ItemsTakeOut.Count == 0)
+        {
+            archive.GrossProfit = archive.CombatLosses = 0;
+            return (grossProfitDelta: archive.GrossProfit - grossProfitOld, combatLossesDelta: archive.CombatLosses - combatLossesOld);
+        }
+        List<MongoId> addition = [], remove = [], change = [];
+        UpdateItemsChanged(addition,
+        remove,
+        change,
+        archive.ItemsTakeIn,
+        archive.ItemsTakeOut);
+        HashSet<MongoId> additionSet = [
+                ..addition
+            ],
+            removeSet = [
+                ..remove
+            ];
+        // 收益, 战损记录
+        archive.GrossProfit = Convert.ToInt64(archive.ItemsTakeOut
+            .Where(x => additionSet.Contains(x.Key))
+            .Sum(x => priceSystem.GetItemValueWithCache(x.Key) * x.Value));
+        archive.CombatLosses = Convert.ToInt64(archive.ItemsTakeIn
+            .Where(x => removeSet.Contains(x.Key))
+            .Sum(x => priceSystem.GetItemValueWithCache(x.Key) * x.Value));
+        foreach ((MongoId itemId, double oldModify) in DataUtil.GetSubDict(archive.ItemsTakeIn, change))
+        {
+            double oldValue = priceSystem.GetItemValueWithCache(itemId) * oldModify;
+            if (archive.ItemsTakeOut.TryGetValue(itemId, out double newModify))
+            {
+                double newValue = priceSystem.GetItemValueWithCache(itemId) * newModify;
+                if (!(Math.Abs(newValue - oldValue) > Constants.Epsilon)) continue;
+                double delta = newValue - oldValue;
+                if (delta > 0)
+                    archive.GrossProfit += Convert.ToInt64(delta);
+                else
+                    archive.CombatLosses += Convert.ToInt64(-delta);
+            }
+            else
+            {
+                modConfig.Warn($"本应同时存在于ItemsTakeIn和ItemsTakeOut中的物品({itemId})不存在于第二者中");
+            }
+        }
+        return (grossProfitDelta: archive.GrossProfit - grossProfitOld, combatLossesDelta: archive.CombatLosses - combatLossesOld);
+    }
+    
     /// <summary>
     /// 获取对局结束时物品的变动信息（基于完整 Item 对象）
     /// </summary>

@@ -1,9 +1,12 @@
 @page "/RaidRecord/Setting"
+@using SPTarkov.Server.Core.Models.Common
 
 @inject I18N I18N
+@inject RaidUtil RaidUtil
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig
 @inject WebDataContext WebData
+@inject RecordManager RecordManager
 @inject DataGetterService DataGetter
 @inject NavigationManager Navigation
 
@@ -39,6 +42,13 @@
             <MudSwitch @bind-Value="IsRepairDurability" Label="@I18N.WebUILocal.IsRepairDurability" Color="Color.Info"/>
         </MudTooltip>
     </MudStack>
+    
+    <MudPaper Outlined="true">
+        <MudText>修复面板</MudText>
+        <MudButton OnClick="@(() => FixAllArchive())">
+            @I18N.WebUILocal.FixAllArchiveCombatLoss
+        </MudButton>
+    </MudPaper>
     
     <MudStack Row="true">
         <MudButton OnClick="@(() => OnSaveConfig())">@I18N.WebUILocal.SaveConfigChange</MudButton>
@@ -116,5 +126,27 @@
         {
             Navigation.NavigateTo("/RaidRecord", true);
         }
+    }
+    
+    /// <summary>
+    /// 修复当前账号的所有存档的收益, 战损计算结果
+    /// </summary>
+    protected void FixAllArchive()
+    {
+        MongoId account = WebData.CurrAccount;
+        EFTCombatRecord profile = RecordManager.GetRecord(account);
+        var result = string.Empty;
+        foreach (RaidDataWrapper wrapper in profile.Records)
+        {
+            if (wrapper.Archive is null) continue;
+            (long grossProfitDelta, long combatLossesDelta) = RaidUtil.ReCalculateArchive(wrapper.Archive);
+            if (!(Math.Abs(grossProfitDelta) > Constants.Epsilon) && !(Math.Abs(combatLossesDelta) > Constants.Epsilon)) continue;
+            result += $"{wrapper.Archive.ServerId} {I18N.WebUILocal.GrossProfit}: {grossProfitDelta:+0.00;-0.00;0.00}  {I18N.WebUILocal.GrossProfit}: {combatLossesDelta:+0.00;-0.00;0.00}\n";
+        }
+        RecordManager.SaveEFTRecord(account);
+        Snackbar.Add(I18N.WebUILocal.Link(
+            I18N.WebUILocal.FixAllArchiveCompleted,
+            ": ",
+            result));
     }
 }

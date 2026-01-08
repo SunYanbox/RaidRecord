@@ -172,6 +172,9 @@ public class WebUILocal
     /// <summary>请输入你要查看的索引</summary>
     [JsonPropertyName("inputIndexUWantLook")]
     public string InputIndexUWantLook { get; set; } = "请输入你要查看的索引";
+    /// <summary>修复当前存档所有对局战损与收益计算</summary>
+    [JsonPropertyName("fixAllArchiveCombatLoss")]
+    public string FixAllArchiveCombatLoss { get; set; } = "修复当前存档所有对局战损与收益计算";
     #endregion
 
     #region 对局详情控件
@@ -353,6 +356,9 @@ public class WebUILocal
     /// <summary>快速起装页面购买物品时是否修复物品耐久</summary>
     [JsonPropertyName("isRepairDurabilityDesc")]
     public string IsRepairDurabilityDesc { get; set; } = "快速起装页面购买物品时是否修复物品耐久";
+    /// <summary>修复全部存档结束</summary>
+    [JsonPropertyName("fixAllArchiveCompleted")]
+    public string FixAllArchiveCompleted { get; set; } = "修复全部存档结束";
     #endregion
     
     #region 导航栏链接文本
