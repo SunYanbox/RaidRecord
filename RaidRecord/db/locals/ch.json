@@ -215,6 +215,8 @@
     "cancel": "取消",
     "cancelConfigChange": "取消配置修改",
     "change": "变化",
+    "checkUpdate": "检查更新",
+    "checkUpdateDesc": "跳转去Github Release页面",
     "choiceArchiveNotExist": "选择的战绩不存在",
     "choiceProfile": "选择存档",
     "choiceTotalValue": "已选择总价值",

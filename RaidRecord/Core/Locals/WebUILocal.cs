@@ -359,6 +359,12 @@ public class WebUILocal
     /// <summary>修复全部存档结束</summary>
     [JsonPropertyName("fixAllArchiveCompleted")]
     public string FixAllArchiveCompleted { get; set; } = "修复全部存档结束";
+    /// <summary>检查更新</summary>
+    [JsonPropertyName("checkUpdate")]
+    public string CheckUpdate { get; set; } = "检查更新";
+    /// <summary>跳转去Github Release页面</summary>
+    [JsonPropertyName("checkUpdateDesc")]
+    public string CheckUpdateDesc { get; set; } = "跳转去Github Release页面";
     #endregion
     
     #region 导航栏链接文本

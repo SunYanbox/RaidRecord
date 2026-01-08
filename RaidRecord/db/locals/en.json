@@ -215,6 +215,8 @@
     "cancel": "Cancel",
     "cancelConfigChange": "Cancel Configuration Changes",
     "change": "Change",
+    "checkUpdate": "Check for Updates",
+    "checkUpdateDesc": "Jump to the Github Releases page",
     "choiceArchiveNotExist": "The selected battle record does not exist.",
     "choiceProfile": "Select Profile",
     "choiceTotalValue": "Total Value Selected",
