@@ -1,5 +1,6 @@
 @page "/RaidRecord/Setting"
 @using SPTarkov.Server.Core.Models.Common
+@using Color = MudBlazor.Color
 
 @inject I18N I18N
 @inject RaidUtil RaidUtil
@@ -43,12 +44,17 @@
         </MudTooltip>
     </MudStack>
     
+    @* 修复面板 *@
     <MudPaper Outlined="true">
         <MudText>修复面板</MudText>
+        @* 修复当前存档所有对局战损与收益计算 *@
         <MudButton OnClick="@(() => FixAllArchive())">
             @I18N.WebUILocal.FixAllArchiveCombatLoss
         </MudButton>
     </MudPaper>
+    
+    @* 理赔 *@
+    <ClaimCompensationWidget />
     
     <MudStack Row="true">
         <MudButton OnClick="@(() => OnSaveConfig())">@I18N.WebUILocal.SaveConfigChange</MudButton>

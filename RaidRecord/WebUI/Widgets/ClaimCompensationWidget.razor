@@ -1,0 +1,73 @@
+@using SPTarkov.Server.Core.Models.Eft.Common
+@using SPTarkov.Server.Core.Models.Eft.ItemEvent
+@using Color = MudBlazor.Color
+@inject I18N I18N
+@inject ISnackbar Snackbar
+@inject ModConfig ModConfig
+@inject DataGetterService DataGetter
+@inject ModMailService ModMailService
+@inject WebDataContext WebDataContext
+
+<MudPaper Outlined="true" MaxHeight="300px" Class="overflow-y-auto">
+    <MudTooltip Text="@I18N.WebUILocal.ClaimCompensationDesc">
+        <MudText Typo="Typo.h6">@I18N.WebUILocal.ClaimCompensation</MudText>
+    </MudTooltip>
+    
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.body2">@I18N.WebUILocal.EnterAmountNeedReceive</MudText>
+        <MudNumericField @bind-Value="GetRub" Label="rub" Variant="Variant.Filled" Min="0.0" Max="@long.MaxValue"/>
+    </MudStack>
+
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.body2">@I18N.WebUILocal.EnterAmountWishConsume</MudText>
+        <MudNumericField @bind-Value="RemoveRub" Label="rub" Variant="Variant.Filled" Min="0.0" Max="@long.MaxValue"/>
+    </MudStack>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Commit"
+               OnClick="@(() => ConfirmClaimCompensation())">@I18N.WebUILocal.Confirm
+    </MudButton>
+</MudPaper>
+
+@code {
+    double GetRub { get; set; }
+    double RemoveRub { get; set; }
+
+    void ConfirmClaimCompensation()
+    {
+        double delta = GetRub - RemoveRub;
+        double amount = Math.Abs(delta);
+        var message = "";
+        List<Warning>? warnings = null;
+        PmcData? pmcData = DataGetter.GetPmcData(WebDataContext.CurrAccount);
+        if (pmcData == null)
+        {
+            ModConfig.Warn("理赔失败: 玩家数据获取失败");
+            return;
+        }
+        if (amount > Constants.Epsilon)
+        {
+            if (delta >= 0)
+            {
+                message = $"{I18N.WebUILocal.ReceivedThroughClaims}: {amount}rub";
+                warnings = ModMailService.SendMoney(WebDataContext.CurrAccount, 
+                    message
+                    , amount);
+            }
+            else
+            {
+                message = $"{I18N.WebUILocal.ConsumedThroughClaims}: {amount}rub";
+                warnings = ModMailService.Payment(WebDataContext.CurrAccount, Convert.ToInt64(amount), pmcData);
+            }
+        }
+        
+        Snackbar.Add(message);
+
+        if (warnings?.Count > 0)
+        {
+            ModConfig.Warn(string.Join(", ", warnings));
+        }
+
+        GetRub = 0;
+        RemoveRub = 0;
+    }
+}

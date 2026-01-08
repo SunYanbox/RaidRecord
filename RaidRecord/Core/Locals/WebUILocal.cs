@@ -417,6 +417,29 @@ public class WebUILocal
     [JsonPropertyName("author")]
     public string Author { get; set; } = "作者";
     #endregion
+
+    #region 理赔控件
+
+    /// <summary>理赔</summary>
+    [JsonPropertyName("claimCompensation")]
+    public string ClaimCompensation { get; set; } = "理赔";
+    /// <summary>理赔</summary>
+    [JsonPropertyName("claimCompensationDesc")]
+    public string ClaimCompensationDesc { get; set; } = "用来一键获取由于模组损失的卢布， 或者移除意外获取的卢布";
+    /// <summary>输入你需要获得的卢布数值</summary>
+    [JsonPropertyName("enterAmountNeedReceive")]
+    public string EnterAmountNeedReceive { get; set; } = "输入你需要获得的卢布数值";
+    /// <summary>输入你希望消费的卢布数值</summary>
+    [JsonPropertyName("enterAmountWishConsume")]
+    public string EnterAmountWishConsume { get; set; } = "输入你希望消费的卢布数值";
+    /// <summary>您已通过理赔获取</summary>
+    [JsonPropertyName("receivedThroughClaims")]
+    public string ReceivedThroughClaims { get; set; } = "您已通过理赔获取";
+    /// <summary>您已通过理赔消费</summary>
+    [JsonPropertyName("consumedThroughClaims")]
+    public string ConsumedThroughClaims { get; set; } = "您已通过理赔消费";
+    
+    #endregion
     
     /// <summary> 连接多个字符串 </summary>
     public string Link(params string[] args) => string.Join(LinkTag, args);
