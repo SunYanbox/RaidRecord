@@ -230,6 +230,7 @@
     "consumedThroughClaims": "You have consumed through claims",
     "createTime": "Creation Time",
     "curr": "Current",
+    "delete": "delete",
     "distance": "Distance",
     "dynPrice": "Dynamic Price",
     "enterAmountNeedReceive": "Enter the amount of rubles you need to receive",

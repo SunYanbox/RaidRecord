@@ -9,6 +9,7 @@
 @inject ModConfig ModConfig;
 @inject SaveServer SaveServer;
 @inject WebDataContext WebData;
+@inject RecordManager RecordManager
 @inject DataGetterService DataGetter;
 @inject LauncherController LauncherController;
 
@@ -20,7 +21,7 @@
            AdornmentColor="Color.Secondary">
     @foreach (MongoId account in AccountAllExist)
     {
-        <MudSelectItem Value="@account.ToString()">@account @GetName(account)</MudSelectItem>
+        <MudSelectItem Value="@account.ToString()">@($"{account} {GetName(account)} {RecordManager.GetRecordFileSize(account)}")</MudSelectItem>
     }
 </MudSelect>
 
@@ -52,14 +53,14 @@
     /// <summary>
     /// 默认初始化为历史战绩最多的账号
     /// </summary>
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (!string.IsNullOrEmpty(WebData.CurrAccount)) return;
         MongoId? choice = null;
         int recordsCount = 0;
         foreach (MongoId mongoId in AccountAllExist)
         {
-            int count = DataGetter.GetArchivesBySession(mongoId).Count;
+            int count = (await DataGetter.GetArchivesBySession(mongoId)).Count;
             if (count <= recordsCount) continue;
             recordsCount = count;
             choice = mongoId;

@@ -3,6 +3,7 @@ using System.Reflection;
 using RaidRecord.Core.Configs;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
+using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
@@ -25,9 +26,10 @@ namespace RaidRecord.Core.Systems;
 /// 提供获取PmcData的辅助方法
 /// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
-public class RecordManager(
+public sealed class RecordManager(
     I18N i18N,
     ICloner cloner,
+    DataUtil dataUtil,
     JsonUtil jsonUtil,
     ModConfig modConfig,
     ModHelper modHelper,
@@ -82,7 +84,7 @@ public class RecordManager(
     /// <br />
     /// 注意: 必须在LoadAllRecords之后使用, 避免覆盖账户数据
     /// </summary>
-    public void InitAllEFTCombatRecord()
+    private void InitAllEFTCombatRecord()
     {
         Dictionary<MongoId, SptProfile> profiles = saveServer.GetProfiles();
         foreach (MongoId accountId in _accountIds)
@@ -92,19 +94,18 @@ public class RecordManager(
         }
     }
 
-    public Task OnLoad()
+    public async Task OnLoad()
     {
         UpdateAccountData();
-        LoadAllRecords();
+        await LoadAllRecords();
         InitAllEFTCombatRecord();
-        return Task.CompletedTask;
     }
 
     /// <summary>
     /// 加载指定数据文件加载
     /// </summary>
     /// <param name="file">文件绝对路径</param>
-    private void LoadFile(string file)
+    private async Task LoadFile(string file)
     {
         if (_recordDbPath == null)
         {
@@ -133,6 +134,8 @@ public class RecordManager(
                         new { FilePath = file }
                     ));
                 }
+
+                data.FilePath = file;
                 _eftCombatRecords.Add(data.AccountId, data);
             }
             catch (Exception e)
@@ -148,9 +151,9 @@ public class RecordManager(
                 ), e);
                 // modConfig.Error($"尝试以0.6.2+版本反序列化数据文件{file}时发生错误: {e.Message}, 将尝试迁移0.6.1版本数据库", e);
                 // 暂时兼容0.6.1版本的数据库
-                var data = jsonUtil.DeserializeFromFile<List<RaidDataWrapper>>(file);
+                var records = jsonUtil.DeserializeFromFile<List<RaidDataWrapper>>(file);
                 // if (data is null) throw new Exception($"反序列化文件{file}时获取不到数据");
-                if (data is null)
+                if (records is null)
                 {
                     throw new Exception(i18N.GetText(
                         "Json-Error.反序列化文件结果为null",
@@ -158,7 +161,11 @@ public class RecordManager(
                     ));
                 }
                 MongoId account = _playerId2Account[fileBaseName];
-                _eftCombatRecords.Add(account, new EFTCombatRecord(account, data));
+                EFTCombatRecord newArchive = new(account, records)
+                {
+                    FilePath = file
+                };
+                _eftCombatRecords.Add(account, newArchive);
                 // 重命名文件, 避免重复迁移
                 string newFile = file.Replace(fileBaseName, account.ToString());
                 modConfig.Info($"正在将旧数据库文件{file}迁移为新版本格式: {newFile}");
@@ -171,7 +178,7 @@ public class RecordManager(
                     }
                 ));
                 File.Move(file, newFile);
-                SaveEFTRecord(account);
+                await SaveEFTRecord(account);
             }
         }
         catch (Exception e)
@@ -213,24 +220,35 @@ public class RecordManager(
     }
 
     /// <summary> 读取所有本地账户历史战绩 </summary>
-    public void LoadAllRecords()
+    public async Task LoadAllRecords()
     {
         string localsDir = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
         _recordDbPath = Path.Combine(localsDir, "db\\records");
 
         if (!Directory.Exists(_recordDbPath)) Directory.CreateDirectory(_recordDbPath);
-
+        List<Task> tasks = [];
         foreach (string file in Directory.GetFiles(_recordDbPath))
         {
             if (Path.Exists(file))
-                LoadFile(file);
+                tasks.Add(LoadFile(file));
         }
+        await Task.WhenAll(tasks);
     }
 
     /// <summary> 通过Pmc或Scav Id获取账号Id </summary>
     public MongoId? GetAccount(MongoId playerId)
     {
         return _playerId2Account.GetValueOrDefault(playerId);
+    }
+
+    public string GetRecordFileSize(MongoId playerId)
+    {
+        if (_eftCombatRecords.TryGetValue(playerId, out EFTCombatRecord? eftRecord))
+        {
+            return dataUtil.GetFileSize(eftRecord.FilePath);
+        }
+
+        return dataUtil.GetFileSize(string.Empty);
     }
 
     /// <summary> 通过Account, Pmc, Session或Scav Id获取PmcData实例 </summary>
@@ -254,7 +272,7 @@ public class RecordManager(
     }
 
     /// <summary> 保存指定账户和的历史战绩 </summary>
-    public void SaveEFTRecord(MongoId account)
+    public async Task SaveEFTRecord(MongoId account)
     {
         if (!_eftCombatRecords.TryGetValue(account, out EFTCombatRecord? eftRecord))
         {
@@ -292,15 +310,15 @@ public class RecordManager(
         }
         string path = Path.Combine(_recordDbPath, $"{account}.json");
 
-        File.WriteAllTextAsync(path, jsonUtil.Serialize(eftRecord));
+        await File.WriteAllTextAsync(path, jsonUtil.Serialize(eftRecord));
     }
 
     /// <summary> 通过账号获取历史记录 </summary>
-    public EFTCombatRecord GetRecord(MongoId account)
+    public async Task<EFTCombatRecord> GetRecord(MongoId account)
     {
         if (_accountIds.Contains(account)) return _eftCombatRecords[account];
         // 重新加载数据库
-        LoadAllRecords();
+        await LoadAllRecords();
 
         if (_recordDbPath == null)
         {
@@ -312,7 +330,7 @@ public class RecordManager(
         string file = Path.Combine(_recordDbPath, $"{account.ToString()}.json");
         if (Path.Exists(file))
         {
-            LoadFile(file);
+            await LoadFile(file);
         }
         else
         {
@@ -322,7 +340,7 @@ public class RecordManager(
     }
 
     /// <summary> 为将进入对局的Pmc或Scav创建RaidDataWrapper记录 </summary>
-    public RaidDataWrapper CreateRecord(MongoId playerId)
+    public async Task<RaidDataWrapper> CreateRecord(MongoId playerId)
     {
         try
         {
@@ -335,7 +353,7 @@ public class RecordManager(
                 }));
                 // throw new Exception($"创建记录时未找到玩家{playerId}的账户Id, 请确保已存在过该玩家账户的记录");
             }
-            EFTCombatRecord records = GetRecord(account.Value);
+            EFTCombatRecord records = await GetRecord(account.Value);
             // Console.WriteLine($"DEBUG RecordManager.CreateRecord > 玩家{playerId}的记录records为{records}, {records?.Count}条");
             // 检查 records 是否为 null
             RaidDataWrapper wrapper = new();
@@ -361,22 +379,31 @@ public class RecordManager(
         }
     }
 
+    public async Task DeleteRecord(MongoId account, string serverId)
+    {
+        if (!_eftCombatRecords.TryGetValue(account, out EFTCombatRecord? combatRecord)) return;
+        combatRecord.Remove(serverId);
+        await SaveEFTRecord(account);
+    }
+    
     /// <summary>
     /// 删除一个账号下的所有历史记录数据(慎用!!!)
     /// </summary>
     /// <param name="account"></param>
-    public void Delete(MongoId account)
+    public async Task Delete(MongoId account)
     {
         if (_eftCombatRecords.Remove(account))
-            SaveEFTRecord(account);
+            await SaveEFTRecord(account);
     }
 
-    public void ZipAll()
+    public async Task ZipAll()
     {
+        List<Task> tasks = [];
         foreach (MongoId playerId in _eftCombatRecords.Keys)
         {
-            ZipAccount(playerId);
+            tasks.Add(ZipAccount(playerId));
         }
+        await Task.WhenAll(tasks);
     }
 
     /// <summary>
@@ -384,7 +411,7 @@ public class RecordManager(
     /// <br />
     /// 会同时压缩未归档缓存
     /// </summary>
-    public void ZipAccount(MongoId account)
+    public async Task ZipAccount(MongoId account)
     {
         if (_eftCombatRecords.TryGetValue(account, out EFTCombatRecord? combatRecord))
         {
@@ -398,7 +425,7 @@ public class RecordManager(
                 combatRecord.InfoRecordCache = null;
             }
         }
-        SaveEFTRecord(account);
+        await SaveEFTRecord(account);
     }
 
     /// <summary>

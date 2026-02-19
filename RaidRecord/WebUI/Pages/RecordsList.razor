@@ -4,6 +4,7 @@
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig;
 @inject WebDataContext WebData;
+@inject RecordManager RecordManager;
 @inject DataFormatService DataFormat;
 @inject DataGetterService DataGetter;
 @inject NavigationManager Navigation;
@@ -102,6 +103,7 @@
             <MudMenu Label="@I18N.WebUILocal.ToolMenu" Modal="false">
                 <MudMenuItem Label="@I18N.WebUILocal.Info" OnClick="@(() => LookDetails(context!))"/>
                 <MudMenuItem Label="@I18N.WebUILocal.QuickEquip" OnClick="@(() => LookQuickEquip(context!))"/>
+                <MudMenuItem Label="@I18N.WebUILocal.Link(I18N.WebUILocal.Delete, I18N.WebUILocal.Profile)" Style="color: red" OnClick="@(() => DeleteArchive(context!))"/>
             </MudMenu>
         </MudTd>
     </RowTemplate>
@@ -112,28 +114,103 @@
 </MudTable>
 
 <MudOverlay @bind-Visible="_visible" DarkBackground="true" AutoClose="true">
-    <MudContainer @onclick:stopPropagation="true">
-        <MudText Typo="Typo.h5">@I18N.WebUILocal.QuickEquip</MudText>
-        <MudText Typo="Typo.inherit">@I18N.WebUILocal.ClickOtherZoneToClose</MudText>
-        @if (QuickEquipArchive is null)
+    @switch (_overlayState)
+    {
+        case OverlayState.QuickEquip:
+            <MudContainer @onclick:stopPropagation="true">
+                <MudText Typo="Typo.h5">@I18N.WebUILocal.QuickEquip</MudText>
+                <MudText Typo="Typo.inherit">@I18N.WebUILocal.ClickOtherZoneToClose</MudText>
+                @if (ArchiveContext is null)
+                {
+                    <MudText>@I18N.WebUILocal.ChoiceArchiveNotExist</MudText>
+                }
+                else
+                {
+                    <QuickEquipmentWidget Archive="ArchiveContext" ProvideQuickBuy="@true"/>
+                }
+            </MudContainer>
+            break;
+        case OverlayState.DeleteArchive:
+            <MudContainer @onclick:stopPropagation="true" Class="overflow-y: auto">
+                <MudText Typo="Typo.h5">@($"{I18N.WebUILocal.Link(I18N.WebUILocal.Delete, I18N.WebUILocal.Profile)}: {ArchiveContext?.ServerId}?")</MudText>
+                <MudText Typo="Typo.inherit">@I18N.WebUILocal.ClickOtherZoneToClose</MudText>
+                @if (ArchiveContext is null)
+                {
+                    <MudText>@I18N.WebUILocal.ChoiceArchiveNotExist</MudText>
+                }
+                else
+                {
+                    <ArchiveInfoPaperWidget Archive="ArchiveContext" ShowToolZone="@false"/>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudButton Color="Color.Error" OnClick="@(async () => await EnsureDelete())">@($"{I18N.WebUILocal.Link(I18N.WebUILocal.Confirm, I18N.WebUILocal.Delete)}?")</MudButton>
+                        <MudButton OnClick="@(() => CancelDelete())">@I18N.WebUILocal.Cancel</MudButton>
+                    </MudStack>
+                }
+            </MudContainer>
+            break;
+        default:
+            throw new Exception("ArgumentOutOfRangeException(如果没有随意修改状态机的值, 该错误理论上不会触发)");
+    }
+    
+    @code
+    {
+        /// <summary>
+        /// 快速起装 / 删除存档的上下文
+        /// </summary>
+        private RaidArchive? ArchiveContext { get; set; }
+        
+        /// <summary>
+        /// 确认删除存档
+        /// </summary>
+        private async Task EnsureDelete()
         {
-            <MudText>@I18N.WebUILocal.ChoiceArchiveNotExist</MudText>
-        }
-        else
-        {
-            <QuickEquipmentWidget Archive="QuickEquipArchive" ProvideQuickBuy="@true"/>
+            if (ArchiveContext is null) return;
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)); // 设置 5 秒超时
+                
+                Task task = Task.Run(async () => 
+                {
+                    string serverId = ArchiveContext.ServerId;
+                    await RecordManager.DeleteRecord(WebData.CurrAccount, serverId).ConfigureAwait(false);
+                    WebData.LookingServerIds.RemoveWhere(x => x.Archive.ServerId == serverId);
+                    Snackbar.Add($"历史战绩{serverId}已删除");
+                }, cts.Token);
+
+                await task.WaitAsync(cts.Token); // 等待任务完成，如果超时这里会抛 OperationCanceledException
+            }
+            catch (Exception e)
+            {
+                ModConfig.Error($"删除历史记录过程中出错: {e.Message}", e);
+            }
+            ToggleOverlay(false);
         }
 
-        @code
+        /// <summary>
+        /// 取消删除存档
+        /// </summary>
+        private void CancelDelete()
         {
-            public RaidArchive? QuickEquipArchive;
+            ToggleOverlay(false);
+            _overlayState = OverlayState.QuickEquip;
         }
-    </MudContainer>
+    }
+
 </MudOverlay>
 
 @code {
     private bool _visible;
     private bool _jump2DetailPage;
+    private OverlayState _overlayState = OverlayState.QuickEquip;
+
+    /// <summary>
+    /// 弹出窗口的状态
+    /// </summary>
+    private enum OverlayState
+    {
+        QuickEquip,
+        DeleteArchive
+    }
     
     /// <summary>
     /// 显示/隐藏 overlay
@@ -191,7 +268,25 @@
     {
         try
         {
-            QuickEquipArchive = archiveIndexed.Archive;
+            ArchiveContext = archiveIndexed.Archive;
+            _overlayState = OverlayState.QuickEquip;
+            ToggleOverlay(true);
+        }
+        catch (Exception e)
+        {
+            ModConfig.Warn($"查看快速购买界面时出现错误: {e.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// 删除存档
+    /// </summary>
+    public void DeleteArchive(ArchiveIndexed archiveIndexed)
+    {
+        try
+        {
+            ArchiveContext = archiveIndexed.Archive;
+            _overlayState = OverlayState.DeleteArchive;
             ToggleOverlay(true);
         }
         catch (Exception e)

@@ -69,7 +69,7 @@
         {
             return string.IsNullOrEmpty(WebData.CurrAccount)
                 ? 0
-                : DataGetter.GetArchivesBySession(WebData.CurrAccount).Count - 1;
+                : DataGetter.GetArchivesBySession(WebData.CurrAccount).Result.Count - 1;
         }
         catch (Exception e)
         {

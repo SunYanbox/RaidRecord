@@ -33,6 +33,9 @@ public class WebUILocal
     /// <summary>取消</summary>
     [JsonPropertyName("cancel")]
     public string Cancel { get; set; } = "取消";
+    /// <summary>删除</summary>
+    [JsonPropertyName("delete")]
+    public string Delete { get; set; } = "删除";
     /// <summary>每页行数: </summary>
     [JsonPropertyName("tablePagerRowsPerPageString")]
     public string TablePagerRowsPerPageString { get; set; } = "每页行数: ";

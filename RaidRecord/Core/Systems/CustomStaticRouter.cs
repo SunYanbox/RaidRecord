@@ -74,7 +74,7 @@ public class CustomStaticRouter: StaticRouter
         ];
     }
 
-    private static void HandleRaidStart(StartLocalRaidRequestData _, MongoId sessionId, string output)
+    private static async Task HandleRaidStart(StartLocalRaidRequestData _, MongoId sessionId, string output)
     {
         if (_serviceProvider == null) throw new NullReferenceException(nameof(_serviceProvider));
         try
@@ -139,9 +139,9 @@ public class CustomStaticRouter: StaticRouter
             }
 
             // 归档已有玩家对局缓存
-            _injectableClasses.RecordManager!.ZipAccount(playerId);
+            await _injectableClasses.RecordManager!.ZipAccount(playerId);
             // 创建新缓存
-            RaidDataWrapper? recordWrapper = _injectableClasses.RecordManager.CreateRecord(playerId);
+            RaidDataWrapper? recordWrapper = await _injectableClasses.RecordManager.CreateRecord(playerId);
 
             logger.Debug($"DEBUG CustomStaticRouter.HandleRaidStart > 获取的记录recordWrapper是否为空: {recordWrapper == null!}" +
                          $"\njson解析的对象response是否为空: {response == null!}" +
@@ -158,7 +158,7 @@ public class CustomStaticRouter: StaticRouter
             if (recordWrapper?.Info is not null)
                 _raidUtil?.HandleRaidStart(recordWrapper.Info, serverId, sessionId);
             // recordWrapper.Info.ItemsTakeIn = Utils.GetInventoryInfo(pmcData, data.ItemHelper);
-            _injectableClasses.RecordManager.SaveEFTRecord(account!.Value);
+            await _injectableClasses.RecordManager.SaveEFTRecord(account!.Value);
             logger.Info(i18N
                 .GetText("CustomStaticRouter-Info.对局开始.已记录",
                     new
@@ -177,7 +177,7 @@ public class CustomStaticRouter: StaticRouter
         }
     }
 
-    private static void HandleRaidEnd(EndLocalRaidRequestData request, MongoId sessionId, string? _)
+    private static async Task HandleRaidEnd(EndLocalRaidRequestData request, MongoId sessionId, string? _)
     {
         try
         {
@@ -196,7 +196,7 @@ public class CustomStaticRouter: StaticRouter
             if (accountId == null)
                 throw new Exception(i18N.GetText("RecordManager-Error.指定的玩家账号不存在", new { PlayerId = playerId }));
 
-            EFTCombatRecord records = _injectableClasses.RecordManager!.GetRecord(accountId.Value);
+            EFTCombatRecord records = await _injectableClasses.RecordManager!.GetRecord(accountId.Value);
 
             if (records.Records.Count == 0 || records.InfoRecordCache == null)
                 throw new Exception(i18N.GetText("CustomStaticRouter-Error.对局结束.没有有效开局数据"));
@@ -209,8 +209,8 @@ public class CustomStaticRouter: StaticRouter
 
             int itemsTakeOutCount = records.InfoRecordCache.Info?.ItemsTakeOut.Count ?? 0;
 
-            _injectableClasses.RecordManager.ZipAccount(playerId);
-            _injectableClasses.RecordManager.SaveEFTRecord(accountId.Value);
+            await _injectableClasses.RecordManager.ZipAccount(playerId);
+            await _injectableClasses.RecordManager.SaveEFTRecord(accountId.Value);
             _injectableClasses.ModConfig?.Info(
                 i18N.GetText(
                     "CustomStaticRouter-Info.对局结束.已记录",

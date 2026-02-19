@@ -8,6 +8,9 @@ using SPTarkov.Server.Core.Utils;
 namespace RaidRecord.Core.Configs;
 
 // ReSharper disable once ClassNeverInstantiated.Global
+/// <summary>
+/// 提供配置管理与本地日志
+/// </summary>
 [Injectable(InjectionType = InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 1)]
 public class ModConfig(ModHelper modHelper,
     ISptLogger<ModConfig> logger,
@@ -79,25 +82,25 @@ public class ModConfig(ModHelper modHelper,
         }
     }
 
-    public void Info(string message)
+    public void Info(string message, bool enableSPTLog = true)
     {
         Log("Info", message);
-        logger.Info($"[RaidRecord] {message}");
+        if (enableSPTLog) logger.Info($"[RaidRecord] {message}");
     }
 
-    public void Debug(string message)
+    public void Debug(string message, bool enableSPTLog = true)
     {
         Log("Debug", message);
-        logger.Debug($"[RaidRecord] {message}");
+        if (enableSPTLog) logger.Debug($"[RaidRecord] {message}");
     }
 
-    public void Warn(string message)
+    public void Warn(string message, bool enableSPTLog = true)
     {
         Log("Warn", message);
-        logger.Warning($"[RaidRecord] {message}");
+        if (enableSPTLog) logger.Warning($"[RaidRecord] {message}");
     }
 
-    public void Error(string message, Exception? ex = null)
+    public void Error(string message, Exception? ex = null, bool enableSPTLog = true)
     {
         string logMessage = message;
         if (ex != null)
@@ -118,7 +121,7 @@ public class ModConfig(ModHelper modHelper,
             logMessage += $"\n\tStack Trace: {Environment.StackTrace}";
         }
         Log("Error", logMessage);
-        logger.Error($"[RaidRecord] {logMessage}");
+        if (enableSPTLog) logger.Error($"[RaidRecord] {logMessage}");
     }
 
     public void LogError(Exception e, string where, string? message = null)

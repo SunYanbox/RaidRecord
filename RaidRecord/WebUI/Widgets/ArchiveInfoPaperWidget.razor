@@ -67,7 +67,7 @@
                 @(I18N.WebUILocal.KillCount): @DataFormat.GetKillCount(Archive)
                 @(I18N.WebUILocal.HeadshotRate): @DataFormat.GetHeadshotRate(Archive)
             </MudText>
-            @if (DataFormat.GetKillCount(Archive) > 0)
+            @if (DataFormat.GetKillCount(Archive) > 0 && ShowToolZone)
             {
                 @if (_showKillAll)
                 {
@@ -122,13 +122,16 @@
         </MudCardContent>
     </MudCard>
 
-    <MudCard>
-        <QuickEquipmentWidget Archive="Archive" ProvideQuickBuy="@true"/>
-    </MudCard>
+    @if (ShowToolZone)
+    {
+        <MudCard>
+            <QuickEquipmentWidget Archive="Archive" ProvideQuickBuy="@true"/>
+        </MudCard>
 
-    <MudCard>
-        <ItemsShowWidget Archive="Archive"/>
-    </MudCard>
+        <MudCard>
+            <ItemsShowWidget Archive="Archive"/>
+        </MudCard>
+    }
 
     @code
     {
@@ -146,6 +149,8 @@
 @code {
     [Parameter]
     public required RaidArchive Archive { get; set; }
+
+    [Parameter] public bool ShowToolZone { get; set; } = true;
 
     public List<Victim> GetVictims() => Archive.EftStats?.Victims?.ToList() ?? [];
 }

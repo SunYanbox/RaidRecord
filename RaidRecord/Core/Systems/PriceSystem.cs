@@ -21,7 +21,7 @@ public class PriceSystem(
     DatabaseService databaseService,
     RagfairOfferService ragfairOfferService)
 {
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly Dictionary<MongoId, PriceCache> _priceCache = new();
 
     /// <summary> 物品价值缓存 </summary>

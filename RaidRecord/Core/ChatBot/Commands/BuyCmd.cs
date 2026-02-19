@@ -66,7 +66,7 @@ public class BuyCmd: CommandBase
 
         int index = _cmdUtil.GetParameter(parametric.Paras, "index", -1);
 
-        List<RaidArchive> records = _dataGetter.GetArchivesBySession(parametric.SessionId);
+        List<RaidArchive> records = _dataGetter.GetArchivesBySession(parametric.SessionId).Result;
 
         index = Math.Max(Math.Min(index < 0 ? records.Count + index : index, records.Count - 1), 0);
 
@@ -122,7 +122,7 @@ public class BuyCmd: CommandBase
         string? verify = _cmdUtil.VerifyIParametric(parametric);
         if (verify != null) return verify;
 
-        List<RaidArchive> records = _dataGetter.GetArchivesBySession(parametric.SessionId);
+        List<RaidArchive> records = _dataGetter.GetArchivesBySession(parametric.SessionId).Result;
         int numberLimit = _cmdUtil.GetParameter(parametric.Paras, "Limit", 10);
         int page = _cmdUtil.GetParameter(parametric.Paras, "Page", -1);
         numberLimit = Math.Min(50, Math.Max(1, numberLimit));

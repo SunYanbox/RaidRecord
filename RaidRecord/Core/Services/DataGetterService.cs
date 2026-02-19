@@ -84,12 +84,12 @@ public class DataGetterService(
     /// 获取指定会话下的所有存档
     /// </summary>
     /// <param name="sessionId">sessionId或者PmcId或者ProfileId</param>
-    public List<RaidArchive> GetArchivesBySession(string sessionId)
+    public async Task<List<RaidArchive>> GetArchivesBySession(string sessionId)
     {
         List<RaidArchive> result = [];
         MongoId? account = GetAccountBySession(sessionId);
         if (account == null) return result;
-        EFTCombatRecord records = recordManager.GetRecord(account.Value);
+        EFTCombatRecord records = await recordManager.GetRecord(account.Value);
         foreach (RaidDataWrapper record in records.Records)
         {
             if (record.IsArchive)
@@ -106,7 +106,7 @@ public class DataGetterService(
     public RaidArchive? GetArchiveWithServerId(string serverId, string sessionId)
     {
         if (string.IsNullOrEmpty(serverId)) return null;
-        List<RaidArchive> records = GetArchivesBySession(sessionId);
+        List<RaidArchive> records = GetArchivesBySession(sessionId).Result;
         RaidArchive? record = records.Find(x => x.ServerId.ToString() == serverId);
         return record;
     }
@@ -117,7 +117,7 @@ public class DataGetterService(
     /// <exception cref="IndexOutOfRangeException">索引超出范围时报错</exception>
     public RaidArchive GetArchiveWithIndex(int index, string sessionId)
     {
-        List<RaidArchive> records = GetArchivesBySession(sessionId);
+        List<RaidArchive> records = GetArchivesBySession(sessionId).Result;
         if (index >= records.Count || index < 0)
         {
             throw new IndexOutOfRangeException(i18N.GetText(
@@ -145,7 +145,7 @@ public class DataGetterService(
     {
         ArchivePageableResult result = new();
         filter ??= x => !string.IsNullOrEmpty(x.ServerId);
-        List<RaidArchive> records = GetArchivesBySession(session);
+        List<RaidArchive> records = GetArchivesBySession(session).Result;
         pageSize = Math.Min(PageSizeRange.Right, Math.Max(PageSizeRange.Left, pageSize));
 
         int totalCount = records.Count;
@@ -191,7 +191,8 @@ public class DataGetterService(
     /// <returns></returns>
     public List<ArchiveIndexed> GetArchivesIndexed(string session)
     {
-        return GetArchivesBySession(session)
+        
+        return GetArchivesBySession(session).Result
             .Select((x, i) => new ArchiveIndexed(x, i))
             .ToList();
     }

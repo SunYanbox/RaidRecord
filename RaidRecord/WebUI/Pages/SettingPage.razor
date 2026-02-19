@@ -49,7 +49,7 @@
     <MudPaper Outlined="true">
         <MudText>修复面板</MudText>
         @* 修复当前存档所有对局战损与收益计算 *@
-        <MudButton OnClick="@(() => FixAllArchive())">
+        <MudButton OnClick="@(async () => await FixAllArchive())">
             @I18N.WebUILocal.FixAllArchiveCombatLoss
         </MudButton>
     </MudPaper>
@@ -141,10 +141,10 @@
     /// <summary>
     /// 修复当前账号的所有存档的收益, 战损计算结果
     /// </summary>
-    protected void FixAllArchive()
+    protected async Task FixAllArchive()
     {
         MongoId account = WebData.CurrAccount;
-        EFTCombatRecord profile = RecordManager.GetRecord(account);
+        EFTCombatRecord profile = await RecordManager.GetRecord(account);
         var result = string.Empty;
         foreach (RaidDataWrapper wrapper in profile.Records)
         {
@@ -153,7 +153,7 @@
             if (!(Math.Abs(grossProfitDelta) > Constants.Epsilon) && !(Math.Abs(combatLossesDelta) > Constants.Epsilon)) continue;
             result += $"{wrapper.Archive.ServerId} {I18N.WebUILocal.GrossProfit}: {grossProfitDelta:+0.00;-0.00;0.00}  {I18N.WebUILocal.GrossProfit}: {combatLossesDelta:+0.00;-0.00;0.00}\n";
         }
-        RecordManager.SaveEFTRecord(account);
+        await RecordManager.SaveEFTRecord(account);
         Snackbar.Add(I18N.WebUILocal.Link(
             I18N.WebUILocal.FixAllArchiveCompleted,
             ": ",

@@ -1,11 +1,45 @@
 using System.Text.Json;
 using RaidRecord.Core.ChatBot.Models;
+using RaidRecord.Core.Configs;
 using RaidRecord.Core.Models;
+using SPTarkov.DI.Annotations;
 
 namespace RaidRecord.Core.Utils;
 
-public static class DataUtil
+[Injectable(InjectionType.Singleton)]
+public class DataUtil(ModConfig config)
 {
+    private readonly string[] _sizeUnits = ["B", "KB", "MB", "GB", "TB", "PB", "EB"];
+    
+    /// <summary>
+    /// 将字节数格式化为可读的文件大小
+    /// </summary>
+    public string GetFileSize(string filePath, int decimalPlaces = 2)
+    {
+        string emptySize = $"0 {_sizeUnits[0]}";
+        
+        if (!File.Exists(filePath)) return emptySize;
+
+        long bytes = 0;
+        
+        try
+        {
+            bytes = new FileInfo(filePath).Length;
+        }
+        catch (Exception e)
+        {
+            config.Error($"获取文件尺寸时出错: {e.Message}", e, false);
+        }
+        
+        if (bytes == 0) return emptySize;
+        
+        var magnitude = (int)Math.Floor(Math.Log(bytes, 1024));
+        magnitude = Math.Min(magnitude, _sizeUnits.Length - 1);
+        
+        var adjustedSize = bytes / Math.Pow(1024, magnitude);
+        return $"{adjustedSize.ToString($"F{decimalPlaces}")} {_sizeUnits[magnitude]}";
+    }
+    
     // 根据 ParaInfo 属性更新一条命令使用指南, 追加到原有的 desc 后
     public static void UpdateCommandDesc(CommandBase command)
     {
