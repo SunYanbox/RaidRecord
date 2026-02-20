@@ -6,7 +6,7 @@
 @using SPTarkov.Server.Core.Servers
 @using Color = MudBlazor.Color
 
-@inject I18N I18N
+@inject I18NMgr I18NMgr
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig
 @inject ItemHelper ItemHelper
@@ -23,11 +23,11 @@
           @bind-SelectedItem="SelectedPriceItem" SortLabel="Sort By">
     <ToolBarContent>
         <MudIcon Icon="@Icons.Material.Filled.PriceCheck" Color="Color.Success"/>
-        <MudText Typo="Typo.h6" Style="text-indent: 2ch;">@I18N.WebUILocal.PriceTitle</MudText>
-        <MudText Typo="Typo.body2" Style="text-indent: 2ch;">@I18N.WebUILocal.PricePageDesc</MudText>
+        <MudText Typo="Typo.h6" Style="text-indent: 2ch;">@I18NMgr.WebUILocal.PriceTitle</MudText>
+        <MudText Typo="Typo.body2" Style="text-indent: 2ch;">@I18NMgr.WebUILocal.PricePageDesc</MudText>
 
         <MudContainer Style="display: flex">
-            <MudTextField Typo="Typo.body1" @bind-Value="Query" Label="@I18N.WebUILocal.Name" Variant="Variant.Filled" Clearable="true"
+            <MudTextField Typo="Typo.body1" @bind-Value="Query" Label="@I18NMgr.WebUILocal.Name" Variant="Variant.Filled" Clearable="true"
                           Adornment="Adornment.End" AdornmentColor="Color.Primary"/>
             <MudNumericField Typo="Typo.body1" @bind-Value="TopN" Label="TopN" Variant="Variant.Filled" Min="1"
                              Max="50"/>
@@ -43,21 +43,21 @@
         <col style="min-width: 15ch"/>
     </ColGroup>
     <HeaderContent>
-        <MudTh>@I18N.WebUILocal.Name</MudTh>
+        <MudTh>@I18NMgr.WebUILocal.Name</MudTh>
         <MudTh>Tpl</MudTh>
         <MudTh>
-            @(I18N.WebUILocal.ModPrice)(rub)
-            <MudText Typo="Typo.body2">@I18N.WebUILocal.RagfairAveragePrice</MudText>
+            @(I18NMgr.WebUILocal.ModPrice)(rub)
+            <MudText Typo="Typo.body2">@I18NMgr.WebUILocal.RagfairAveragePrice</MudText>
         </MudTh>
-        <MudTh>@(I18N.WebUILocal.DynPrice)(rub)</MudTh>
-        <MudTh>@(I18N.WebUILocal.HandbookPrice)(rub)</MudTh>
+        <MudTh>@(I18NMgr.WebUILocal.DynPrice)(rub)</MudTh>
+        <MudTh>@(I18NMgr.WebUILocal.HandbookPrice)(rub)</MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<PriceItem, object>(x => x.Similarity)">
-                @I18N.WebUILocal.Similarity
+                @I18NMgr.WebUILocal.Similarity
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            @I18N.WebUILocal.ToolBar
+            @I18NMgr.WebUILocal.ToolBar
         </MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -71,30 +71,30 @@
         <MudTd>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Payment" Color="Color.Info"
                        Onclick="@(() => OnQuickBuyItem(context))">
-                @I18N.WebUILocal.BuyThisItem
+                @I18NMgr.WebUILocal.BuyThisItem
             </MudButton>
         </MudTd>
     </RowTemplate>
     <PagerContent>
-        <MudTablePager RowsPerPageString="@I18N.WebUILocal.TablePagerRowsPerPageString" InfoFormat="@I18N.WebUILocal.TablePagerInfoFormat"
+        <MudTablePager RowsPerPageString="@I18NMgr.WebUILocal.TablePagerRowsPerPageString" InfoFormat="@I18NMgr.WebUILocal.TablePagerInfoFormat"
                        PageSizeOptions="new[] { 10, 1, 5, 20, 50, 100 }"/>
     </PagerContent>
 </MudTable>
 
-<MudMessageBox @ref="QuickBuyItemMegBox" Title="Info" CancelText="@I18N.WebUILocal.Cancel">
+<MudMessageBox @ref="QuickBuyItemMegBox" Title="Info" CancelText="@I18NMgr.WebUILocal.Cancel">
     <MessageContent>
         <MudText>
-            @I18N.DumpFormatStrLocal(I18N.WebUILocal.BuyItemTitle, new { WillBuy?.Name })
-            <MudText Typo="Typo.body2" Color="Color.Warning">@I18N.WebUILocal.BuyItemWarn1</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Info">@I18N.WebUILocal.BuyItemWarn2</MudText>
+            @I18NMgr.DumpFormatStrLocal(I18NMgr.WebUILocal.BuyItemTitle, new { WillBuy?.Name })
+            <MudText Typo="Typo.body2" Color="Color.Warning">@I18NMgr.WebUILocal.BuyItemWarn1</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Info">@I18NMgr.WebUILocal.BuyItemWarn2</MudText>
         </MudText>
-        <MudText>@I18N.WebUILocal.PerPrice: @(WillBuy?.AvgPrice ?? 0)rub</MudText>
+        <MudText>@I18NMgr.WebUILocal.PerPrice: @(WillBuy?.AvgPrice ?? 0)rub</MudText>
         <MudNumericField @bind-Value="_num" Variant="Variant.Text" Min="1" Max="10000"/>
     </MessageContent>
 
     <YesButton>
         <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Commit"
-                   OnClick="@(() => YesBuy())">@I18N.WebUILocal.ConfirmPayment
+                   OnClick="@(() => YesBuy())">@I18NMgr.WebUILocal.ConfirmPayment
         </MudButton>
     </YesButton>
 
@@ -132,7 +132,7 @@
                 ModConfig.Warn("发送物品失败: 选择的物品模版ID为空");
                 return;
             }
-            string buySuccess = I18N.DumpFormatStrLocal(I18N.WebUILocal.SuccessBuyItemMsg,
+            string buySuccess = I18NMgr.DumpFormatStrLocal(I18NMgr.WebUILocal.SuccessBuyItemMsg,
             new {
                 WillBuy?.Name,
                 StackObjectsCount = _num,

@@ -26,7 +26,7 @@ namespace RaidRecord.Core.Services;
 /// </summary>
 [Injectable]
 public class ModMailService(
-    I18N i18N,
+    I18NMgr i18NMgr,
     ModConfig modConfig,
     ItemHelper itemHelper,
     ConfigServer configServer,
@@ -55,7 +55,7 @@ public class ModMailService(
         coreConfig.Features.ChatbotFeatures.Ids[chatbot.Info!.Nickname!] = chatbot.Id;
         coreConfig.Features.ChatbotFeatures.EnabledBots[chatbot.Id] = true;
         // logger.Info($"[RaidRecord] 已经成功注册ChatBot: {chatbot.Id}");
-        modConfig.Info(i18N.GetText("MainMod-Info.成功注册ChatBot", new
+        modConfig.Info(i18NMgr.GetText("MainMod-Info.成功注册ChatBot", new
         {
             ChatBotId = chatbot.Id
         }));

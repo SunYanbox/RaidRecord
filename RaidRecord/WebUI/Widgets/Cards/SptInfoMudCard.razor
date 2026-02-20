@@ -1,20 +1,20 @@
 @using SPTarkov.Server.Core.Models.Eft.Profile
 
-@inject I18N I18N
+@inject I18NMgr I18NMgr
 
 <MudCardContent Class="spt-info-mud-card-content">
-    <MudText>@I18N.WebUILocal.TitleCreateProfileSptVersion</MudText>
+    <MudText>@I18NMgr.WebUILocal.TitleCreateProfileSptVersion</MudText>
     <MudText Class="two-char-indent" Typo="Typo.body2">Version: @SptProfile?.SptData?.Version</MudText>
-    <MudText>@I18N.WebUILocal.HistoryLoadModInfo</MudText>
+    <MudText>@I18NMgr.WebUILocal.HistoryLoadModInfo</MudText>
     @{
         List<ModDetails> mods = SptProfile?.SptData?.Mods ?? [];
         IEnumerable<ModDetails> displayMods = _modInfoShowAll ? mods : mods.Take(5);
         foreach (ModDetails detail in displayMods)
         {
             <div style="display: flex">
-                <MudText Class="two-char-indent">@I18N.WebUILocal.Name: @detail.Name</MudText>
-                <MudText Class="two-char-indent">@I18N.WebUILocal.Version: @detail.Version</MudText>
-                <MudText Class="two-char-indent">@I18N.WebUILocal.Author: @detail.Author</MudText>
+                <MudText Class="two-char-indent">@I18NMgr.WebUILocal.Name: @detail.Name</MudText>
+                <MudText Class="two-char-indent">@I18NMgr.WebUILocal.Version: @detail.Version</MudText>
+                <MudText Class="two-char-indent">@I18NMgr.WebUILocal.Author: @detail.Author</MudText>
                 @if (!string.IsNullOrEmpty(detail.Url))
                 {
                     <MudLink Class="two-char-indent" Href="@detail.Url" Target="_blank">@detail.Name</MudLink>
@@ -48,12 +48,12 @@
     private void ToggleShowAll()
     {
         _modInfoShowAll = !_modInfoShowAll;
-        _modInfoShowAllText = _modInfoShowAll ? I18N.WebUILocal.Collapse : I18N.WebUILocal.Expand;
+        _modInfoShowAllText = _modInfoShowAll ? I18NMgr.WebUILocal.Collapse : I18NMgr.WebUILocal.Expand;
     }    
     
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        _modInfoShowAllText = I18N.WebUILocal.Expand;
+        _modInfoShowAllText = I18NMgr.WebUILocal.Expand;
     }
 }

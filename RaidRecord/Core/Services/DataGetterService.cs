@@ -22,7 +22,7 @@ public class DataGetterService(
     RecordManager recordManager,
     ProfileHelper profileHelper,
     ItemHelper itemHelper,
-    I18N i18N)
+    I18NMgr i18NMgr)
 {
     /// <summary>
     /// 获取Pmc存档数据
@@ -43,7 +43,7 @@ public class DataGetterService(
             Aid = 8100860,
             Info = new UserDialogDetails
             {
-                Nickname = i18N.GetText("ChatBotName"),
+                Nickname = i18NMgr.GetText("ChatBotName"),
                 Side = "Usec",
                 Level = 69,
                 MemberCategory = MemberCategory.Sherpa,
@@ -67,7 +67,7 @@ public class DataGetterService(
     /// </summary>
     public Dictionary<string, string>? GetSptLocals()
     {
-        return i18N.SptLocals;
+        return i18NMgr.SptLocals;
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ public class DataGetterService(
         List<RaidArchive> records = GetArchivesBySession(sessionId).Result;
         if (index >= records.Count || index < 0)
         {
-            throw new IndexOutOfRangeException(i18N.GetText(
+            throw new IndexOutOfRangeException(i18NMgr.GetText(
                 "DataGetter-Error.索引超出记录数量范围",
                 new
                 {

@@ -10,11 +10,11 @@ namespace RaidRecord.Core.Models.Tree;
 /// </summary>
 public sealed class RRTreeItemData: TreeItemData<MongoId>
 {
-    public RRTreeItemData(MongoId itemId, MongoId tplId, I18N i18N)
+    public RRTreeItemData(MongoId itemId, MongoId tplId, I18NMgr i18NMgr)
     {
         ItemId = itemId;
         TplId = tplId;
-        Text = i18N.GetItemName(tplId);
+        Text = i18NMgr.GetItemName(tplId);
         Value = itemId;
     }
     /// <summary> 物品 id </summary>

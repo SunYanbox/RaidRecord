@@ -1,6 +1,6 @@
 @page "/RaidRecord/Info"
 
-@inject I18N I18N
+@inject I18NMgr I18NMgr
 @inject ModConfig ModConfig
 @inject WebDataContext WebData
 @inject DataFormatService DataFormat
@@ -12,7 +12,7 @@
 <MudDynamicTabs Color="@Color.Info" Style="height: 100%; width: 100%;" AddTab="@OnAddTab" CloseTab="@OnCloseTab">
     @if (WebData.LookingServerIds.Count == 0)
     {
-        <MudText Color="Color.Error">@I18N.WebUILocal.NoArchiveWarn</MudText>
+        <MudText Color="Color.Error">@I18NMgr.WebUILocal.NoArchiveWarn</MudText>
     }
     else
     {
@@ -34,14 +34,14 @@
     }
 </MudDynamicTabs>
 
-<MudMessageBox @ref="MudMessageBox" Title="Info" CancelText="@I18N.WebUILocal.Cancel">
+<MudMessageBox @ref="MudMessageBox" Title="Info" CancelText="@I18NMgr.WebUILocal.Cancel">
     <MessageContent>
-        <MudText>@(I18N.WebUILocal.InputIndexUWantLook):</MudText>
+        <MudText>@(I18NMgr.WebUILocal.InputIndexUWantLook):</MudText>
         <MudNumericField @bind-Value="_index" Variant="Variant.Text" Min="0" Max="@GetMaxCount()"/>
     </MessageContent>
     <YesButton>
         <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Commit"
-                   OnClick="@(() => AddTab(_index))">@I18N.WebUILocal.Confirm
+                   OnClick="@(() => AddTab(_index))">@I18NMgr.WebUILocal.Confirm
         </MudButton>
     </YesButton>
 

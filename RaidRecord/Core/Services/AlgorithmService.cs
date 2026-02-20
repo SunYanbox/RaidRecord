@@ -10,7 +10,7 @@ namespace RaidRecord.Core.Services;
 /// 算法相关服务
 /// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
-public class AlgorithmService(I18N i18N)
+public class AlgorithmService(I18NMgr i18NMgr)
 {
     public static readonly string[] HeadshotBodyPart = ["Head", "Ears", "Eyes"];
     /// <summary>
@@ -126,7 +126,7 @@ public class AlgorithmService(I18N i18N)
 
         RRTreeItemData CreateTreeItem(TreeNode<Item> node)
         {
-            RRTreeItemData treeItem = new(node.Data.Id, node.Data.Template, i18N);
+            RRTreeItemData treeItem = new(node.Data.Id, node.Data.Template, i18NMgr);
             if (node.Children.Count > 0)
             {
                 treeItem.Children = node.Children.Select(CreateTreeItem).ToList();

@@ -1,3 +1,15 @@
+### 0.6.11
+
+重构本地化:
+- [x] ChatBot
+- [ ] Services
+- [ ] Systems
+- [ ] Utils
+- [ ] Layouts
+- [ ] Pages
+- [ ] Cards
+- [ ] Widgets
+
 ### 0.6.9
 
 - [x] 优化快速购买界面的装备选择逻辑, 允许修改逻辑为 **排除已选中**

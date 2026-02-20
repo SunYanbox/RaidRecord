@@ -6,6 +6,7 @@ using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Enums;
+using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
@@ -13,20 +14,21 @@ namespace RaidRecord.Core.ChatBot.Commands;
 public class InfoCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
-    private readonly I18N _i18N;
+    private readonly I18NMgr _i18NMgr;
     private readonly DataGetterService _dataGetter;
     private readonly DataFormatService _dataFormatService;
+    private I18N I18N => _i18NMgr.I18N!;
 
-    public InfoCmd(CmdUtil cmdUtil, DataGetterService dataGetter, DataFormatService dataFormatService, I18N i18N)
+    public InfoCmd(CmdUtil cmdUtil, DataGetterService dataGetter, DataFormatService dataFormatService, I18NMgr i18NMgr)
     {
         _cmdUtil = cmdUtil;
         Key = "info";
-        Desc = i18N.GetText("Cmd-Info.Desc");
+        Desc = "serverMessage.Cmd-Info.Desc".Translate(I18N);
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("index", "int", i18N.GetText("Cmd-参数简述.index"))
+            .AddParam("index", "int", "serverMessage.Cmd-参数简述.index".Translate(I18N))
             .SetOptional(["index"])
             .Build();
-        _i18N = i18N;
+        _i18NMgr = i18NMgr;
         _dataGetter = dataGetter;
         _dataFormatService = dataFormatService;
     }
@@ -51,12 +53,12 @@ public class InfoCmd: CommandBase
 
         if (victims.Count > 0)
         {
-            msg += _i18N.GetText("Cmd-Info.本局击杀标题");
+            msg += "serverMessage.Cmd-Info.本局击杀标题".Translate(I18N);
             foreach (Victim victim in victims)
             {
-                // "Cmd-Info.本局击杀信息": "\n {{VictimTime}} 使用{{WeaponName}}命中{{BodyPart}}淘汰距离{{VictimDistance}}m远的{{VictimName}}(等级:{{VictimLevel}} 阵营:{{VictimSide}} 角色:{{VictimRole}})",
-                msg += _i18N.GetText(
-                    "Cmd-Info.本局击杀信息",
+                // "serverMessage.Cmd-Info.本局击杀信息": "\n {{VictimTime}} 使用{{WeaponName}}命中{{BodyPart}}淘汰距离{{VictimDistance}}m远的{{VictimName}}(等级:{{VictimLevel}} 阵营:{{VictimSide}} 角色:{{VictimRole}})",
+                msg += "serverMessage.Cmd-Info.本局击杀信息".Translate(
+                    I18N,
                     new
                     {
                         VictimTime = _dataFormatService.GetVictimTime(victim),
@@ -80,21 +82,21 @@ public class InfoCmd: CommandBase
             Aggressor? aggressor = archive.EftStats?.Aggressor;
             if (aggressor != null)
             {
-                // "Cmd-Info.本局击杀者": "\n击杀者: {{AggressorName}}(阵营: {{AggressorSide}})使用{{WeaponName}}命中{{ArmorZone}}淘汰了你",
-                msg += _i18N.GetText(
-                    "Cmd-Info.本局击杀者",
+                // "serverMessage.Cmd-Info.本局击杀者": "\n击杀者: {{AggressorName}}(阵营: {{AggressorSide}})使用{{WeaponName}}命中{{ArmorZone}}淘汰了你",
+                msg += "serverMessage.Cmd-Info.本局击杀者".Translate(
+                    I18N,
                     new
                     {
                         AggressorName = aggressor.Name,
                         AggressorSide = aggressor.Side,
                         WeaponName = _dataFormatService.GetWeaponName(aggressor),
-                        BodyPart = _cmdUtil.I18N!.GetArmorZoneName(aggressor.BodyPart ?? _i18N.GetText("Unknown"))
+                        BodyPart = _cmdUtil.I18NMgr!.GetArmorZoneName(aggressor.BodyPart ?? "translations.Unknown".Translate(I18N))
                     }
                 );
             }
             else
             {
-                msg += _i18N.GetText("Cmd-Info.本局被击杀者信息加载失败");
+                msg += "serverMessage.Cmd-Info.本局被击杀者信息加载失败".Translate(I18N);
                 // msg += "\n击杀者数据加载失败";
             }
         }

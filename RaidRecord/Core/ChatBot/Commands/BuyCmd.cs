@@ -9,13 +9,14 @@ using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.ItemEvent;
+using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
 [Injectable]
 public class BuyCmd: CommandBase
 {
-    private readonly I18N _i18N;
+    private readonly I18NMgr _i18NMgr;
     private readonly CmdUtil _cmdUtil;
     private readonly ItemUtil _itemUtil;
     private readonly ItemHelper _itemHelper;
@@ -23,9 +24,10 @@ public class BuyCmd: CommandBase
     private readonly ProfileHelper _profileHelper;
     private readonly DataGetterService _dataGetter;
     private readonly ModMailService _modMailService;
+    private I18N I18N => _i18NMgr.I18N!;
 
     public BuyCmd(CmdUtil cmdUtil,
-        I18N i18N,
+        I18NMgr i18NMgr,
         ItemUtil itemUtil,
         ItemHelper itemHelper,
         PriceSystem priceSystem,
@@ -34,17 +36,17 @@ public class BuyCmd: CommandBase
         ModMailService modMailService)
     {
         _cmdUtil = cmdUtil;
+        _i18NMgr = i18NMgr;
         Key = "buy";
-        Desc = i18N.GetText("Cmd-Buy.Desc");
+        Desc = "serverMessage.Cmd-Buy.Desc".Translate(I18N);
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("index", "int", i18N.GetText("Cmd-参数简述.index"))
-            .AddParam("limit", "int", i18N.GetText("Cmd-参数化简述.limit"))
-            .AddParam("page", "int", i18N.GetText("Cmd-参数化简述.page"))
-            .AddParam("list", "int", i18N.GetText("Cmd-参数化简述.list"))
-            .AddParam("preview", "int", i18N.GetText("Cmd-参数化简述.preview"))
+            .AddParam("index", "int", "serverMessage.Cmd-参数简述.index".Translate(I18N))
+            .AddParam("limit", "int", "serverMessage.Cmd-参数化简述.limit".Translate(I18N))
+            .AddParam("page", "int", "serverMessage.Cmd-参数化简述.page".Translate(I18N))
+            .AddParam("list", "int", "serverMessage.Cmd-参数化简述.list".Translate(I18N))
+            .AddParam("preview", "int", "serverMessage.Cmd-参数化简述.preview".Translate(I18N))
             .SetOptional(["index", "limit", "page", "list", "preview"])
             .Build();
-        _i18N = i18N;
         _dataGetter = dataGetter;
         _itemUtil = itemUtil;
         _profileHelper = profileHelper;
@@ -80,15 +82,15 @@ public class BuyCmd: CommandBase
         PmcData? pmcData = _profileHelper.GetPmcProfile(parametric.SessionId);
 
         if (equipments.Length == 0 || totalPrice <= 0)
-            return _i18N.GetText("Cmd-Buy.Error.没有获取到已记录的有效装备数据");
-        if (pmcData == null) return _i18N.GetText("Cmd-Buy.Error.无法获取到Pmc存档信息");
+            return "serverMessage.Cmd-Buy.Error.没有获取到已记录的有效装备数据".Translate(I18N);
+        if (pmcData == null) return "serverMessage.Cmd-Buy.Error.无法获取到Pmc存档信息".Translate(I18N);
 
         if (parametric.Command.Contains("preview") || parametric.Command.Contains("pv"))
         {
             string msg = $"Index: {index}, ServerId: {archive.ServerId}\n";
             foreach (Item item in equipments)
             {
-                msg += $"{item.Template} {_i18N.GetItemName(item.Template)} {_itemHelper.GetItemQualityModifier(item)}x{_priceSystem.GetItemValueWithCache(item.Template)} rub\n";
+                msg += $"{item.Template} {_i18NMgr.GetItemName(item.Template)} {_itemHelper.GetItemQualityModifier(item)}x{_priceSystem.GetItemValueWithCache(item.Template)} rub\n";
             }
             return msg;
         }
@@ -100,7 +102,7 @@ public class BuyCmd: CommandBase
             return string.Join("\n", warnings.Select(x => x.ErrorMessage));
         }
 
-        string successMsg = _i18N.GetText("Cmd-Buy.Success.您已购买装备", new
+        string successMsg = "serverMessage.Cmd-Buy.Success.您已购买装备".Translate(I18N, new
         {
             Index = index,
             archive.ServerId,
@@ -144,7 +146,7 @@ public class BuyCmd: CommandBase
 
         int indexLeft = Math.Max(numberLimit * (page - 1), 0);
         int indexRight = Math.Min(numberLimit * page, totalCount);
-        if (totalCount <= 0) return _i18N.GetText("Cmd-Buy.BuyList.没有任何快购列表");
+        if (totalCount <= 0) return "serverMessage.Cmd-Buy.BuyList.没有任何快购列表".Translate(I18N);
         // if (totalCount <= 0) return "您没有任何快购列表, 请至少对局一次后再来查询吧";
         List<(int index, RaidArchive archive, long price)> results = [];
         for (int i = indexLeft; i < indexRight; i++)
@@ -154,7 +156,7 @@ public class BuyCmd: CommandBase
         int countBeforeCheck = results.Count;
         if (countBeforeCheck <= 0)
         {
-            return _i18N.GetText("Cmd-Buy.BuyList.没有找到指定页的记录",
+            return "serverMessage.Cmd-Buy.BuyList.没有找到指定页的记录".Translate(I18N,
                 new
                 {
                     StartIndex = indexLeft + 1,
@@ -166,7 +168,7 @@ public class BuyCmd: CommandBase
         results.RemoveAll(x => string.IsNullOrEmpty(x.archive.ServerId));
         int countAfterCheck = results.Count;
 
-        string msg = _i18N.GetText("Cmd-Buy.BuyList.快购列表.统计表头", new
+        string msg = "serverMessage.Cmd-Buy.BuyList.快购列表.统计表头".Translate(I18N, new
         {
             ResultCount = countAfterCheck,
             TotalCount = totalCount,
@@ -187,7 +189,7 @@ public class BuyCmd: CommandBase
         {
             RaidArchive row = results[k].archive;
 
-            string result = _i18N.GetText("UnknownResult");
+            string result = "translations.UnknownResult".Translate(I18N);
             RaidResultData? raidResultData = row.Results;
             try
             {
@@ -195,19 +197,19 @@ public class BuyCmd: CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                result = _cmdUtil.I18N!.GetText(raidResultData.Result.Value.ToString());
+                result = $"translations.{raidResultData.Result.Value.ToString()}".Translate(I18N);
             }
             catch (Exception e)
             {
                 _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.BuyListCommand",
-                    _i18N.GetText("Cmd-Buy.BuyList.获取对局结果信息时出错"));
+                    "serverMessage.Cmd-Buy.BuyList.获取对局结果信息时出错".Translate(I18N));
             }
 
             string[] values =
             [
                 results[k].index.ToString(),
                 CmdUtil.GetPlayerGroupOfServerId(row.ServerId),
-                _cmdUtil.I18N!.GetMapName(row.ServerId[..row.ServerId.IndexOf('.')].ToLower()),
+                _cmdUtil.I18NMgr!.GetMapName(row.ServerId[..row.ServerId.IndexOf('.')].ToLower()),
                 row.GrossProfit.ToString(),
                 row.CombatLosses.ToString(),
                 row.EquipmentValue.ToString(),
@@ -225,7 +227,7 @@ public class BuyCmd: CommandBase
             }
         }
 
-        string header = _i18N.GetText("Cmd-Buy.BuyList.快购列表.表头").Replace("\n", "");
+        string header = "serverMessage.Cmd-Buy.BuyList.快购列表.表头".Translate(I18N).Replace("\n", "");
         string[] coreHeader = header.Split('|');
 
         int colCount = Math.Min(colWidths.Length, coreHeader.Length);
@@ -233,8 +235,8 @@ public class BuyCmd: CommandBase
         if (colCount != colWidths.Length || colCount != coreHeader.Length)
         {
             _cmdUtil.ModConfig!.Warn(
-                _i18N.GetText(
-                    "Cmd-Buy.BuyList.快购列表.表头长度不一致",
+                "serverMessage.Cmd-Buy.BuyList.快购列表.表头长度不一致".Translate(
+                    I18N,
                     new
                     {
                         // 理论列数
@@ -258,7 +260,7 @@ public class BuyCmd: CommandBase
         {
             RaidArchive archive = results[i].archive;
 
-            string result = _i18N.GetText("UnknownResult");
+            string result = "translations.UnknownResult".Translate(I18N);
             RaidResultData? raidResultData = archive.Results;
             try
             {
@@ -266,12 +268,12 @@ public class BuyCmd: CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                result = _cmdUtil.I18N!.GetText(raidResultData.Result.Value.ToString());
+                result = $"translations.{raidResultData.Result.Value.ToString()}".Translate(I18N);
             }
             catch (Exception e)
             {
                 _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.BuyListCommand",
-                    _i18N.GetText("Cmd-Buy.BuyList.获取对局结果信息时出错"));
+                    "serverMessage.Cmd-Buy.BuyList.获取对局结果信息时出错".Translate(I18N));
                 // _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand", "尝试从本地数据库获取对局结果信息时出错");
             }
 
@@ -279,7 +281,7 @@ public class BuyCmd: CommandBase
             [
                 results[i].index.ToString(),
                 CmdUtil.GetPlayerGroupOfServerId(archive.ServerId),
-                _cmdUtil.I18N!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower()),
+                _cmdUtil.I18NMgr!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower()),
                 archive.GrossProfit.ToString(),
                 archive.CombatLosses.ToString(),
                 archive.EquipmentValue.ToString(),
@@ -298,8 +300,8 @@ public class BuyCmd: CommandBase
                 }
             }
 
-            // "Cmd-Buy.BuyList.快购列表.表行": " - {{Index}} | {{PlayerGroup}} | {{MapName}} | {{GrossProfit}} | {{CombatLosses}} | {{EquipmentValue}} | {{EquipmentCount}} | {{PlayTime}} | {{KillCount}} | {{Result}} | {{QuickBuyPrice}}\n",
-            msg += _i18N.GetText("Cmd-Buy.BuyList.快购列表.表行", new
+            // "serverMessage.Cmd-Buy.BuyList.快购列表.表行": " - {{Index}} | {{PlayerGroup}} | {{MapName}} | {{GrossProfit}} | {{CombatLosses}} | {{EquipmentValue}} | {{EquipmentCount}} | {{PlayTime}} | {{KillCount}} | {{Result}} | {{QuickBuyPrice}}\n",
+            msg += "serverMessage.Cmd-Buy.BuyList.快购列表.表行".Translate(I18N, new
             {
                 Index = values[0],
                 PlayerGroup = values[1],
@@ -320,7 +322,7 @@ public class BuyCmd: CommandBase
             //        + $"{StringUtil.TimeString(archive.Results?.PlayTime ?? 0)} {result}\n";
         }
         // if (jump > 0) msg += $"跳过{jump}条无效数据";
-        if (jump > 0) msg += _i18N.GetText("Cmd-Buy.BuyList.快购列表.跳过无效数据", new { JumpCount = jump });
+        if (jump > 0) msg += "serverMessage.Cmd-Buy.BuyList.快购列表.跳过无效数据".Translate(I18N, new { JumpCount = jump });
         return msg;
     }
 }

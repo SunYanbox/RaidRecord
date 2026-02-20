@@ -3,7 +3,7 @@
 @using SPTarkov.Server.Core.Models.Common
 @using Color = MudBlazor.Color
 
-@inject I18N I18N
+@inject I18NMgr I18NMgr
 @inject RaidUtil RaidUtil
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig
@@ -15,33 +15,33 @@
 <MainLayout/>
 
 <MudPaper>
-    <MudText Typo="Typo.h4">@I18N.WebUILocal.SettingTitle</MudText>
+    <MudText Typo="Typo.h4">@I18NMgr.WebUILocal.SettingTitle</MudText>
     <MudStack>
         @* 本地化语言 *@
         <MudSelect @bind-Value="Local"
                    Style="width: auto"
-                   Label="@I18N.WebUILocal.SelectLang"
+                   Label="@I18NMgr.WebUILocal.SelectLang"
                    AdornmentColor="Color.Secondary">
-            @foreach (string lang in I18N.AvailableLang)
+            @foreach (string lang in I18NMgr.I18N!.AvailableLang)
             {
                 <MudSelectItem Value="@lang">@lang</MudSelectItem>
             }
         </MudSelect>
         @* 自动卸载其他语言 *@
-        <MudTooltip Text="@I18N.WebUILocal.AutoUnloadLangDesc">
-            <MudSwitch @bind-Value="AutoUnloadOtherLang" Label="@I18N.WebUILocal.AutoUnloadLang" Color="Color.Secondary"/>
+        <MudTooltip Text="@I18NMgr.WebUILocal.AutoUnloadLangDesc">
+            <MudSwitch @bind-Value="AutoUnloadOtherLang" Label="@I18NMgr.WebUILocal.AutoUnloadLang" Color="Color.Secondary"/>
         </MudTooltip>
         @* 价格缓存更新时间 *@
-        <MudNumericField @bind-Value="PriceCacheUpdateMinTime" Label="@I18N.WebUILocal.PriceCacheUpdateMinTime" Variant="Variant.Text" Min="1" Max="604800000"/>
+        <MudNumericField @bind-Value="PriceCacheUpdateMinTime" Label="@I18NMgr.WebUILocal.PriceCacheUpdateMinTime" Variant="Variant.Text" Min="1" Max="604800000"/>
         @* 模组 Give 是否为 FIR *@
-        <MudTooltip Text="@I18N.WebUILocal.ModGiveIsFIRDesc">
-            <MudSwitch @bind-Value="ModGiveIsFIR" Label="@I18N.WebUILocal.ModGiveIsFIR" Color="Color.Info"/>
+        <MudTooltip Text="@I18NMgr.WebUILocal.ModGiveIsFIRDesc">
+            <MudSwitch @bind-Value="ModGiveIsFIR" Label="@I18NMgr.WebUILocal.ModGiveIsFIR" Color="Color.Info"/>
         </MudTooltip>
         @* 深色模式 *@
-        <MudSwitch @bind-Value="DarkMode" Label="@I18N.WebUILocal.IsDarkMode" Color="Color.Info"/>
+        <MudSwitch @bind-Value="DarkMode" Label="@I18NMgr.WebUILocal.IsDarkMode" Color="Color.Info"/>
         @* 维修耐久度 *@
-        <MudTooltip Text="@I18N.WebUILocal.IsRepairDurabilityDesc">
-            <MudSwitch @bind-Value="IsRepairDurability" Label="@I18N.WebUILocal.IsRepairDurability" Color="Color.Info"/>
+        <MudTooltip Text="@I18NMgr.WebUILocal.IsRepairDurabilityDesc">
+            <MudSwitch @bind-Value="IsRepairDurability" Label="@I18NMgr.WebUILocal.IsRepairDurability" Color="Color.Info"/>
         </MudTooltip>
     </MudStack>
     
@@ -50,7 +50,7 @@
         <MudText>修复面板</MudText>
         @* 修复当前存档所有对局战损与收益计算 *@
         <MudButton OnClick="@(async () => await FixAllArchive())">
-            @I18N.WebUILocal.FixAllArchiveCombatLoss
+            @I18NMgr.WebUILocal.FixAllArchiveCombatLoss
         </MudButton>
     </MudPaper>
     
@@ -58,13 +58,13 @@
     <ClaimCompensationWidget />
     
     <MudStack Row="true">
-        <MudButton OnClick="@(() => OnSaveConfig())">@I18N.WebUILocal.SaveConfigChange</MudButton>
-        <MudButton OnClick="@(() => CancelSaveConfig())">@I18N.WebUILocal.CancelConfigChange</MudButton>
-        <MudTooltip Text="@I18N.WebUILocal.ReInitLangDesc">
-            <MudButton OnClick="@(() => { I18N.ReInitLang(); DataGetter.ReInitName2Id(); })">@I18N.WebUILocal.ReInitLang</MudButton>
+        <MudButton OnClick="@(() => OnSaveConfig())">@I18NMgr.WebUILocal.SaveConfigChange</MudButton>
+        <MudButton OnClick="@(() => CancelSaveConfig())">@I18NMgr.WebUILocal.CancelConfigChange</MudButton>
+        <MudTooltip Text="@I18NMgr.WebUILocal.ReInitLangDesc">
+            <MudButton OnClick="@(() => { I18NMgr.ReInitLang(); DataGetter.ReInitName2Id(); })">@I18NMgr.WebUILocal.ReInitLang</MudButton>
         </MudTooltip>
-        <MudTooltip Text="@I18N.WebUILocal.CheckUpdateDesc">
-            <MudButton OnClick="@(() => CheckUpdate())">@I18N.WebUILocal.CheckUpdate</MudButton>
+        <MudTooltip Text="@I18NMgr.WebUILocal.CheckUpdateDesc">
+            <MudButton OnClick="@(() => CheckUpdate())">@I18NMgr.WebUILocal.CheckUpdate</MudButton>
         </MudTooltip>
     </MudStack>
 </MudPaper>
@@ -78,8 +78,8 @@
         set
         {
             if (string.IsNullOrEmpty(value)
-                || !I18N.AvailableLang.Contains(value)
-                || I18N.CurrLang == value) return;
+                || !I18NMgr.I18N!.AvailableLang.Contains(value)
+                || I18NMgr.CurrLang == value) return;
             _local = value;
         }
     }
@@ -100,7 +100,7 @@
         {
             ModConfig.Configs.Local = _local;
             Task.Run(() => {
-                I18N.CurrLang = _local;
+                I18NMgr.CurrLang = _local;
                 DataGetter.ReInitName2Id();
             });
         }
@@ -110,7 +110,7 @@
         ModConfig.Configs.DarkMode = DarkMode;
         ModConfig.Configs.IsRepairDurability = IsRepairDurability;
         _ = ModConfig.SaveConfig();
-        Snackbar.Add(I18N.DumpFormatStrLocal(I18N.WebUILocal.SaveConfigSuccess, new { CurrLang = _local }));
+        Snackbar.Add(I18NMgr.DumpFormatStrLocal(I18NMgr.WebUILocal.SaveConfigSuccess, new { CurrLang = _local }));
     }
 
     private void CancelSaveConfig()
@@ -151,11 +151,11 @@
             if (wrapper.Archive is null) continue;
             (long grossProfitDelta, long combatLossesDelta) = RaidUtil.ReCalculateArchive(wrapper.Archive);
             if (!(Math.Abs(grossProfitDelta) > Constants.Epsilon) && !(Math.Abs(combatLossesDelta) > Constants.Epsilon)) continue;
-            result += $"{wrapper.Archive.ServerId} {I18N.WebUILocal.GrossProfit}: {grossProfitDelta:+0.00;-0.00;0.00}  {I18N.WebUILocal.GrossProfit}: {combatLossesDelta:+0.00;-0.00;0.00}\n";
+            result += $"{wrapper.Archive.ServerId} {I18NMgr.WebUILocal.GrossProfit}: {grossProfitDelta:+0.00;-0.00;0.00}  {I18NMgr.WebUILocal.GrossProfit}: {combatLossesDelta:+0.00;-0.00;0.00}\n";
         }
         await RecordManager.SaveEFTRecord(account);
-        Snackbar.Add(I18N.WebUILocal.Link(
-            I18N.WebUILocal.FixAllArchiveCompleted,
+        Snackbar.Add(I18NMgr.WebUILocal.Link(
+            I18NMgr.WebUILocal.FixAllArchiveCompleted,
             ": ",
             result));
     }

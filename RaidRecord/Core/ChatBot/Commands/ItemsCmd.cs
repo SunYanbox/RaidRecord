@@ -14,11 +14,11 @@ public class ItemsCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
     private readonly ItemHelper _itemHelper;
-    private readonly I18N _i18N;
+    private readonly I18NMgr _i18NMgr;
     private readonly DataGetterService _dataGetter;
 
     public ItemsCmd(CmdUtil cmdUtil,
-        I18N i18N,
+        I18NMgr i18NMgr,
         ItemHelper itemHelper,
         DataGetterService dataGetter)
     {
@@ -26,15 +26,15 @@ public class ItemsCmd: CommandBase
         _itemHelper = itemHelper;
         _dataGetter = dataGetter;
         Key = "items";
-        Desc = i18N.GetText("Cmd-Items.Desc");
+        Desc = i18NMgr.GetText("serverMessage.Cmd-Items.Desc");
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("index", "int", i18N.GetText("Cmd-参数简述.index"))
-            .AddParam("mode", "string", i18N.GetText("Cmd-参数化简述.Items.mode"))
-            .AddParam("ge", "double", i18N.GetText("Cmd-参数化简述.Items.ge"))
-            .AddParam("le", "double", i18N.GetText("Cmd-参数化简述.Items.le"))
+            .AddParam("index", "int", i18NMgr.GetText("serverMessage.Cmd-参数简述.index"))
+            .AddParam("mode", "string", i18NMgr.GetText("serverMessage.Cmd-参数化简述.Items.mode"))
+            .AddParam("ge", "double", i18NMgr.GetText("serverMessage.Cmd-参数化简述.Items.ge"))
+            .AddParam("le", "double", i18NMgr.GetText("serverMessage.Cmd-参数化简述.Items.le"))
             .SetOptional(["index", "mode", "ge", "le"])
             .Build();
-        _i18N = i18N;
+        _i18NMgr = i18NMgr;
     }
 
     public override string Execute(Parametric parametric)
@@ -68,7 +68,7 @@ public class ItemsCmd: CommandBase
         msg += _cmdUtil.GetArchiveMetadata(archive);
 
         // Dictionary<MongoId, TemplateItem> itemTpls = databaseService.GetTables().Templates.Items;
-        Dictionary<string, string>? sptLocal = _i18N.SptLocals;
+        Dictionary<string, string>? sptLocal = _i18NMgr.SptLocals;
 
         if (sptLocal == null) return "无法显示属性, 这是由于SPT的本地化数据库加载失败";
 
@@ -78,8 +78,8 @@ public class ItemsCmd: CommandBase
             {
                 // "\n\n带入对局物品:\n   物品名称  物品单价(rub) * 物品修正 = 物品总价值(rub)  物品描述"
                 msg += "\n"
-                       + _i18N.GetText("Cmd-Items.All.带入物品标题")
-                       + _i18N.GetText("Cmd-Items.物品表头");
+                       + _i18NMgr.GetText("serverMessage.Cmd-Items.All.带入物品标题")
+                       + _i18NMgr.GetText("serverMessage.Cmd-Items.物品表头");
 
                 foreach ((MongoId tpl, double modify) in archive.ItemsTakeIn)
                 {
@@ -90,7 +90,7 @@ public class ItemsCmd: CommandBase
 
             if (archive is { ItemsTakeOut.Count: <= 0 }) return msg;
             {
-                msg += _i18N.GetText("Cmd-Items.All.带出物品标题");
+                msg += _i18NMgr.GetText("serverMessage.Cmd-Items.All.带出物品标题");
                 foreach ((MongoId tpl, double modify) in archive.ItemsTakeOut)
                 {
                     if (ShouldSkip(tpl, modify, ge, le)) continue;
@@ -106,9 +106,9 @@ public class ItemsCmd: CommandBase
         RaidUtil.UpdateItemsChanged(add, remove, change, archive.ItemsTakeIn, archive.ItemsTakeOut);
 
         // "\n\n物品变化:\n   物品名称  物品单价(rub) * 物品修正 = 物品总价值(rub)  物品描述"
-        msg += "\n" + _i18N.GetText("Cmd-Items.物品表头");
+        msg += "\n" + _i18NMgr.GetText("serverMessage.Cmd-Items.物品表头");
 
-        msg += _i18N.GetText("Cmd-Items.Change.获得的物品");
+        msg += _i18NMgr.GetText("serverMessage.Cmd-Items.Change.获得的物品");
 
         foreach (MongoId addTpl in add)
         {
@@ -118,7 +118,7 @@ public class ItemsCmd: CommandBase
             msg += $"\n + {GetItemDetails(addTpl, modify, sptLocal)}";
         }
 
-        msg += _i18N.GetText("Cmd-Items.Change.丢失的物品");
+        msg += _i18NMgr.GetText("serverMessage.Cmd-Items.Change.丢失的物品");
 
         foreach (MongoId removeTpl in remove)
         {
@@ -128,7 +128,7 @@ public class ItemsCmd: CommandBase
             msg += $"\n - {GetItemDetails(removeTpl, modify, sptLocal)}";
         }
 
-        msg += _i18N.GetText("Cmd-Items.Change.变化的物品");
+        msg += _i18NMgr.GetText("serverMessage.Cmd-Items.Change.变化的物品");
 
         foreach (MongoId changeTpl in change)
         {

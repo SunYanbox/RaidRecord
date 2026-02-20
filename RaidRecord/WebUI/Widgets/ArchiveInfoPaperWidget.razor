@@ -3,7 +3,7 @@
 @using SPTarkov.Server.Core.Models.Enums
 @using Color = MudBlazor.Color
 
-@inject I18N I18N
+@inject I18NMgr I18NMgr
 @inject DataFormatService DataFormat;
 @inject RecordManager RecordManager;
 
@@ -11,61 +11,61 @@
 <MudPaper Class="pa-4">
     <MudCard>
         <MudCardContent>
-            <MudText>@I18N.WebUILocal.BaseInfo</MudText>
+            <MudText>@I18NMgr.WebUILocal.BaseInfo</MudText>
             <MudText Typo="Typo.body2">
                 ServerId: @Archive.ServerId
-                @I18N.WebUILocal.ArchiveTime: @DataFormat.FromDateTimeSeconds(Archive.CreateTime)
-                @I18N.WebUILocal.PlayerNickName: @PlayerData.Info?.Nickname
-                @I18N.WebUILocal.PlayerLevel: @PlayerData.Info?.Level
-                @I18N.WebUILocal.PlayerId: @Archive.PlayerId
+                @I18NMgr.WebUILocal.ArchiveTime: @DataFormat.FromDateTimeSeconds(Archive.CreateTime)
+                @I18NMgr.WebUILocal.PlayerNickName: @PlayerData.Info?.Nickname
+                @I18NMgr.WebUILocal.PlayerLevel: @PlayerData.Info?.Level
+                @I18NMgr.WebUILocal.PlayerId: @Archive.PlayerId
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>@I18N.WebUILocal.Link(I18N.WebUILocal.MapName, I18N.WebUILocal.And, I18N.WebUILocal.SurviveTime)</MudText>
+            <MudText>@I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.MapName, I18NMgr.WebUILocal.And, I18NMgr.WebUILocal.SurviveTime)</MudText>
             <MudText Typo="Typo.body2">
-                @(I18N.WebUILocal.MapName): @DataFormat.GetMapNameLocal(Archive)
-                @(I18N.WebUILocal.SurviveTime): @DataFormat.FromTimeSeconds(Archive.Results?.PlayTime ?? 0)
+                @(I18NMgr.WebUILocal.MapName): @DataFormat.GetMapNameLocal(Archive)
+                @(I18NMgr.WebUILocal.SurviveTime): @DataFormat.FromTimeSeconds(Archive.Results?.PlayTime ?? 0)
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>@I18N.WebUILocal.ArchiveResult</MudText>
+            <MudText>@I18NMgr.WebUILocal.ArchiveResult</MudText>
             <MudText Typo="Typo.body2">
-                @I18N.WebUILocal.Result: @DataFormat.GetResultStr(Archive)
-                @I18N.WebUILocal.ExitName: @DataFormat.GetExitName(Archive)
-                @I18N.WebUILocal.SurvivorClass: @DataFormat.GetSurvivorClass(Archive)
+                @I18NMgr.WebUILocal.Result: @DataFormat.GetResultStr(Archive)
+                @I18NMgr.WebUILocal.ExitName: @DataFormat.GetExitName(Archive)
+                @I18NMgr.WebUILocal.SurvivorClass: @DataFormat.GetSurvivorClass(Archive)
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>@I18N.WebUILocal.EnterArchive</MudText>
+            <MudText>@I18NMgr.WebUILocal.EnterArchive</MudText>
             <MudText Typo="Typo.body2">
-                @I18N.WebUILocal.EquipmentValue: @Archive.EquipmentValue rub
-                @I18N.WebUILocal.SecuredValue: @Archive.SecuredValue rub
-                @I18N.WebUILocal.PreRaidValue: @Archive.PreRaidValue rub
+                @I18NMgr.WebUILocal.EquipmentValue: @Archive.EquipmentValue rub
+                @I18NMgr.WebUILocal.SecuredValue: @Archive.SecuredValue rub
+                @I18NMgr.WebUILocal.PreRaidValue: @Archive.PreRaidValue rub
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>@I18N.WebUILocal.ExitArchive</MudText>
+            <MudText>@I18NMgr.WebUILocal.ExitArchive</MudText>
             <MudText Typo="Typo.body2">
-                @I18N.WebUILocal.GrossProfit: @Archive.GrossProfit rub
-                @I18N.WebUILocal.CombatLoss: @Archive.CombatLosses rub
-                @I18N.WebUILocal.NetProfit: @DataFormat.GetNetProfit(Archive) rub
+                @I18NMgr.WebUILocal.GrossProfit: @Archive.GrossProfit rub
+                @I18NMgr.WebUILocal.CombatLoss: @Archive.CombatLosses rub
+                @I18NMgr.WebUILocal.NetProfit: @DataFormat.GetNetProfit(Archive) rub
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>@I18N.WebUILocal.KillInfo</MudText>
+            <MudText>@I18NMgr.WebUILocal.KillInfo</MudText>
             <MudText Typo="Typo.body2">
-                @(I18N.WebUILocal.KillCount): @DataFormat.GetKillCount(Archive)
-                @(I18N.WebUILocal.HeadshotRate): @DataFormat.GetHeadshotRate(Archive)
+                @(I18NMgr.WebUILocal.KillCount): @DataFormat.GetKillCount(Archive)
+                @(I18NMgr.WebUILocal.HeadshotRate): @DataFormat.GetHeadshotRate(Archive)
             </MudText>
             @if (DataFormat.GetKillCount(Archive) > 0 && ShowToolZone)
             {
@@ -73,11 +73,11 @@
                 {
                     <MudTable Items="@GetVictims()" FixedHeader="@true" FixedFooter="@true">
                         <HeaderContent>
-                            <MudTh>@I18N.WebUILocal.Time</MudTh>
-                            <MudTh>@I18N.WebUILocal.Weapon</MudTh>
-                            <MudTh>@I18N.WebUILocal.BodyPart</MudTh>
-                            <MudTh>@I18N.WebUILocal.Distance</MudTh>
-                            <MudTh>@I18N.WebUILocal.VictimInfo</MudTh>
+                            <MudTh>@I18NMgr.WebUILocal.Time</MudTh>
+                            <MudTh>@I18NMgr.WebUILocal.Weapon</MudTh>
+                            <MudTh>@I18NMgr.WebUILocal.BodyPart</MudTh>
+                            <MudTh>@I18NMgr.WebUILocal.Distance</MudTh>
+                            <MudTh>@I18NMgr.WebUILocal.VictimInfo</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd>@DataFormat.GetVictimTime(context)</MudTd>
@@ -93,7 +93,7 @@
                 }
                 <MudCardActions>
                     <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OnShowKillAllClick())">
-                        @(_showKillAll ? I18N.WebUILocal.Link(I18N.WebUILocal.Collapse, I18N.WebUILocal.KillInfo) : I18N.WebUILocal.Link(I18N.WebUILocal.Expand, I18N.WebUILocal.KillInfo))
+                        @(_showKillAll ? I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Collapse, I18NMgr.WebUILocal.KillInfo) : I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Expand, I18NMgr.WebUILocal.KillInfo))
                     </MudButton>
                 </MudCardActions>
             }
@@ -104,19 +104,19 @@
                 {
                     <MudCard>
                         <MudCardContent>
-                            <MudText>@I18N.WebUILocal.AggressorInfo</MudText>
+                            <MudText>@I18NMgr.WebUILocal.AggressorInfo</MudText>
                             <MudText Typo="Typo.body2">
-                                @I18N.WebUILocal.Name: @aggressor.Name
-                                @I18N.WebUILocal.Side: @aggressor.Side
-                                @I18N.WebUILocal.Link(I18N.WebUILocal.Weapon, I18N.WebUILocal.Name): @DataFormat.GetWeaponName(aggressor)
-                                @I18N.WebUILocal.Role: @DataFormat.GetRoleName(aggressor)
+                                @I18NMgr.WebUILocal.Name: @aggressor.Name
+                                @I18NMgr.WebUILocal.Side: @aggressor.Side
+                                @I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Weapon, I18NMgr.WebUILocal.Name): @DataFormat.GetWeaponName(aggressor)
+                                @I18NMgr.WebUILocal.Role: @DataFormat.GetRoleName(aggressor)
                             </MudText>
                         </MudCardContent>
                     </MudCard>
                 }
                 else
                 {
-                    <MudText>@I18N.WebUILocal.AggressorInfoLoadFail</MudText>
+                    <MudText>@I18NMgr.WebUILocal.AggressorInfoLoadFail</MudText>
                 }
             }
         </MudCardContent>

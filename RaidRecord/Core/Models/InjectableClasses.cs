@@ -11,7 +11,7 @@ namespace RaidRecord.Core.Models;
 public class InjectableClasses(
     JsonUtil jsonUtil,
     RecordManager recordCacheManager,
-    I18N i18N,
+    I18NMgr i18NMgr,
     ProfileHelper profileHelper,
     ItemHelper itemHelper,
     ModConfig modConfig,
@@ -20,7 +20,7 @@ public class InjectableClasses(
 {
     public JsonUtil? JsonUtil { get; set; } = jsonUtil;
     public RecordManager? RecordManager { get; set; } = recordCacheManager;
-    public I18N? I18N { get; set; } = i18N;
+    public I18NMgr? I18NMgr { get; set; } = i18NMgr;
     public ProfileHelper? ProfileHelper { get; set; } = profileHelper;
     public ItemHelper? ItemHelper { get; set; } = itemHelper;
     public ModConfig? ModConfig { get; set; } = modConfig;
@@ -30,7 +30,7 @@ public class InjectableClasses(
     {
         return JsonUtil != null
                && RecordManager != null
-               && I18N != null
+               && I18NMgr != null
                && ProfileHelper != null
                && ItemHelper != null
                && ModConfig != null

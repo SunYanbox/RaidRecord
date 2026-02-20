@@ -2,6 +2,7 @@ using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
+using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
@@ -10,13 +11,16 @@ public class HelpCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
     private readonly string _displayMessage;
+    private readonly I18NMgr _i18NMgr;
+    private I18N I18N => _i18NMgr.I18N!;
 
-    public HelpCmd(CmdUtil cmdUtil, I18N i18N)
+    public HelpCmd(CmdUtil cmdUtil, I18NMgr i18NMgr)
     {
         _cmdUtil = cmdUtil;
         Key = "help";
-        Desc = i18N.GetText("Cmd-Help.Desc");
-        _displayMessage = i18N.GetText("Cmd-Help.显示文本");
+        _i18NMgr = i18NMgr;
+        Desc = "serverMessage.Cmd-Help.Desc".Translate(I18N);
+        _displayMessage = "serverMessage.Cmd-Help.显示文本".Translate(I18N);
     }
 
     public override string Execute(Parametric parametric)

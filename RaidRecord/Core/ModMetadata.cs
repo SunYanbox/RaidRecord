@@ -18,7 +18,10 @@ public record ModMetadata: AbstractModMetadata, IModWebMetadata {
     public override Range SptVersion { get; init; } = new("~4.0.0");
 
     public override List<string>? Incompatibilities { get; init; }
-    public override Dictionary<string, Range>? ModDependencies { get; init; }
+    public override Dictionary<string, Range>? ModDependencies { get; init; } = new()
+    {
+        { "com.suntion.suntioncore", new Range(">=0.1.0") }
+    };
     public override string? Url { get; init; } = "https://forge.sp-tarkov.com/mod/2341/raidrecord";
     public override bool? IsBundleMod { get; init; } = false;
     public override string? License { get; init; } = "CC-BY-SA";

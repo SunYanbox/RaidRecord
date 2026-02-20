@@ -13,7 +13,7 @@ namespace RaidRecord.Core.Utils;
 
 [Injectable(InjectionType.Singleton)]
 public class CmdUtil(
-    I18N i18N,
+    I18NMgr i18NMgr,
     ModConfig modConfig,
     ProfileHelper profileHelper,
     RecordManager recordCacheManager,
@@ -21,7 +21,7 @@ public class CmdUtil(
 )
 {
     #region 提供依赖给工具调用 | 只放大部分命令需要的依赖
-    public readonly I18N? I18N = i18N;
+    public readonly I18NMgr? I18NMgr = i18NMgr;
     public readonly RecordManager? RecordManager = recordCacheManager;
     public readonly ModConfig? ModConfig = modConfig;
     public readonly ParaInfoBuilder ParaInfoBuilder = new();
@@ -46,7 +46,7 @@ public class CmdUtil(
         PmcData playerData = RecordManager!.GetPmcDataByPlayerId(playerId);
 
         // "Record-元数据.Id与玩家信息": "{{TimeFormat}} 对局ID: {{ServerId}} 玩家信息: {{Nickname}}(Level={{Level}}, id={{PlayerId}})"
-        msg += I18N!.GetText("Record-元数据.Id与玩家信息",
+        msg += I18NMgr!.GetText("Record-元数据.Id与玩家信息",
         new {
             TimeFormat = dataFormatService.GetCreateTimeStr(archive),
             ServerId = serverId,
@@ -55,7 +55,7 @@ public class CmdUtil(
             PlayerId = playerId
         });
         //"Record-元数据.地图与存活时间": "\n地图: {{MapName}} 生存时间: {{PlayTime}} 击杀数量: {{KillCount}} 爆头击杀率: {{HeadshotKillRate}}",
-        msg += I18N!.GetText("Record-元数据.地图与存活时间",
+        msg += I18NMgr!.GetText("Record-元数据.地图与存活时间",
         new {
             MapName = dataFormatService.GetMapNameLocal(archive),
             PlayTime = dataFormatService.FromTimeSeconds(archive.Results?.PlayTime ?? 0),
@@ -63,7 +63,7 @@ public class CmdUtil(
             HeadshotKillRate = dataFormatService.GetHeadshotRate(archive)
         });
         // "Record-元数据.入场信息": "\n入局战备: {{EquipmentValue}}rub, 安全箱物资价值: {{SecuredValue}}rub, 总带入价值: {{PreRaidValue}}rub",
-        msg += I18N!.GetText("Record-元数据.入场信息",
+        msg += I18NMgr!.GetText("Record-元数据.入场信息",
         new {
             EquipmentValue = (int)archive.EquipmentValue,
             SecuredValue = (int)archive.SecuredValue,
@@ -71,7 +71,7 @@ public class CmdUtil(
         });
 
         // "Record-元数据.退出信息": "\n带出价值: {{GrossProfit}}rub, 战损{{CombatLosses}}rub, 净利润{{NetProfit}}rub",
-        msg += I18N!.GetText("Record-元数据.退出信息",
+        msg += I18NMgr!.GetText("Record-元数据.退出信息",
         new {
             GrossProfit = (int)archive.GrossProfit,
             CombatLosses = (int)archive.CombatLosses,
@@ -79,7 +79,7 @@ public class CmdUtil(
         });
 
         // "Record-元数据.对局结果": "\n对局结果: {{Result}} 撤离点: {{ExitName}} 游戏风格: {{SurvivorClass}}",
-        msg += I18N.GetText("Record-元数据.对局结果",
+        msg += I18NMgr.GetText("Record-元数据.对局结果",
         new {
             Result = dataFormatService.GetResultStr(archive),
             ExitName = dataFormatService.GetExitName(archive),
@@ -104,7 +104,7 @@ public class CmdUtil(
         ArgumentNullException.ThrowIfNull(parameters);
 
         if (string.IsNullOrEmpty(key))
-            throw new ArgumentException(I18N!.GetText("CmdUtil-Error.参数键为空", new { KeyName = nameof(key) }));
+            throw new ArgumentException(I18NMgr!.GetText("serverMessage.CmdUtil-Error.参数键为空", new { KeyName = nameof(key) }));
         // throw new ArgumentException("Para key cannot be null or empty", nameof(key));
 
         // 如果字典中不存在该键，返回默认值
@@ -136,7 +136,7 @@ public class CmdUtil(
         int month = date.Month;
         int day = date.Day;
         string time = date.ToShortTimeString();
-        return I18N!.GetText("CmdUtil-日期时间格式化", new
+        return I18NMgr!.GetText("serverMessage.CmdUtil-日期时间格式化", new
         {
             Year = year,
             Month = month,
@@ -151,7 +151,7 @@ public class CmdUtil(
     {
         if (string.IsNullOrEmpty(parametric.SessionId))
         {
-            return I18N!.GetText("CmdUtil-Error.参数验证.Value为空",
+            return I18NMgr!.GetText("serverMessage.CmdUtil-Error.参数验证.Value为空",
                 new { ValueName = nameof(parametric.SessionId) });
             // return "未输入session参数或session为空";
         }
@@ -161,8 +161,8 @@ public class CmdUtil(
             PmcData? pmcData = profileHelper.GetPmcProfile(parametric.SessionId!);
             if (pmcData?.Id == null)
             {
-                throw new NullReferenceException(I18N!.GetText(
-                    "CmdUtil-Error.PmcData为空或PmcData.Id为空"
+                throw new NullReferenceException(I18NMgr!.GetText(
+                    "serverMessage.CmdUtil-Error.PmcData为空或PmcData.Id为空"
                 ));
                 // throw new NullReferenceException($"{nameof(pmcData)} or {nameof(pmcData.Id)}");
             }
@@ -170,20 +170,20 @@ public class CmdUtil(
             // if (string.IsNullOrEmpty(playerId)) throw new Exception("playerId为null或为空");
             if (string.IsNullOrEmpty(playerId))
             {
-                throw new Exception(I18N!.GetText("CmdUtil-Error.参数验证.Value为空",
+                throw new Exception(I18NMgr!.GetText("serverMessage.CmdUtil-Error.参数验证.Value为空",
                     new { ValueName = nameof(playerId) }));
             }
         }
         catch (Exception e)
         {
-            string errorMsg = I18N!.GetText("CmdUtil-Error.用户未注册或者Session已失效",
+            string errorMsg = I18NMgr!.GetText("serverMessage.CmdUtil-Error.用户未注册或者Session已失效",
                 new { ErrorMessage = e.Message });
             ModConfig?.LogError(e, "RaidRecordManagerChat.VerifyIParametric", errorMsg);
             return errorMsg;
         }
 
         return parametric.ManagerChat == null
-            ? I18N!.GetText("CmdUtil-Error.参数验证.属性ManagerChat为空")
+            ? I18NMgr!.GetText("serverMessage.CmdUtil-Error.参数验证.属性ManagerChat为空")
             : null;
         // return parametric.ManagerChat == null ? "实例未正确初始化: 缺少managerChat属性" : null;
     }

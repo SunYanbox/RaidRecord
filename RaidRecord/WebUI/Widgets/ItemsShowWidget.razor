@@ -1,6 +1,6 @@
 @using SPTarkov.Server.Core.Models.Common
 @using Color = MudBlazor.Color
-@inject I18N I18N
+@inject I18NMgr I18NMgr
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig
 @inject ItemHelper ItemHelper
@@ -10,36 +10,36 @@
 @inject WebDataContext WebDataContext
 
 <MudPaper Class="pa-16 ma-2" Outlined="true">
-    <MudText Typo="Typo.h4">@I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Change, I18N.WebUILocal.Info)</MudText>
+    <MudText Typo="Typo.h4">@I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Item, I18NMgr.WebUILocal.Change, I18NMgr.WebUILocal.Info)</MudText>
     <MudSpacer/>
     @if (_initEd)
     {
         <MudTable Items="@ItemDeltaShouldShow" Dense="@true" Hover="@true" Bordered="@true">
             <ToolBarContent>
                 <MudContainer Style="display: flex; align-items: center; height: 100%;">
-                    <MudText Typo="Typo.h6">@I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Change, I18N.WebUILocal.List)</MudText>
-                    <MudSwitch @bind-Value="_showAdd" Color="Color.Success">@I18N.WebUILocal.Add</MudSwitch>
-                    <MudSwitch @bind-Value="_showChange" Color="Color.Warning">@I18N.WebUILocal.Change</MudSwitch>
-                    <MudSwitch @bind-Value="_showRemove" Color="Color.Error">@I18N.WebUILocal.Remove</MudSwitch>
+                    <MudText Typo="Typo.h6">@I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Item, I18NMgr.WebUILocal.Change, I18NMgr.WebUILocal.List)</MudText>
+                    <MudSwitch @bind-Value="_showAdd" Color="Color.Success">@I18NMgr.WebUILocal.Add</MudSwitch>
+                    <MudSwitch @bind-Value="_showChange" Color="Color.Warning">@I18NMgr.WebUILocal.Change</MudSwitch>
+                    <MudSwitch @bind-Value="_showRemove" Color="Color.Error">@I18NMgr.WebUILocal.Remove</MudSwitch>
                 </MudContainer>
             </ToolBarContent>
             <HeaderContent>
-                <MudTh>@I18N.WebUILocal.Link(I18N.WebUILocal.Item, "ID")</MudTh>
-                <MudTh>@I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Name)</MudTh>
+                <MudTh>@I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Item, "ID")</MudTh>
+                <MudTh>@I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Item, I18NMgr.WebUILocal.Name)</MudTh>
                 <MudTh>
                     <MudTableSortLabel SortBy="new Func<KeyValuePair<MongoId, double>, object>(x => x.Value)">
-                        @I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Change)
+                        @I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Item, I18NMgr.WebUILocal.Change)
                     </MudTableSortLabel>
                 </MudTh>
                 <MudTh>
                     <MudTableSortLabel SortBy="new Func<KeyValuePair<MongoId, double>, object>(x => GetPrice(x))">
-                        @I18N.WebUILocal.Link(I18N.WebUILocal.Value, I18N.WebUILocal.Change)
+                        @I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Value, I18NMgr.WebUILocal.Change)
                     </MudTableSortLabel>
                 </MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>@context.Key</MudTd>
-                <MudTd>@I18N.GetItemName(context.Key)</MudTd>
+                <MudTd>@I18NMgr.GetItemName(context.Key)</MudTd>
                 <MudTd>
                     <MudText Color="@GetColor(context.Key)">@context.Value</MudText>
                 </MudTd>

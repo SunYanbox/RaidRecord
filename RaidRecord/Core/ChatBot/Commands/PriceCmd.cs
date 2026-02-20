@@ -5,6 +5,7 @@ using RaidRecord.Core.Systems;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
+using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
@@ -12,25 +13,26 @@ namespace RaidRecord.Core.ChatBot.Commands;
 public class PriceCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
-    private readonly I18N _i18N;
+    private readonly I18NMgr _i18NMgr;
     private readonly PriceSystem _priceSystem;
     private readonly ItemHelper _itemHelper;
     private readonly DataGetterService _dataGetter;
+    private I18N I18N => _i18NMgr.I18N!;
 
-    public PriceCmd(CmdUtil cmdUtil, I18N i18N, ItemHelper itemHelper, PriceSystem priceSystem,
+    public PriceCmd(CmdUtil cmdUtil, I18NMgr i18NMgr, ItemHelper itemHelper, PriceSystem priceSystem,
         DataGetterService dataGetter)
     {
         _cmdUtil = cmdUtil;
-        _i18N = i18N;
+        _i18NMgr = i18NMgr;
         _priceSystem = priceSystem;
         _itemHelper = itemHelper;
         _dataGetter = dataGetter;
         Key = "price";
-        Desc = i18N.GetText("Cmd-Price.Desc");
+        Desc = "serverMessage.Cmd-Price.Desc".Translate(I18N);
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("tpl", "string", i18N.GetText("Cmd-参数简述.tpl"))
-            .AddParam("name", "string", i18N.GetText("Cmd-参数简述.name"))
-            .AddParam("top", "int", i18N.GetText("Cmd-参数简述.top"))
+            .AddParam("tpl", "string", "serverMessage.Cmd-参数简述.tpl".Translate(I18N))
+            .AddParam("name", "string", "serverMessage.Cmd-参数简述.name".Translate(I18N))
+            .AddParam("top", "int", "serverMessage.Cmd-参数简述.top".Translate(I18N))
             .SetOptional(["tpl", "name", "top"])
             .Build();
     }
@@ -47,14 +49,14 @@ public class PriceCmd: CommandBase
 
         if (string.IsNullOrEmpty(tpl) && string.IsNullOrEmpty(name))
         {
-            return _i18N.GetText("Cmd-Price.Error.缺少参数");
+            return "serverMessage.Cmd-Price.Error.缺少参数".Translate(I18N);
         }
 
         if (!string.IsNullOrEmpty(tpl))
         {
             if (!_itemHelper.IsValidItem(tpl))
-                return _i18N.GetText("Cmd-Price.Error.无效的tpl", new { TplId = tpl });
-            return _i18N.GetText("Cmd-Price.tpl结果", new
+                return "serverMessage.Cmd-Price.Error.无效的tpl".Translate(I18N, new { TplId = tpl });
+            return "serverMessage.Cmd-Price.tpl结果".Translate(I18N, new
             {
                 TplId = tpl,
                 Name = _itemHelper.GetItemName(tpl),
@@ -62,7 +64,7 @@ public class PriceCmd: CommandBase
                 DynPrice = _itemHelper.GetDynamicItemPrice(tpl),
                 HandbookPrice = _itemHelper.GetStaticItemPrice(tpl)
             }) + "\n";
-            // "Cmd-Price.tpl结果": "物品模板ID: {{TplId}} 物品名称: {{Name}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub"
+            // "serverMessage.Cmd-Price.tpl结果": "物品模板ID: {{TplId}} 物品名称: {{Name}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub"
         }
 
         PriorityQueue<(string name, double similarity), double> pq = AlgorithmService.Search(name, _dataGetter.Name2Id, top);
@@ -71,10 +73,10 @@ public class PriceCmd: CommandBase
         while (pq.Count > 0)
         {
             (string nameResult, double similarityResult) = pq.Dequeue();
-            // "Cmd-Price.name结果": "物品名称: {{Name}} 物品模板ID: {{TplId}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub 相似得分: {{Similarity}}"
+            // "serverMessage.Cmd-Price.name结果": "物品名称: {{Name}} 物品模板ID: {{TplId}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub 相似得分: {{Similarity}}"
             string tplResult = _dataGetter.Name2Id[nameResult];
 
-            returnResult += _i18N.GetText("Cmd-Price.name结果", new
+            returnResult += "serverMessage.Cmd-Price.name结果".Translate(I18N, new
             {
                 Name = nameResult,
                 TplId = tplResult,

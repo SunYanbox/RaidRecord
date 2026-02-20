@@ -5,27 +5,29 @@ using RaidRecord.Core.Models.Services;
 using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
+using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
 [Injectable]
 public class ListCmd: CommandBase
 {
-    private readonly I18N _i18N;
+    private readonly I18NMgr _i18NMgr;
     private readonly CmdUtil _cmdUtil;
     private readonly DataGetterService _dataGetter;
+    private I18N I18N => _i18NMgr.I18N!;
 
-    public ListCmd(CmdUtil cmdUtil, I18N i18N, DataGetterService dataGetter)
+    public ListCmd(CmdUtil cmdUtil, I18NMgr i18NMgr, DataGetterService dataGetter)
     {
         _cmdUtil = cmdUtil;
+        _i18NMgr = i18NMgr;
         Key = "list";
-        Desc = i18N.GetText("Cmd-List.Desc");
+        Desc = "serverMessage.Cmd-List.Desc".Translate(I18N);
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("limit", "int", i18N.GetText("Cmd-参数化简述.limit"))
-            .AddParam("page", "int", i18N.GetText("Cmd-参数化简述.page"))
+            .AddParam("limit", "int", "serverMessage.Cmd-参数化简述.limit".Translate(I18N))
+            .AddParam("page", "int", "serverMessage.Cmd-参数化简述.page".Translate(I18N))
             .SetOptional(["limit", "page"])
             .Build();
-        _i18N = i18N;
         _dataGetter = dataGetter;
     }
 
@@ -44,7 +46,7 @@ public class ListCmd: CommandBase
 
         int countAfterCheck = results.Archives.Count;
 
-        string msg = _i18N.GetText("Cmd-List.历史战绩.统计表头", new
+        string msg = "serverMessage.Cmd-List.历史战绩.统计表头".Translate(I18N, new
         {
             ResultCount = countAfterCheck,
             TotalCount = countAfterCheck + results.JumpData,
@@ -67,7 +69,7 @@ public class ListCmd: CommandBase
         {
             RaidArchive row = results.Archives[k].Archive;
 
-            string result = _i18N.GetText("UnknownResult");
+            string result = "translations.UnknownResult".Translate(I18N);
             RaidResultData? raidResultData = row.Results;
             try
             {
@@ -75,19 +77,19 @@ public class ListCmd: CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                result = _cmdUtil.I18N!.GetText(raidResultData.Result.Value.ToString());
+                result = $"translations.{raidResultData.Result.Value.ToString()}".Translate(I18N);
             }
             catch (Exception e)
             {
                 _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand",
-                    _i18N.GetText("Cmd-List.获取对局结果信息时出错"));
+                    "serverMessage.Cmd-List.获取对局结果信息时出错".Translate(I18N));
             }
 
             string[] values =
             [
                 k.ToString(),
                 CmdUtil.GetPlayerGroupOfServerId(row.ServerId),
-                _cmdUtil.I18N!.GetMapName(row.ServerId[..row.ServerId.IndexOf('.')].ToLower()),
+                _cmdUtil.I18NMgr!.GetMapName(row.ServerId[..row.ServerId.IndexOf('.')].ToLower()),
                 row.PreRaidValue.ToString(),
                 row.EquipmentValue.ToString(),
                 row.GrossProfit.ToString(),
@@ -104,7 +106,7 @@ public class ListCmd: CommandBase
             }
         }
 
-        string header = _i18N.GetText("Cmd-List.历史战绩.表头").Replace("\n", "");
+        string header = "serverMessage.Cmd-List.历史战绩.表头".Translate(I18N).Replace("\n", "");
         string[] coreHeader = header.Split('|');
 
         int colCount = Math.Min(colWidths.Length, coreHeader.Length);
@@ -112,8 +114,8 @@ public class ListCmd: CommandBase
         if (colCount != colWidths.Length || colCount != coreHeader.Length)
         {
             _cmdUtil.ModConfig!.Warn(
-                _i18N.GetText(
-                    "Cmd-List.历史战绩.表头长度不一致",
+                "serverMessage.Cmd-List.历史战绩.表头长度不一致".Translate(
+                    I18N,
                     new
                     {
                         // 理论列数
@@ -139,7 +141,7 @@ public class ListCmd: CommandBase
         {
             RaidArchive archive = results.Archives[i].Archive;
 
-            string result = _i18N.GetText("UnknownResult");
+            string result = "translations.UnknownResult".Translate(I18N);
             RaidResultData? raidResultData = archive.Results;
             try
             {
@@ -147,12 +149,12 @@ public class ListCmd: CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                result = _cmdUtil.I18N!.GetText(raidResultData.Result.Value.ToString());
+                result = $"translations.{raidResultData.Result.Value.ToString()}".Translate(I18N);
             }
             catch (Exception e)
             {
                 _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand",
-                    _i18N.GetText("Cmd-List.获取对局结果信息时出错"));
+                    "serverMessage.Cmd-List.获取对局结果信息时出错".Translate(I18N));
                 // _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand", "尝试从本地数据库获取对局结果信息时出错");
             }
 
@@ -160,7 +162,7 @@ public class ListCmd: CommandBase
             [
                 results.Archives[i].Index.ToString(),
                 CmdUtil.GetPlayerGroupOfServerId(archive.ServerId),
-                _cmdUtil.I18N!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower()),
+                _cmdUtil.I18NMgr!.GetMapName(archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower()),
                 archive.PreRaidValue.ToString(),
                 archive.EquipmentValue.ToString(),
                 archive.GrossProfit.ToString(),
@@ -178,7 +180,7 @@ public class ListCmd: CommandBase
                 }
             }
 
-            msg += _i18N.GetText("Cmd-List.历史战绩.表行", new
+            msg += "serverMessage.Cmd-List.历史战绩.表行".Translate(I18N, new
             {
                 Index = values[0],
                 PlayerGroup = values[1],
@@ -198,7 +200,7 @@ public class ListCmd: CommandBase
             //        + $"{StringUtil.TimeString(archive.Results?.PlayTime ?? 0)} {result}\n";
         }
         // if (jump > 0) msg += $"跳过{jump}条无效数据";
-        if (jump > 0) msg += _i18N.GetText("Cmd-List.历史战绩.跳过无效数据", new { JumpCount = jump });
+        if (jump > 0) msg += "serverMessage.Cmd-List.历史战绩.跳过无效数据".Translate(I18N, new { JumpCount = jump });
         return msg;
     }
 }
