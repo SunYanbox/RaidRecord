@@ -1,45 +1,39 @@
 @using SPTarkov.Server.Core.Models.Common
 @using Color = MudBlazor.Color
-@inject I18N I18N
-@inject ISnackbar Snackbar
-@inject ModConfig ModConfig
-@inject ItemHelper ItemHelper
+@inject I18NMgr I18NMgr
 @inject PriceSystem PriceSystem
-@inject DataGetterService DataGetter
-@inject ModMailService ModMailService
-@inject WebDataContext WebDataContext
 
 <MudPaper Class="pa-16 ma-2" Outlined="true">
-    <MudText Typo="Typo.h4">@I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Change, I18N.WebUILocal.Info)</MudText>
+    <MudText Typo="Typo.h4">@("item::change::info".Translate(I18NMgr.I18N!))</MudText>
     <MudSpacer/>
     @if (_initEd)
     {
         <MudTable Items="@ItemDeltaShouldShow" Dense="@true" Hover="@true" Bordered="@true">
             <ToolBarContent>
                 <MudContainer Style="display: flex; align-items: center; height: 100%;">
-                    <MudText Typo="Typo.h6">@I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Change, I18N.WebUILocal.List)</MudText>
-                    <MudSwitch @bind-Value="_showAdd" Color="Color.Success">@I18N.WebUILocal.Add</MudSwitch>
-                    <MudSwitch @bind-Value="_showChange" Color="Color.Warning">@I18N.WebUILocal.Change</MudSwitch>
-                    <MudSwitch @bind-Value="_showRemove" Color="Color.Error">@I18N.WebUILocal.Remove</MudSwitch>
+                    <MudText Typo="Typo.h6">@("item::change::list".Translate(I18NMgr.I18N!))</MudText>
+                    <MudSwitch @bind-Value="_showAdd" Color="Color.Success">@("add".Translate(I18NMgr.I18N!))</MudSwitch>
+                    <MudSwitch @bind-Value="_showChange" Color="Color.Warning">@("change".Translate(I18NMgr.I18N!))</MudSwitch>
+                    <MudSwitch @bind-Value="_showRemove" Color="Color.Error">@("remove".Translate(I18NMgr.I18N!))</MudSwitch>
                 </MudContainer>
             </ToolBarContent>
             <HeaderContent>
-                <MudTh>@I18N.WebUILocal.Link(I18N.WebUILocal.Item, "ID")</MudTh>
-                <MudTh>@I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Name)</MudTh>
+                <MudTh>@(string.Join(I18NMgr.I18N!.LinkTag, "item".Translate(I18NMgr.I18N!), "ID"))</MudTh>
+                <MudTh>@("item::name".Translate(I18NMgr.I18N!))</MudTh>
                 <MudTh>
                     <MudTableSortLabel SortBy="new Func<KeyValuePair<MongoId, double>, object>(x => x.Value)">
-                        @I18N.WebUILocal.Link(I18N.WebUILocal.Item, I18N.WebUILocal.Change)
+                        @("item::change".Translate(I18NMgr.I18N!))
                     </MudTableSortLabel>
                 </MudTh>
                 <MudTh>
                     <MudTableSortLabel SortBy="new Func<KeyValuePair<MongoId, double>, object>(x => GetPrice(x))">
-                        @I18N.WebUILocal.Link(I18N.WebUILocal.Value, I18N.WebUILocal.Change)
+                        @("webUI.value::change".Translate(I18NMgr.I18N!))
                     </MudTableSortLabel>
                 </MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>@context.Key</MudTd>
-                <MudTd>@I18N.GetItemName(context.Key)</MudTd>
+                <MudTd>@I18NMgr.GetItemName(context.Key)</MudTd>
                 <MudTd>
                     <MudText Color="@GetColor(context.Key)">@context.Value</MudText>
                 </MudTd>
@@ -97,7 +91,7 @@
         return false;
     }
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         if (!_initEd)
         {

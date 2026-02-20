@@ -14,6 +14,8 @@ using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Utils;
 using SPTarkov.Server.Core.Utils.Cloners;
+using SuntionCore.Services.FileUtils;
+using SuntionCore.Services.I18NUtil;
 using Path = System.IO.Path;
 
 namespace RaidRecord.Core.Systems;
@@ -27,7 +29,7 @@ namespace RaidRecord.Core.Systems;
 /// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
 public sealed class RecordManager(
-    I18N i18N,
+    I18NMgr i18NMgr,
     ICloner cloner,
     DataUtil dataUtil,
     JsonUtil jsonUtil,
@@ -59,7 +61,7 @@ public sealed class RecordManager(
         HashSet<MongoId> accounts = profiles.Keys.ToHashSet();
         _accountIds = accounts;
         // 更新Pmc/Scav id 到账户id的映射
-        string msg = i18N.GetText("RecordManager-Debug.从SPT加载账户数据.标题");
+        string msg = "z2serverMessage.RecordManager-Debug.从SPT加载账户数据.标题".Translate(i18NMgr.I18N!);
         // string msg = "从SPT加载账户数据: ";
         foreach (MongoId accountId in accounts)
         {
@@ -69,7 +71,7 @@ public sealed class RecordManager(
             if (pmcId is not null) _playerId2Account[pmcId.Value] = accountId;
             if (scavId is not null) _playerId2Account[scavId.Value] = accountId;
             // msg += $"\n\tAccount: {accountId}, PmcId: {pmcId}, ScavId: {scavId}";
-            msg += i18N.GetText("RecordManager-Debug.从SPT加载账户数据.内容", new
+            msg += "z2serverMessage.RecordManager-Debug.从SPT加载账户数据.内容".Translate(i18NMgr.I18N!, new
             {
                 Account = accountId,
                 PmcId = pmcId,
@@ -86,7 +88,7 @@ public sealed class RecordManager(
     /// </summary>
     private void InitAllEFTCombatRecord()
     {
-        Dictionary<MongoId, SptProfile> profiles = saveServer.GetProfiles();
+        // Dictionary<MongoId, SptProfile> profiles = saveServer.GetProfiles();
         foreach (MongoId accountId in _accountIds)
         {
             if (_eftCombatRecords.ContainsKey(accountId)) continue;
@@ -109,8 +111,7 @@ public sealed class RecordManager(
     {
         if (_recordDbPath == null)
         {
-            modConfig.Error(i18N.GetText(
-                "RecordManager-Error.记录数据库文件夹不存在.Load",
+            modConfig.Error("z2serverMessage.RecordManager-Error.记录数据库文件夹不存在.Load".Translate(i18NMgr.I18N!,
                 new { RecordDbPath = _recordDbPath }
             ));
             // modConfig.Error($"加载记录数据库时记录的数据库文件夹路径\"{_recordDbPath}\"意外不存在, 请确保`db\\records`文件夹路径存在, 保存失败");
@@ -129,8 +130,7 @@ public sealed class RecordManager(
                 // if (data is null) throw new Exception($"反序列化文件{file}时获取不到数据");
                 if (data is null)
                 {
-                    throw new Exception(i18N.GetText(
-                        "Json-Error.反序列化文件结果为null",
+                    throw new Exception("z2serverMessage.Json-Error.反序列化文件结果为null".Translate(i18NMgr.I18N!,
                         new { FilePath = file }
                     ));
                 }
@@ -140,8 +140,7 @@ public sealed class RecordManager(
             }
             catch (Exception e)
             {
-                modConfig.Error(i18N.GetText(
-                    "RecordManager-Error.加载记录数据时发生错误",
+                modConfig.Error("z2serverMessage.RecordManager-Error.加载记录数据时发生错误".Translate(i18NMgr.I18N!,
                     new
                     {
                         CurrVersion = modConfig.Metadata.Version.ToString(),
@@ -155,8 +154,7 @@ public sealed class RecordManager(
                 // if (data is null) throw new Exception($"反序列化文件{file}时获取不到数据");
                 if (records is null)
                 {
-                    throw new Exception(i18N.GetText(
-                        "Json-Error.反序列化文件结果为null",
+                    throw new Exception("z2serverMessage.Json-Error.反序列化文件结果为null".Translate(i18NMgr.I18N!,
                         new { FilePath = file }
                     ));
                 }
@@ -169,8 +167,7 @@ public sealed class RecordManager(
                 // 重命名文件, 避免重复迁移
                 string newFile = file.Replace(fileBaseName, account.ToString());
                 modConfig.Info($"正在将旧数据库文件{file}迁移为新版本格式: {newFile}");
-                modConfig.Info(i18N.GetText(
-                    "RecordManager-Info.数据库迁移完成",
+                modConfig.Info("z2serverMessage.RecordManager-Info.数据库迁移完成".Translate(i18NMgr.I18N!,
                     new
                     {
                         OldFile = file,
@@ -201,8 +198,7 @@ public sealed class RecordManager(
             {
                 File.Copy(originalFilePath, backupPath);
                 // modConfig.Info($"序列化记录时出现问题: {e.Message}, 已备份损坏文件至: {backupPath}");
-                modConfig.Info(i18N.GetText(
-                    "Json-Error.反序列化出错并备份文件",
+                modConfig.Info("z2serverMessage.Json-Error.反序列化出错并备份文件".Translate(i18NMgr.I18N!,
                     new
                     {
                         OriginalFilePath = originalFilePath,
@@ -214,7 +210,7 @@ public sealed class RecordManager(
             catch (Exception copyEx)
             {
                 // modConfig.Error($"备份文件过程中发生错误: {copyEx.Message}", copyEx);
-                modConfig.Error(i18N.GetText("Json-Error.备份文件出错", new { ErrorMessage = copyEx.Message }));
+                modConfig.Error("z2serverMessage.Json-Error.备份文件出错".Translate(i18NMgr.I18N!, new { ErrorMessage = copyEx.Message }));
             }
         }
     }
@@ -245,10 +241,10 @@ public sealed class RecordManager(
     {
         if (_eftCombatRecords.TryGetValue(playerId, out EFTCombatRecord? eftRecord))
         {
-            return dataUtil.GetFileSize(eftRecord.FilePath);
+            return eftRecord.FilePath.ToFileSize();
         }
 
-        return dataUtil.GetFileSize(string.Empty);
+        return "".ToFileSize();
     }
 
     /// <summary> 通过Account, Pmc, Session或Scav Id获取PmcData实例 </summary>
@@ -265,8 +261,7 @@ public sealed class RecordManager(
                 : sptProfile.CharacterData!.ScavData)!;
         }
         // throw new Exception($"未找到{playerId}对应的PmcData实例");
-        throw new Exception(i18N.GetText(
-            "RecordManager-Error.未找到PmcData实例",
+        throw new Exception("z2serverMessage.RecordManager-Error.未找到PmcData实例".Translate(i18NMgr.I18N!,
             new { PlayerId = playerId }
         ));
     }
@@ -277,8 +272,7 @@ public sealed class RecordManager(
         if (!_eftCombatRecords.TryGetValue(account, out EFTCombatRecord? eftRecord))
         {
             // modConfig.Error($"保存记录数据库时账户Id: {account}未找到, 请确保已保存过该账户的记录");
-            modConfig.Error(i18N.GetText(
-                "RecordManager-Error.保存记录数据库时账户Id未找到",
+            modConfig.Error("z2serverMessage.RecordManager-Error.保存记录数据库时账户Id未找到".Translate(i18NMgr.I18N!,
                 new { AccountId = account }));
             return;
         }
@@ -287,8 +281,7 @@ public sealed class RecordManager(
             MongoId oldId = eftRecord.AccountId;
             eftRecord.AccountId = account;
             // modConfig.Warn($"保存记录数据库时账户Id不一致, 已将数据库账户Id从{oldId}修改为: {account}");
-            modConfig.Warn(i18N.GetText(
-                "RecordManager-Warn.保存数据库时账户Id不一致",
+            modConfig.Warn("z2serverMessage.RecordManager-Warn.保存数据库时账户Id不一致".Translate(i18NMgr.I18N!,
                 new
                 {
                     OldId = oldId,
@@ -299,8 +292,7 @@ public sealed class RecordManager(
         if (_recordDbPath == null)
         {
             modConfig.Error($"保存记录数据库时数据库文件路径\"{_recordDbPath}\"意外不存在, 请确保`db\\records`文件夹路径存在, 保存失败");
-            modConfig.Error(i18N.GetText(
-                "RecordManager-Error.记录数据库文件夹不存在.Save",
+            modConfig.Error("z2serverMessage.RecordManager-Error.记录数据库文件夹不存在.Save".Translate(i18NMgr.I18N!,
                 new
                 {
                     RecordDbPath = _recordDbPath
@@ -322,7 +314,7 @@ public sealed class RecordManager(
 
         if (_recordDbPath == null)
         {
-            string errorMsg = i18N.GetText("RecordManager-Error.记录数据库文件夹不存在");
+            string errorMsg = "z2serverMessage.RecordManager-Error.记录数据库文件夹不存在".Translate(i18NMgr.I18N!);
             modConfig.Error(errorMsg);
             throw new InvalidDataException(errorMsg);
         }
@@ -347,7 +339,7 @@ public sealed class RecordManager(
             MongoId? account = GetAccount(playerId);
             if (account == null!)
             {
-                throw new Exception(i18N.GetText("RecordManager-Error.指定的玩家账号不存在", new
+                throw new Exception("z2serverMessage.RecordManager-Error.指定的玩家账号不存在".Translate(i18NMgr.I18N!, new
                 {
                     PlayerId = playerId
                 }));
@@ -361,8 +353,7 @@ public sealed class RecordManager(
             {
                 records.Records.Add(ZipRaidDataWrapper(records.InfoRecordCache));
                 // modConfig.Warn($"玩家{playerId}的战绩记录缓存不为空, 已直接归档缓存");
-                modConfig.Warn(i18N.GetText(
-                    "RecordManager-Warn.创建记录时存在缓存->归档缓存",
+                modConfig.Warn("z2serverMessage.RecordManager-Warn.创建记录时存在缓存->归档缓存".Translate(i18NMgr.I18N!,
                     new { PlayerId = playerId }));
             }
             records.InfoRecordCache = wrapper;
@@ -374,7 +365,7 @@ public sealed class RecordManager(
         {
             Console.WriteLine($"RecordManager.CreateRecord: {e.Message}\nstack: {e.StackTrace}");
             modConfig.LogError(e, "RaidRecordManager.CreateRecord.try-catch",
-                i18N.GetText("创建记录实例时出错"));
+                "创建记录实例时出错".Translate(i18NMgr.I18N!));
             throw;
         }
     }

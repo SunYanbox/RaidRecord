@@ -6,6 +6,7 @@ using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
+using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
@@ -14,27 +15,27 @@ public class ItemsCmd: CommandBase
 {
     private readonly CmdUtil _cmdUtil;
     private readonly ItemHelper _itemHelper;
-    private readonly I18N _i18N;
+    private readonly I18NMgr _i18NMgr;
     private readonly DataGetterService _dataGetter;
 
     public ItemsCmd(CmdUtil cmdUtil,
-        I18N i18N,
+        I18NMgr i18NMgr,
         ItemHelper itemHelper,
         DataGetterService dataGetter)
     {
         _cmdUtil = cmdUtil;
         _itemHelper = itemHelper;
         _dataGetter = dataGetter;
+        _i18NMgr = i18NMgr;
         Key = "items";
-        Desc = i18N.GetText("Cmd-Items.Desc");
+        Desc = "z2serverMessage.Cmd-Items.Desc".Translate(_i18NMgr.I18N!);
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("index", "int", i18N.GetText("Cmd-参数简述.index"))
-            .AddParam("mode", "string", i18N.GetText("Cmd-参数化简述.Items.mode"))
-            .AddParam("ge", "double", i18N.GetText("Cmd-参数化简述.Items.ge"))
-            .AddParam("le", "double", i18N.GetText("Cmd-参数化简述.Items.le"))
+            .AddParam("index", "int", "z3translations.Cmd-参数简述.index".Translate(_i18NMgr.I18N!))
+            .AddParam("mode", "string", "z3translations.Cmd-参数化简述.Items.mode".Translate(_i18NMgr.I18N!))
+            .AddParam("ge", "double", "z3translations.Cmd-参数化简述.Items.ge".Translate(_i18NMgr.I18N!))
+            .AddParam("le", "double", "z3translations.Cmd-参数化简述.Items.le".Translate(_i18NMgr.I18N!))
             .SetOptional(["index", "mode", "ge", "le"])
             .Build();
-        _i18N = i18N;
     }
 
     public override string Execute(Parametric parametric)
@@ -43,9 +44,9 @@ public class ItemsCmd: CommandBase
         if (verify != null) return verify;
 
         int index = _cmdUtil.GetParameter(parametric.Paras, "index", -1);
-        string mode = _cmdUtil.GetParameter<string>(parametric.Paras, "mode", "change");
-        double ge = _cmdUtil.GetParameter<double>(parametric.Paras, "ge", 0);
-        double le = _cmdUtil.GetParameter<double>(parametric.Paras, "le", double.MaxValue);
+        var mode = _cmdUtil.GetParameter<string>(parametric.Paras, "mode", "change");
+        var ge = _cmdUtil.GetParameter<double>(parametric.Paras, "ge", 0);
+        double le = _cmdUtil.GetParameter(parametric.Paras, "le", double.MaxValue);
 
         return GetItemsDetails(
             _dataGetter.GetArchiveWithIndex(index, parametric.SessionId),
@@ -68,7 +69,7 @@ public class ItemsCmd: CommandBase
         msg += _cmdUtil.GetArchiveMetadata(archive);
 
         // Dictionary<MongoId, TemplateItem> itemTpls = databaseService.GetTables().Templates.Items;
-        Dictionary<string, string>? sptLocal = _i18N.SptLocals;
+        Dictionary<string, string>? sptLocal = _i18NMgr.I18N?.SptLocals;
 
         if (sptLocal == null) return "无法显示属性, 这是由于SPT的本地化数据库加载失败";
 
@@ -78,8 +79,8 @@ public class ItemsCmd: CommandBase
             {
                 // "\n\n带入对局物品:\n   物品名称  物品单价(rub) * 物品修正 = 物品总价值(rub)  物品描述"
                 msg += "\n"
-                       + _i18N.GetText("Cmd-Items.All.带入物品标题")
-                       + _i18N.GetText("Cmd-Items.物品表头");
+                       + "z2serverMessage.Cmd-Items.All.带入物品标题".Translate(_i18NMgr.I18N!)
+                       + "z2serverMessage.Cmd-Items.物品表头".Translate(_i18NMgr.I18N!);
 
                 foreach ((MongoId tpl, double modify) in archive.ItemsTakeIn)
                 {
@@ -90,7 +91,7 @@ public class ItemsCmd: CommandBase
 
             if (archive is { ItemsTakeOut.Count: <= 0 }) return msg;
             {
-                msg += _i18N.GetText("Cmd-Items.All.带出物品标题");
+                msg += "z2serverMessage.Cmd-Items.All.带出物品标题".Translate(_i18NMgr.I18N!);
                 foreach ((MongoId tpl, double modify) in archive.ItemsTakeOut)
                 {
                     if (ShouldSkip(tpl, modify, ge, le)) continue;
@@ -106,9 +107,9 @@ public class ItemsCmd: CommandBase
         RaidUtil.UpdateItemsChanged(add, remove, change, archive.ItemsTakeIn, archive.ItemsTakeOut);
 
         // "\n\n物品变化:\n   物品名称  物品单价(rub) * 物品修正 = 物品总价值(rub)  物品描述"
-        msg += "\n" + _i18N.GetText("Cmd-Items.物品表头");
+        msg += "\n" + "z2serverMessage.Cmd-Items.物品表头".Translate(_i18NMgr.I18N!);
 
-        msg += _i18N.GetText("Cmd-Items.Change.获得的物品");
+        msg += "z2serverMessage.Cmd-Items.Change.获得的物品".Translate(_i18NMgr.I18N!);
 
         foreach (MongoId addTpl in add)
         {
@@ -118,7 +119,7 @@ public class ItemsCmd: CommandBase
             msg += $"\n + {GetItemDetails(addTpl, modify, sptLocal)}";
         }
 
-        msg += _i18N.GetText("Cmd-Items.Change.丢失的物品");
+        msg += "z2serverMessage.Cmd-Items.Change.丢失的物品".Translate(_i18NMgr.I18N!);
 
         foreach (MongoId removeTpl in remove)
         {
@@ -128,7 +129,7 @@ public class ItemsCmd: CommandBase
             msg += $"\n - {GetItemDetails(removeTpl, modify, sptLocal)}";
         }
 
-        msg += _i18N.GetText("Cmd-Items.Change.变化的物品");
+        msg += "z2serverMessage.Cmd-Items.Change.变化的物品".Translate(_i18NMgr.I18N!);
 
         foreach (MongoId changeTpl in change)
         {
