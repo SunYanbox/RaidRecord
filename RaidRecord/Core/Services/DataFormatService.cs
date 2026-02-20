@@ -2,6 +2,7 @@ using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.Services;
 
@@ -9,10 +10,10 @@ namespace RaidRecord.Core.Services;
 /// 这个服务用于模组数据的格式化文本输出
 /// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
-public class DataFormatService(I18N i18N)
+public class DataFormatService(I18NMgr i18NMgr)
 {
     public IReadOnlyDictionary<string, string>? SptLocals;
-    public readonly string UnknowWeapon = i18N.GetText("UnknownWeapon");
+    public readonly string UnknowWeapon = "UnknownWeapon".Translate(i18NMgr.I18N!);
 
     #region Archive
     /// <summary> 从ServerId解析地图ID </summary>
@@ -30,7 +31,7 @@ public class DataFormatService(I18N i18N)
     /// <summary> 获取Archive的地图名称格式化值 </summary>
     public string GetMapNameLocal(RaidArchive archive)
     {
-        return i18N.GetMapName(GetMapId(archive));
+        return i18NMgr.GetMapName(GetMapId(archive));
     }
 
     /// <summary> 获取Archive的击杀数 </summary>
@@ -52,19 +53,19 @@ public class DataFormatService(I18N i18N)
     public string GetSurvivorClass(RaidArchive archive)
     {
         string survivorClass = archive.EftStats?.SurvivorClass ?? "Unknown";
-        return i18N.SptLocals?.GetValueOrDefault(survivorClass) ?? i18N.GetText("Unknown");
+        return i18NMgr.I18N?.SptLocals?.GetValueOrDefault(survivorClass) ?? "Unknown".Translate(i18NMgr.I18N!);
     }
 
     /// <summary> 获取Archive的撤离点名称 </summary>
     public string GetExitName(RaidArchive archive)
     {
-        return i18N.GetExitName(GetMapId(archive), archive.Results?.ExitName ?? i18N.GetText("Unknown"));
+        return i18NMgr.GetExitName(GetMapId(archive), archive.Results?.ExitName ?? "Unknown".Translate(i18NMgr.I18N!));
     }
 
     /// <summary> 获取Archive的结算结果 </summary>
     public string GetResultStr(RaidArchive archive)
     {
-        return i18N.GetText(archive.Results?.Result.ToString() ?? "UnknownResult");
+        return (archive.Results?.Result.ToString() ?? "UnknownResult").Translate(i18NMgr.I18N!);
     }
 
     /// <summary> 获取净利润 </summary>
@@ -78,7 +79,7 @@ public class DataFormatService(I18N i18N)
     /// <summary> 获取 Victim 击杀信息 的武器名称 </summary>
     public string GetWeaponName(Victim victim)
     {
-        SptLocals ??= i18N.GetSptLocals();
+        SptLocals ??= i18NMgr.I18N?.SptLocals;
         if (SptLocals == null || victim.Weapon == null) return UnknowWeapon;
         string weaponName = victim.Weapon.Replace("Short", "");
         return SptLocals.GetValueOrDefault(weaponName, weaponName);
@@ -87,7 +88,7 @@ public class DataFormatService(I18N i18N)
     /// <summary> 获取 Victim 击杀信息 的部位名称 </summary>
     public string GetBodyPartName(Victim victim)
     {
-        return i18N.GetArmorZoneName(victim.BodyPart ?? "");
+        return i18NMgr.GetArmorZoneName(victim.BodyPart ?? "");
     }
 
     /// <summary> 获取 Victim 击杀信息 的距离 </summary>
@@ -99,19 +100,19 @@ public class DataFormatService(I18N i18N)
     /// <summary> 获取 Victim 击杀信息 的身份 </summary>
     public string GetRoleName(Victim victim)
     {
-        return i18N.GetRoleName(victim.Role ?? "");
+        return i18NMgr.GetRoleName(victim.Role ?? "");
     }
 
     /// <summary> 获取 Aggressor 击杀信息 的身份 </summary>
     public string GetRoleName(Aggressor aggressor)
     {
-        return i18N.GetRoleName(aggressor.Role ?? "");
+        return i18NMgr.GetRoleName(aggressor.Role ?? "");
     }
 
     /// <summary> 获取 Aggressor 击杀玩家者的武器名称 </summary>
     public string GetWeaponName(Aggressor aggressor)
     {
-        SptLocals ??= i18N.GetSptLocals();
+        SptLocals ??= i18NMgr.I18N?.SptLocals;
         if (SptLocals == null || aggressor.WeaponName == null) return UnknowWeapon;
         string weaponName = aggressor.WeaponName.Replace("Short", "");
         return SptLocals.GetValueOrDefault(weaponName, weaponName);
@@ -132,14 +133,14 @@ public class DataFormatService(I18N i18N)
     /// <param name="seconds">时间戳</param>
     public string FromDateTimeSeconds(long seconds)
     {
-        DateTime time = DateTimeOffset.FromUnixTimeSeconds(seconds).DateTime;
+        DateTime time = DateTimeOffset.FromUnixTimeSeconds(seconds).LocalDateTime;
         return time.ToShortDateString() + " " + time.ToShortTimeString();
     }
 
     /// <summary> 获取Unix时间戳的 时间 格式化值 </summary>
     public string FromTimeSeconds(long seconds)
     {
-        return DateTimeOffset.FromUnixTimeSeconds(seconds).DateTime.ToLongTimeString();
+        return DateTimeOffset.FromUnixTimeSeconds(seconds).LocalDateTime.ToLongTimeString();
     }
     #endregion
 }
