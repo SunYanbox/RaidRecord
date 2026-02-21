@@ -36,12 +36,12 @@ public class RaidRecordManagerChat(
         catch (Exception e)
         {
             modConfig.Error(
-                "Chatbot-Error.指令处理失败".Translate(
+                "z2serverMessage.Chatbot-Error.指令处理失败".Translate(
                     I18N,
                     new { SessionId = sessionId }
                 ), e);
             // modConfig.Error($"用户{sessionId}输入的指令处理失败: ", e);
-            modMailService.SendMessage(sessionId, "Chatbot-Mail.发送指令处理失败信息".Translate(
+            modMailService.SendMessage(sessionId, "z2serverMessage.Chatbot-Mail.发送指令处理失败信息".Translate(
                 I18N,
                 new
                 {
@@ -63,7 +63,7 @@ public class RaidRecordManagerChat(
         }
         else
         {
-            modConfig.Warn("Chatbot-Warn.无法从DI解析命令实例".Translate(
+            modConfig.Warn("z2serverMessage.Chatbot-Warn.无法从DI解析命令实例".Translate(
                 I18N,
                 new { CommandType = typeof(T).Name }
             ));
@@ -84,7 +84,7 @@ public class RaidRecordManagerChat(
             RegisterCommand<PriceCmd>();
             RegisterCommand<BuyCmd>();
 
-            modConfig.Info("Chatbot-Info.命令初始化完毕".Translate(
+            modConfig.Info("z2serverMessage.Chatbot-Info.命令初始化完毕".Translate(
                 I18N,
                 new { WhichCommandsRegister = string.Join(", ", Commands.Keys.ToArray()) }
             ));
@@ -92,7 +92,7 @@ public class RaidRecordManagerChat(
         }
         catch (Exception e)
         {
-            modConfig.Error("Chatbot-Error.命令初始化失败".Translate(
+            modConfig.Error("z2serverMessage.Chatbot-Error.命令初始化失败".Translate(
                 I18N,
                 new { ErrorMessage = e.Message }
             ), e);
@@ -105,7 +105,7 @@ public class RaidRecordManagerChat(
         DataUtil.UpdateCommandDesc(commandBase);
         if (commandBase.Key == null)
         {
-            modConfig.Error("Chatbot-Error.添加命令失败.缺少键".Translate(
+            modConfig.Error("z2serverMessage.Chatbot-Error.添加命令失败.缺少键".Translate(
                 I18N,
                 new { CommandType = commandBase.GetType().Name }
             ));
@@ -120,13 +120,13 @@ public class RaidRecordManagerChat(
         string[] data = StringUtil.SplitCommand(command.ToLower());
         if (data.Length <= 0)
         {
-            return "Chatbot-Error.未输入任何命令".Translate(I18N);
+            return "z2serverMessage.Chatbot-Error.未输入任何命令".Translate(I18N);
         }
 
         // logger.Info($"全部命令: {string.Join(", ", _commands.Keys.ToArray())}, 输入的指令: \"{command}\", 检测出的指令: {data[0]}");
         if (!Commands.TryGetValue(data[0], out CommandBase? iCmd))
         {
-            return "Chatbot-Error.未知的命令".Translate(
+            return "z2serverMessage.Chatbot-Error.未知的命令".Translate(
                 I18N,
                 new { Command = data[0], AvailableCommands = string.Join(",", Commands.Keys.ToArray()) }
             );
@@ -154,7 +154,7 @@ public class RaidRecordManagerChat(
         catch (Exception e)
         {
             result += e.Message;
-            modConfig.Error("Chatbot-Error.命令执行失败".Translate(
+            modConfig.Error("z2serverMessage.Chatbot-Error.命令执行失败".Translate(
                 I18N,
                 new { Command = iCmd.GetType().Name, ErrorMessage = e.Message }
             ), e);

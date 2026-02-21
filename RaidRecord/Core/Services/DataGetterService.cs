@@ -10,6 +10,7 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Enums;
+using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.Services;
 
@@ -43,7 +44,7 @@ public class DataGetterService(
             Aid = 8100860,
             Info = new UserDialogDetails
             {
-                Nickname = i18NMgr.GetText("ChatBotName"),
+                Nickname = "z3translations.ChatBotName".Translate(i18NMgr.I18N!),
                 Side = "Usec",
                 Level = 69,
                 MemberCategory = MemberCategory.Sherpa,
@@ -67,7 +68,7 @@ public class DataGetterService(
     /// </summary>
     public Dictionary<string, string>? GetSptLocals()
     {
-        return i18NMgr.SptLocals;
+        return i18NMgr.I18N?.SptLocals;
     }
 
     /// <summary>
@@ -120,8 +121,8 @@ public class DataGetterService(
         List<RaidArchive> records = GetArchivesBySession(sessionId).Result;
         if (index >= records.Count || index < 0)
         {
-            throw new IndexOutOfRangeException(i18NMgr.GetText(
-                "DataGetter-Error.索引超出记录数量范围",
+            throw new IndexOutOfRangeException("z2serverMessage.DataGetter-Error.索引超出记录数量范围".Translate(
+                i18NMgr.I18N!,
                 new
                 {
                     Index = index,

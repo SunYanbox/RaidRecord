@@ -4,20 +4,20 @@
 @inject I18NMgr I18NMgr
 
 <MudCardContent Class="bot-info-mud-card-content" Style="@Style">
-    <MudText>PMC @I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Profile, I18NMgr.WebUILocal.Info)</MudText>
-    <MudText Class="two-char-indent">@I18NMgr.WebUILocal.Nickname: @PmcData?.Info?.Nickname</MudText>
-    <MudText Class="two-char-indent">@I18NMgr.WebUILocal.LowerNickname: @PmcData?.Info?.LowerNickname</MudText>
-    <MudText Class="two-char-indent">@I18NMgr.WebUILocal.Level: @PmcData?.Info?.Level</MudText>
-    <MudText Class="two-char-indent">@I18NMgr.WebUILocal.GameVersion: @PmcData?.Info?.GameVersion</MudText>
-    <MudText Class="two-char-indent">@I18NMgr.WebUILocal.Side: @PmcData?.Info?.Side</MudText>
-    <MudText>SCAV @I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Profile, I18NMgr.WebUILocal.Info)</MudText>
+    <MudText>PMC @("profile::info".Translate(I18NMgr.I18N!))</MudText>
+    <MudText Class="two-char-indent">@("nickname".Translate(I18NMgr.I18N!)): @PmcData?.Info?.Nickname</MudText>
+    <MudText Class="two-char-indent">@("webUI.lowerNickname".Translate(I18NMgr.I18N!)): @PmcData?.Info?.LowerNickname</MudText>
+    <MudText Class="two-char-indent">@("level".Translate(I18NMgr.I18N!)): @PmcData?.Info?.Level</MudText>
+    <MudText Class="two-char-indent">@("webUI.gameVersion".Translate(I18NMgr.I18N!)): @PmcData?.Info?.GameVersion</MudText>
+    <MudText Class="two-char-indent">@("side".Translate(I18NMgr.I18N!)): @PmcData?.Info?.Side</MudText>
+    <MudText>SCAV @("profile::info".Translate(I18NMgr.I18N!))</MudText>
     @if (_botInfoShowAll)
     {
-        <MudText Class="two-char-indent">@I18NMgr.WebUILocal.Nickname: @ScavData?.Info?.Nickname</MudText>
-        <MudText Class="two-char-indent">@I18NMgr.WebUILocal.LowerNickname: @ScavData?.Info?.LowerNickname</MudText>
-        <MudText Class="two-char-indent">@I18NMgr.WebUILocal.Level: @ScavData?.Info?.Level</MudText>
-        <MudText Class="two-char-indent">@I18NMgr.WebUILocal.GameVersion: @ScavData?.Info?.GameVersion</MudText>
-        <MudText Class="two-char-indent">@I18NMgr.WebUILocal.Side: @ScavData?.Info?.Side</MudText>
+        <MudText Class="two-char-indent">@("nickname".Translate(I18NMgr.I18N!)): @ScavData?.Info?.Nickname</MudText>
+        <MudText Class="two-char-indent">@("webUI.lowerNickname".Translate(I18NMgr.I18N!)): @ScavData?.Info?.LowerNickname</MudText>
+        <MudText Class="two-char-indent">@("level".Translate(I18NMgr.I18N!)): @ScavData?.Info?.Level</MudText>
+        <MudText Class="two-char-indent">@("webUI.gameVersion".Translate(I18NMgr.I18N!)): @ScavData?.Info?.GameVersion</MudText>
+        <MudText Class="two-char-indent">@("side".Translate(I18NMgr.I18N!)): @ScavData?.Info?.Side</MudText>
     }
     <MudCardActions>
         <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => ToggleShowAll())">
@@ -43,18 +43,23 @@
     private PmcData? PmcData => SptProfile?.CharacterData?.PmcData;
     private PmcData? ScavData => SptProfile?.CharacterData?.ScavData;
 
+    private string? _collapse;
+    private string? _expand;
+
     private bool _botInfoShowAll;
     private string? _botInfoShowAllText;
 
     private void ToggleShowAll()
     {
         _botInfoShowAll = !_botInfoShowAll;
-        _botInfoShowAllText = _botInfoShowAll ? I18NMgr.WebUILocal.Collapse : I18NMgr.WebUILocal.Expand;
+        _botInfoShowAllText = _botInfoShowAll ? _collapse : _expand;
     }
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        _botInfoShowAllText = I18NMgr.WebUILocal.Expand;
+        _collapse = "collapse".Translate(I18NMgr.I18N!);
+        _expand = "expand".Translate(I18NMgr.I18N!);
+        _botInfoShowAllText = _expand;
     }
 }

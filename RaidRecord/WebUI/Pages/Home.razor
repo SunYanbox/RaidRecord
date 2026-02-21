@@ -17,7 +17,7 @@
 
 <MudSelect @bind-Value="WebData.CurrAccount"
            Style="width: auto"
-           Label="@I18NMgr.WebUILocal.ChoiceProfile"
+           Label="@("webUI.choiceProfile".Translate(I18NMgr.I18N!))"
            AdornmentColor="Color.Secondary">
     @foreach (MongoId account in AccountAllExist)
     {

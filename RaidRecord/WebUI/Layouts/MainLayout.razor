@@ -21,13 +21,13 @@
 <MudLayout>
     <MudAppBar Elevation="2" Style="width: 100%">
         <MudText Typo="Typo.body1" Style="min-width: 18ch">@NameAndVersion</MudText>
-        <MudNavLink Class="mud-nav-link" Href="/RaidRecord" Match="NavLinkMatch.All">@I18NMgr.WebUILocal.NavLinkHome</MudNavLink>
-        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/List" Match="NavLinkMatch.All">@I18NMgr.WebUILocal.NavLinkList</MudNavLink>
-        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Info" Match="NavLinkMatch.All">@I18NMgr.WebUILocal.NavLinkInfo</MudNavLink>
-        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Price" Match="NavLinkMatch.All">@I18NMgr.WebUILocal.NavLinkPrice</MudNavLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord" Match="NavLinkMatch.All">@("webUI.navLinkRaidRecord".Translate(I18NMgr.I18N!))</MudNavLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/List" Match="NavLinkMatch.All">@("webUI.navLinkList".Translate(I18NMgr.I18N!))</MudNavLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Info" Match="NavLinkMatch.All">@("webUI.navLinkInfo".Translate(I18NMgr.I18N!))</MudNavLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Price" Match="NavLinkMatch.All">@("webUI.navLinkPrice".Translate(I18NMgr.I18N!))</MudNavLink>
         <MudSpacer/>
-        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Setting" Match="NavLinkMatch.All">@I18NMgr.WebUILocal.NavLinkSettings</MudNavLink>
-        <MudLink Class="mud-nav-link" Color="Color.Default" Target="_blank" Href="@Url">@I18NMgr.WebUILocal.NavLinkAbout</MudLink>
+        <MudNavLink Class="mud-nav-link" Href="/RaidRecord/Setting" Match="NavLinkMatch.All">@("webUI.navLinkRaidSettings".Translate(I18NMgr.I18N!))</MudNavLink>
+        <MudLink Class="mud-nav-link" Color="Color.Default" Target="_blank" Href="@Url">@("webUI.navLinkAbout".Translate(I18NMgr.I18N!))</MudLink>
         <style>
             .mud-nav-link {
                 width: fit-content;

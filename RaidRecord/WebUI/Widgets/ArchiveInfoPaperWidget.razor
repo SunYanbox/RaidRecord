@@ -11,61 +11,61 @@
 <MudPaper Class="pa-4">
     <MudCard>
         <MudCardContent>
-            <MudText>@I18NMgr.WebUILocal.BaseInfo</MudText>
+            <MudText>@("webUI.baseInfo".Translate(I18NMgr.I18N!))</MudText>
             <MudText Typo="Typo.body2">
                 ServerId: @Archive.ServerId
-                @I18NMgr.WebUILocal.ArchiveTime: @DataFormat.FromDateTimeSeconds(Archive.CreateTime)
-                @I18NMgr.WebUILocal.PlayerNickName: @PlayerData.Info?.Nickname
-                @I18NMgr.WebUILocal.PlayerLevel: @PlayerData.Info?.Level
-                @I18NMgr.WebUILocal.PlayerId: @Archive.PlayerId
+                @("webUI.archiveTime".Translate(I18NMgr.I18N!)): @DataFormat.FromDateTimeSeconds(Archive.CreateTime)
+                @("webUI.playerNickName".Translate(I18NMgr.I18N!)): @PlayerData.Info?.Nickname
+                @("webUI.playerLevel".Translate(I18NMgr.I18N!)): @PlayerData.Info?.Level
+                @("webUI.playerId".Translate(I18NMgr.I18N!)): @Archive.PlayerId
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>@I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.MapName, I18NMgr.WebUILocal.And, I18NMgr.WebUILocal.SurviveTime)</MudText>
+            <MudText>@("mapName::and::webUI.surviveTime".Translate(I18NMgr.I18N!))</MudText>
             <MudText Typo="Typo.body2">
-                @(I18NMgr.WebUILocal.MapName): @DataFormat.GetMapNameLocal(Archive)
-                @(I18NMgr.WebUILocal.SurviveTime): @DataFormat.FromTimeSeconds(Archive.Results?.PlayTime ?? 0)
+                @("mapName".Translate(I18NMgr.I18N!)): @DataFormat.GetMapNameLocal(Archive)
+                @("webUI.surviveTime".Translate(I18NMgr.I18N!)): @DataFormat.FromTimeSeconds(Archive.Results?.PlayTime ?? 0)
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>@I18NMgr.WebUILocal.ArchiveResult</MudText>
+            <MudText>@("webUI.archiveResult".Translate(I18NMgr.I18N!))</MudText>
             <MudText Typo="Typo.body2">
-                @I18NMgr.WebUILocal.Result: @DataFormat.GetResultStr(Archive)
-                @I18NMgr.WebUILocal.ExitName: @DataFormat.GetExitName(Archive)
-                @I18NMgr.WebUILocal.SurvivorClass: @DataFormat.GetSurvivorClass(Archive)
+                @("result".Translate(I18NMgr.I18N!)): @DataFormat.GetResultStr(Archive)
+                @("exitName".Translate(I18NMgr.I18N!)): @DataFormat.GetExitName(Archive)
+                @("webUI.survivorClass".Translate(I18NMgr.I18N!)): @DataFormat.GetSurvivorClass(Archive)
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>@I18NMgr.WebUILocal.EnterArchive</MudText>
+            <MudText>@("webUI.enterArchive".Translate(I18NMgr.I18N!))</MudText>
             <MudText Typo="Typo.body2">
-                @I18NMgr.WebUILocal.EquipmentValue: @Archive.EquipmentValue rub
-                @I18NMgr.WebUILocal.SecuredValue: @Archive.SecuredValue rub
-                @I18NMgr.WebUILocal.PreRaidValue: @Archive.PreRaidValue rub
+                @("webUI.equipmentValue".Translate(I18NMgr.I18N!)): @Archive.EquipmentValue rub
+                @("webUI.securedValue".Translate(I18NMgr.I18N!)): @Archive.SecuredValue rub
+                @("webUI.preRaidValue".Translate(I18NMgr.I18N!)): @Archive.PreRaidValue rub
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>@I18NMgr.WebUILocal.ExitArchive</MudText>
+            <MudText>@("webUI.exitArchive".Translate(I18NMgr.I18N!))</MudText>
             <MudText Typo="Typo.body2">
-                @I18NMgr.WebUILocal.GrossProfit: @Archive.GrossProfit rub
-                @I18NMgr.WebUILocal.CombatLoss: @Archive.CombatLosses rub
-                @I18NMgr.WebUILocal.NetProfit: @DataFormat.GetNetProfit(Archive) rub
+                @("grossProfit".Translate(I18NMgr.I18N!)): @Archive.GrossProfit rub
+                @("combatLoss".Translate(I18NMgr.I18N!)): @Archive.CombatLosses rub
+                @("netProfit".Translate(I18NMgr.I18N!)): @DataFormat.GetNetProfit(Archive) rub
             </MudText>
         </MudCardContent>
     </MudCard>
     <MudCard>
         <MudCardContent>
-            <MudText>@I18NMgr.WebUILocal.KillInfo</MudText>
+            <MudText>@("killInfo".Translate(I18NMgr.I18N!))</MudText>
             <MudText Typo="Typo.body2">
-                @(I18NMgr.WebUILocal.KillCount): @DataFormat.GetKillCount(Archive)
-                @(I18NMgr.WebUILocal.HeadshotRate): @DataFormat.GetHeadshotRate(Archive)
+                @("killCount".Translate(I18NMgr.I18N!)): @DataFormat.GetKillCount(Archive)
+                @("headshotRate".Translate(I18NMgr.I18N!)): @DataFormat.GetHeadshotRate(Archive)
             </MudText>
             @if (DataFormat.GetKillCount(Archive) > 0 && ShowToolZone)
             {
@@ -73,11 +73,11 @@
                 {
                     <MudTable Items="@GetVictims()" FixedHeader="@true" FixedFooter="@true">
                         <HeaderContent>
-                            <MudTh>@I18NMgr.WebUILocal.Time</MudTh>
-                            <MudTh>@I18NMgr.WebUILocal.Weapon</MudTh>
-                            <MudTh>@I18NMgr.WebUILocal.BodyPart</MudTh>
-                            <MudTh>@I18NMgr.WebUILocal.Distance</MudTh>
-                            <MudTh>@I18NMgr.WebUILocal.VictimInfo</MudTh>
+                            <MudTh>@("time".Translate(I18NMgr.I18N!))</MudTh>
+                            <MudTh>@("weapon".Translate(I18NMgr.I18N!))</MudTh>
+                            <MudTh>@("bodyPart".Translate(I18NMgr.I18N!))</MudTh>
+                            <MudTh>@("distance".Translate(I18NMgr.I18N!))</MudTh>
+                            <MudTh>@("webUI.victimInfo".Translate(I18NMgr.I18N!))</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd>@DataFormat.GetVictimTime(context)</MudTd>
@@ -93,7 +93,7 @@
                 }
                 <MudCardActions>
                     <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OnShowKillAllClick())">
-                        @(_showKillAll ? I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Collapse, I18NMgr.WebUILocal.KillInfo) : I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Expand, I18NMgr.WebUILocal.KillInfo))
+                        @(_showKillAll ? "collapse::killInfo".Translate(I18NMgr.I18N!) : "expand::killInfo".Translate(I18NMgr.I18N!))
                     </MudButton>
                 </MudCardActions>
             }
@@ -104,19 +104,19 @@
                 {
                     <MudCard>
                         <MudCardContent>
-                            <MudText>@I18NMgr.WebUILocal.AggressorInfo</MudText>
+                            <MudText>@("webUI.aggressorInfo".Translate(I18NMgr.I18N!))</MudText>
                             <MudText Typo="Typo.body2">
-                                @I18NMgr.WebUILocal.Name: @aggressor.Name
-                                @I18NMgr.WebUILocal.Side: @aggressor.Side
-                                @I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Weapon, I18NMgr.WebUILocal.Name): @DataFormat.GetWeaponName(aggressor)
-                                @I18NMgr.WebUILocal.Role: @DataFormat.GetRoleName(aggressor)
+                                @("name".Translate(I18NMgr.I18N!)): @aggressor.Name
+                                @("side".Translate(I18NMgr.I18N!)): @aggressor.Side
+                                @("weapon::name".Translate(I18NMgr.I18N!)): @DataFormat.GetWeaponName(aggressor)
+                                @("role".Translate(I18NMgr.I18N!)): @DataFormat.GetRoleName(aggressor)
                             </MudText>
                         </MudCardContent>
                     </MudCard>
                 }
                 else
                 {
-                    <MudText>@I18NMgr.WebUILocal.AggressorInfoLoadFail</MudText>
+                    <MudText>@("webUI.aggressorInfoLoadFail".Translate(I18NMgr.I18N!))</MudText>
                 }
             }
         </MudCardContent>

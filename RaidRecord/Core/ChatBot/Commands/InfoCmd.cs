@@ -21,14 +21,14 @@ public class InfoCmd: CommandBase
 
     public InfoCmd(CmdUtil cmdUtil, DataGetterService dataGetter, DataFormatService dataFormatService, I18NMgr i18NMgr)
     {
+        _i18NMgr = i18NMgr;
         _cmdUtil = cmdUtil;
         Key = "info";
-        Desc = "serverMessage.Cmd-Info.Desc".Translate(I18N);
+        Desc = "z2serverMessage.Cmd-Info.Desc".Translate(I18N);
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("index", "int", "serverMessage.Cmd-参数简述.index".Translate(I18N))
+            .AddParam("index", "int", "z3translations.Cmd-参数简述.index".Translate(I18N))
             .SetOptional(["index"])
             .Build();
-        _i18NMgr = i18NMgr;
         _dataGetter = dataGetter;
         _dataFormatService = dataFormatService;
     }
@@ -53,11 +53,11 @@ public class InfoCmd: CommandBase
 
         if (victims.Count > 0)
         {
-            msg += "serverMessage.Cmd-Info.本局击杀标题".Translate(I18N);
+            msg += "z2serverMessage.Cmd-Info.本局击杀标题".Translate(I18N);
             foreach (Victim victim in victims)
             {
-                // "serverMessage.Cmd-Info.本局击杀信息": "\n {{VictimTime}} 使用{{WeaponName}}命中{{BodyPart}}淘汰距离{{VictimDistance}}m远的{{VictimName}}(等级:{{VictimLevel}} 阵营:{{VictimSide}} 角色:{{VictimRole}})",
-                msg += "serverMessage.Cmd-Info.本局击杀信息".Translate(
+                // "z2serverMessage.Cmd-Info.本局击杀信息": "\n {{VictimTime}} 使用{{WeaponName}}命中{{BodyPart}}淘汰距离{{VictimDistance}}m远的{{VictimName}}(等级:{{VictimLevel}} 阵营:{{VictimSide}} 角色:{{VictimRole}})",
+                msg += "z2serverMessage.Cmd-Info.本局击杀信息".Translate(
                     I18N,
                     new
                     {
@@ -82,21 +82,21 @@ public class InfoCmd: CommandBase
             Aggressor? aggressor = archive.EftStats?.Aggressor;
             if (aggressor != null)
             {
-                // "serverMessage.Cmd-Info.本局击杀者": "\n击杀者: {{AggressorName}}(阵营: {{AggressorSide}})使用{{WeaponName}}命中{{ArmorZone}}淘汰了你",
-                msg += "serverMessage.Cmd-Info.本局击杀者".Translate(
+                // "z2serverMessage.Cmd-Info.本局击杀者": "\n击杀者: {{AggressorName}}(阵营: {{AggressorSide}})使用{{WeaponName}}命中{{ArmorZone}}淘汰了你",
+                msg += "z2serverMessage.Cmd-Info.本局击杀者".Translate(
                     I18N,
                     new
                     {
                         AggressorName = aggressor.Name,
                         AggressorSide = aggressor.Side,
                         WeaponName = _dataFormatService.GetWeaponName(aggressor),
-                        BodyPart = _cmdUtil.I18NMgr!.GetArmorZoneName(aggressor.BodyPart ?? "translations.Unknown".Translate(I18N))
+                        BodyPart = _cmdUtil.I18NMgr!.GetArmorZoneName(aggressor.BodyPart ?? "Unknown".Translate(I18N))
                     }
                 );
             }
             else
             {
-                msg += "serverMessage.Cmd-Info.本局被击杀者信息加载失败".Translate(I18N);
+                msg += "z2serverMessage.Cmd-Info.本局被击杀者信息加载失败".Translate(I18N);
                 // msg += "\n击杀者数据加载失败";
             }
         }

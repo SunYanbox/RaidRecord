@@ -22,10 +22,10 @@ public class ListCmd: CommandBase
         _cmdUtil = cmdUtil;
         _i18NMgr = i18NMgr;
         Key = "list";
-        Desc = "serverMessage.Cmd-List.Desc".Translate(I18N);
+        Desc = "z2serverMessage.Cmd-List.Desc".Translate(I18N);
         ParaInfo = cmdUtil.ParaInfoBuilder
-            .AddParam("limit", "int", "serverMessage.Cmd-参数化简述.limit".Translate(I18N))
-            .AddParam("page", "int", "serverMessage.Cmd-参数化简述.page".Translate(I18N))
+            .AddParam("limit", "int", "z3translations.Cmd-参数化简述.limit".Translate(I18N))
+            .AddParam("page", "int", "z3translations.Cmd-参数化简述.page".Translate(I18N))
             .SetOptional(["limit", "page"])
             .Build();
         _dataGetter = dataGetter;
@@ -46,7 +46,7 @@ public class ListCmd: CommandBase
 
         int countAfterCheck = results.Archives.Count;
 
-        string msg = "serverMessage.Cmd-List.历史战绩.统计表头".Translate(I18N, new
+        string msg = "z2serverMessage.Cmd-List.历史战绩.统计表头".Translate(I18N, new
         {
             ResultCount = countAfterCheck,
             TotalCount = countAfterCheck + results.JumpData,
@@ -69,7 +69,7 @@ public class ListCmd: CommandBase
         {
             RaidArchive row = results.Archives[k].Archive;
 
-            string result = "translations.UnknownResult".Translate(I18N);
+            string result = "UnknownResult".Translate(I18N);
             RaidResultData? raidResultData = row.Results;
             try
             {
@@ -77,12 +77,12 @@ public class ListCmd: CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                result = $"translations.{raidResultData.Result.Value.ToString()}".Translate(I18N);
+                result = $"z3translations.{raidResultData.Result.Value.ToString()}".Translate(I18N);
             }
             catch (Exception e)
             {
                 _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand",
-                    "serverMessage.Cmd-List.获取对局结果信息时出错".Translate(I18N));
+                    "z2serverMessage.Cmd-List.获取对局结果信息时出错".Translate(I18N));
             }
 
             string[] values =
@@ -106,7 +106,7 @@ public class ListCmd: CommandBase
             }
         }
 
-        string header = "serverMessage.Cmd-List.历史战绩.表头".Translate(I18N).Replace("\n", "");
+        string header = "z2serverMessage.Cmd-List.历史战绩.表头".Translate(I18N).Replace("\n", "");
         string[] coreHeader = header.Split('|');
 
         int colCount = Math.Min(colWidths.Length, coreHeader.Length);
@@ -114,7 +114,7 @@ public class ListCmd: CommandBase
         if (colCount != colWidths.Length || colCount != coreHeader.Length)
         {
             _cmdUtil.ModConfig!.Warn(
-                "serverMessage.Cmd-List.历史战绩.表头长度不一致".Translate(
+                "z2serverMessage.Cmd-List.历史战绩.表头长度不一致".Translate(
                     I18N,
                     new
                     {
@@ -141,7 +141,7 @@ public class ListCmd: CommandBase
         {
             RaidArchive archive = results.Archives[i].Archive;
 
-            string result = "translations.UnknownResult".Translate(I18N);
+            string result = "UnknownResult".Translate(I18N);
             RaidResultData? raidResultData = archive.Results;
             try
             {
@@ -149,12 +149,12 @@ public class ListCmd: CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                result = $"translations.{raidResultData.Result.Value.ToString()}".Translate(I18N);
+                result = $"z3translations.{raidResultData.Result.Value.ToString()}".Translate(I18N);
             }
             catch (Exception e)
             {
                 _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand",
-                    "serverMessage.Cmd-List.获取对局结果信息时出错".Translate(I18N));
+                    "z2serverMessage.Cmd-List.获取对局结果信息时出错".Translate(I18N));
                 // _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand", "尝试从本地数据库获取对局结果信息时出错");
             }
 
@@ -180,7 +180,7 @@ public class ListCmd: CommandBase
                 }
             }
 
-            msg += "serverMessage.Cmd-List.历史战绩.表行".Translate(I18N, new
+            msg += "z2serverMessage.Cmd-List.历史战绩.表行".Translate(I18N, new
             {
                 Index = values[0],
                 PlayerGroup = values[1],
@@ -200,7 +200,7 @@ public class ListCmd: CommandBase
             //        + $"{StringUtil.TimeString(archive.Results?.PlayTime ?? 0)} {result}\n";
         }
         // if (jump > 0) msg += $"跳过{jump}条无效数据";
-        if (jump > 0) msg += "serverMessage.Cmd-List.历史战绩.跳过无效数据".Translate(I18N, new { JumpCount = jump });
+        if (jump > 0) msg += "z2serverMessage.Cmd-List.历史战绩.跳过无效数据".Translate(I18N, new { JumpCount = jump });
         return msg;
     }
 }

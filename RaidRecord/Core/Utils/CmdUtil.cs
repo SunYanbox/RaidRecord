@@ -8,6 +8,7 @@ using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Enums;
+using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.Utils;
 
@@ -21,7 +22,9 @@ public class CmdUtil(
 )
 {
     #region 提供依赖给工具调用 | 只放大部分命令需要的依赖
+    #pragma warning disable CS9124 // 形参被捕获到封闭类型状态，它的值也用于初始化字段、属性或事件。
     public readonly I18NMgr? I18NMgr = i18NMgr;
+    #pragma warning restore CS9124 // 形参被捕获到封闭类型状态，它的值也用于初始化字段、属性或事件。
     public readonly RecordManager? RecordManager = recordCacheManager;
     public readonly ModConfig? ModConfig = modConfig;
     public readonly ParaInfoBuilder ParaInfoBuilder = new();
@@ -45,8 +48,8 @@ public class CmdUtil(
         string playerId = archive.PlayerId;
         PmcData playerData = RecordManager!.GetPmcDataByPlayerId(playerId);
 
-        // "Record-元数据.Id与玩家信息": "{{TimeFormat}} 对局ID: {{ServerId}} 玩家信息: {{Nickname}}(Level={{Level}}, id={{PlayerId}})"
-        msg += I18NMgr!.GetText("Record-元数据.Id与玩家信息",
+        // "z3translations.Record-元数据.Id与玩家信息": "{{TimeFormat}} 对局ID: {{ServerId}} 玩家信息: {{Nickname}}(Level={{Level}}, id={{PlayerId}})"
+        msg += "z3translations.Record-元数据.Id与玩家信息".Translate(i18NMgr.I18N!,
         new {
             TimeFormat = dataFormatService.GetCreateTimeStr(archive),
             ServerId = serverId,
@@ -54,32 +57,32 @@ public class CmdUtil(
             playerData.Info?.Level,
             PlayerId = playerId
         });
-        //"Record-元数据.地图与存活时间": "\n地图: {{MapName}} 生存时间: {{PlayTime}} 击杀数量: {{KillCount}} 爆头击杀率: {{HeadshotKillRate}}",
-        msg += I18NMgr!.GetText("Record-元数据.地图与存活时间",
+        //"z3translations.Record-元数据.地图与存活时间": "\n地图: {{MapName}} 生存时间: {{PlayTime}} 击杀数量: {{KillCount}} 爆头击杀率: {{HeadshotKillRate}}",
+        msg += "z3translations.Record-元数据.地图与存活时间".Translate(i18NMgr.I18N!,
         new {
             MapName = dataFormatService.GetMapNameLocal(archive),
             PlayTime = dataFormatService.FromTimeSeconds(archive.Results?.PlayTime ?? 0),
             KillCount = dataFormatService.GetKillCount(archive),
             HeadshotKillRate = dataFormatService.GetHeadshotRate(archive)
         });
-        // "Record-元数据.入场信息": "\n入局战备: {{EquipmentValue}}rub, 安全箱物资价值: {{SecuredValue}}rub, 总带入价值: {{PreRaidValue}}rub",
-        msg += I18NMgr!.GetText("Record-元数据.入场信息",
+        // "z3translations.Record-元数据.入场信息": "\n入局战备: {{EquipmentValue}}rub, 安全箱物资价值: {{SecuredValue}}rub, 总带入价值: {{PreRaidValue}}rub",
+        msg += "z3translations.Record-元数据.入场信息".Translate(i18NMgr.I18N!,
         new {
             EquipmentValue = (int)archive.EquipmentValue,
             SecuredValue = (int)archive.SecuredValue,
             PreRaidValue = (int)archive.PreRaidValue
         });
 
-        // "Record-元数据.退出信息": "\n带出价值: {{GrossProfit}}rub, 战损{{CombatLosses}}rub, 净利润{{NetProfit}}rub",
-        msg += I18NMgr!.GetText("Record-元数据.退出信息",
+        // "z3translations.Record-元数据.退出信息": "\n带出价值: {{GrossProfit}}rub, 战损{{CombatLosses}}rub, 净利润{{NetProfit}}rub",
+        msg += "z3translations.Record-元数据.退出信息".Translate(i18NMgr.I18N!,
         new {
             GrossProfit = (int)archive.GrossProfit,
             CombatLosses = (int)archive.CombatLosses,
             NetProfit = dataFormatService.GetNetProfit(archive)
         });
 
-        // "Record-元数据.对局结果": "\n对局结果: {{Result}} 撤离点: {{ExitName}} 游戏风格: {{SurvivorClass}}",
-        msg += I18NMgr.GetText("Record-元数据.对局结果",
+        // "z3translations.Record-元数据.对局结果": "\n对局结果: {{Result}} 撤离点: {{ExitName}} 游戏风格: {{SurvivorClass}}",
+        msg += "z3translations.Record-元数据.对局结果".Translate(i18NMgr.I18N!,
         new {
             Result = dataFormatService.GetResultStr(archive),
             ExitName = dataFormatService.GetExitName(archive),
@@ -104,7 +107,7 @@ public class CmdUtil(
         ArgumentNullException.ThrowIfNull(parameters);
 
         if (string.IsNullOrEmpty(key))
-            throw new ArgumentException(I18NMgr!.GetText("serverMessage.CmdUtil-Error.参数键为空", new { KeyName = nameof(key) }));
+            throw new ArgumentException("z2serverMessage.CmdUtil-Error.参数键为空".Translate(i18NMgr.I18N!, new { KeyName = nameof(key) }));
         // throw new ArgumentException("Para key cannot be null or empty", nameof(key));
 
         // 如果字典中不存在该键，返回默认值
@@ -136,7 +139,7 @@ public class CmdUtil(
         int month = date.Month;
         int day = date.Day;
         string time = date.ToShortTimeString();
-        return I18NMgr!.GetText("serverMessage.CmdUtil-日期时间格式化", new
+        return "z2serverMessage.CmdUtil-日期时间格式化".Translate(i18NMgr.I18N!, new
         {
             Year = year,
             Month = month,
@@ -151,7 +154,7 @@ public class CmdUtil(
     {
         if (string.IsNullOrEmpty(parametric.SessionId))
         {
-            return I18NMgr!.GetText("serverMessage.CmdUtil-Error.参数验证.Value为空",
+            return "z2serverMessage.CmdUtil-Error.参数验证.Value为空".Translate(i18NMgr.I18N!,
                 new { ValueName = nameof(parametric.SessionId) });
             // return "未输入session参数或session为空";
         }
@@ -161,29 +164,27 @@ public class CmdUtil(
             PmcData? pmcData = profileHelper.GetPmcProfile(parametric.SessionId!);
             if (pmcData?.Id == null)
             {
-                throw new NullReferenceException(I18NMgr!.GetText(
-                    "serverMessage.CmdUtil-Error.PmcData为空或PmcData.Id为空"
-                ));
+                throw new NullReferenceException("z2serverMessage.CmdUtil-Error.PmcData为空或PmcData.Id为空".Translate(i18NMgr.I18N!));
                 // throw new NullReferenceException($"{nameof(pmcData)} or {nameof(pmcData.Id)}");
             }
             string playerId = pmcData.Id;
             // if (string.IsNullOrEmpty(playerId)) throw new Exception("playerId为null或为空");
             if (string.IsNullOrEmpty(playerId))
             {
-                throw new Exception(I18NMgr!.GetText("serverMessage.CmdUtil-Error.参数验证.Value为空",
+                throw new Exception("z2serverMessage.CmdUtil-Error.参数验证.Value为空".Translate(i18NMgr.I18N!,
                     new { ValueName = nameof(playerId) }));
             }
         }
         catch (Exception e)
         {
-            string errorMsg = I18NMgr!.GetText("serverMessage.CmdUtil-Error.用户未注册或者Session已失效",
+            string errorMsg = "z2serverMessage.CmdUtil-Error.用户未注册或者Session已失效".Translate(i18NMgr.I18N!,
                 new { ErrorMessage = e.Message });
             ModConfig?.LogError(e, "RaidRecordManagerChat.VerifyIParametric", errorMsg);
             return errorMsg;
         }
 
         return parametric.ManagerChat == null
-            ? I18NMgr!.GetText("serverMessage.CmdUtil-Error.参数验证.属性ManagerChat为空")
+            ? "z2serverMessage.CmdUtil-Error.参数验证.属性ManagerChat为空".Translate(i18NMgr.I18N!)
             : null;
         // return parametric.ManagerChat == null ? "实例未正确初始化: 缺少managerChat属性" : null;
     }

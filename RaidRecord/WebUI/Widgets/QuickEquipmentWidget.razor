@@ -30,32 +30,32 @@
     else if (_initEd && Items.Length == 0)
     {
         // 没加载完毕显示一个占位框
-        <MudText Style="max-height: 50px; max-width: 800px">@I18NMgr.WebUILocal.NoEquipInfoInThisArchive</MudText>
+        <MudText Style="max-height: 50px; max-width: 800px">@("webUI.noEquipInfoInThisArchive".Translate(I18NMgr.I18N!))</MudText>
     }
     else
     {
         <MudStack Row="true" AlignItems="AlignItems.Center">
-            <MudButton Color="Color.Primary" OnClick="@(() => ExpandAllAsync())">@I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Expand, I18NMgr.WebUILocal.All)</MudButton>
-            <MudButton Color="Color.Primary" OnClick="@(() => CollapseAllAsync())">@I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Collapse, I18NMgr.WebUILocal.All)</MudButton>
-            <MudText>@(I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.ChoiceTotalValue, GetAllPriceText()))</MudText>
+            <MudButton Color="Color.Primary" OnClick="@(() => ExpandAllAsync())">@("expand::all".Translate(I18NMgr.I18N!))</MudButton>
+            <MudButton Color="Color.Primary" OnClick="@(() => CollapseAllAsync())">@("collapse::all".Translate(I18NMgr.I18N!))</MudButton>
+            <MudText>@(string.Join(I18NMgr.I18N!.LinkTag, "webUI.choiceTotalValue".Translate(I18NMgr.I18N!), GetAllPriceText()))</MudText>
             @if (ProvideQuickBuy)
             {
-                <MudButton StartIcon="@Icons.Material.Filled.Payment" OnClick="@(() => RefQuickBuyEquipmentMegBox!.ShowAsync())">@I18NMgr.WebUILocal.ConfirmPayment</MudButton>
+                <MudButton StartIcon="@Icons.Material.Filled.Payment" OnClick="@(() => RefQuickBuyEquipmentMegBox!.ShowAsync())">@("confirmPayment".Translate(I18NMgr.I18N!))</MudButton>
             }
             @if (IsRepair)
             {
                 <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh"/>
-                <MudText>@I18NMgr.WebUILocal.AlreadyEnableDurabilityRepair</MudText>
+                <MudText>@("webUI.alreadyEnableDurabilityRepair".Translate(I18NMgr.I18N!))</MudText>
             }
         </MudStack>
         <MudStack Row="true">
-            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Weapon]" Label="@I18NMgr.WebUILocal.Weapon" Color="Color.Success"/>
-            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.WeaponMod]" Label="@I18NMgr.WebUILocal.WeaponMod" Color="Color.Success"/>
-            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Head]" Label="@I18NMgr.WebUILocal.Head" Color="Color.Success"/>
-            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Armor]" Label="@I18NMgr.WebUILocal.Armor" Color="Color.Success"/>
-            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Vest]" Label="@I18NMgr.WebUILocal.Vest" Color="Color.Success"/>
-            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Backpack]" Label="@I18NMgr.WebUILocal.Backpack" Color="Color.Success"/>
-            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.EquipmentMod]" Label="@I18NMgr.WebUILocal.EquipMod" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Weapon]" Label="@("weapon".Translate(I18NMgr.I18N!))" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.WeaponMod]" Label="@("weaponMod".Translate(I18NMgr.I18N!))" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Head]" Label="@("head".Translate(I18NMgr.I18N!))" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Armor]" Label="@("armor".Translate(I18NMgr.I18N!))" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Vest]" Label="@("vest".Translate(I18NMgr.I18N!))" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.Backpack]" Label="@("backpack".Translate(I18NMgr.I18N!))" Color="Color.Success"/>
+            <MudSwitch @bind-Value="@EnabledItemTypes[ItemType.EquipmentMod]" Label="@("equipMod".Translate(I18NMgr.I18N!))" Color="Color.Success"/>
         </MudStack>
         <MudTreeView @ref="RefTreeView" Items="@TreeItemsMud" Height="350px"
                      ReadOnly="@true" Hover="@true" Dense="@true" ExpandOnClick="@true">
@@ -77,7 +77,7 @@
                                 <MudTreeViewItemToggleButton @bind-Expanded="@presenter.Expanded" Visible="@(presenter.Children?.Count > 0)"/>
                                 @* 显示的名称与价格 *@
                                 <MudText Color="@widgetColor">
-                                    @I18NMgr.WebUILocal.Link(presenter.Text!, GetNodePriceEndText(presenter))
+                                    @(string.Join(I18NMgr.I18N!.LinkTag, presenter.Text!, GetNodePriceEndText(presenter)))
                                 </MudText>
                                 @* 显示耐久 *@
                                 <MudText Color="@widgetColor" Typo="Typo.caption">
@@ -91,8 +91,8 @@
         </MudTreeView>
         <MudCard Class="pa-2" Style="max-height: 300px">
             <MudStack Row="true" AlignItems="AlignItems.Center">
-                <MudTooltip Text="@I18NMgr.WebUILocal.ExcludeItemDesc">
-                    <MudText>@I18NMgr.WebUILocal.ExcludeItem</MudText>
+                <MudTooltip Text="@("webUI.excludeItemDesc".Translate(I18NMgr.I18N!))">
+                    <MudText>@("webUI.excludeItem".Translate(I18NMgr.I18N!))</MudText>
                 </MudTooltip>
                 <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => ToggleShowAll())">
                     @_excludeItemsShowAllText
@@ -102,7 +102,7 @@
             {
                 <MudList T="MongoId" @bind-SelectedValues="ExcludeItems" SelectionMode="SelectionMode.MultiSelection" ReadOnly="@false" CheckBoxColor="Color.Error" Dense="true" Class="overflow-y-auto pa-2" Style="max-height: 250px">
                     <MudListSubheader>
-                        @I18NMgr.WebUILocal.SelectItemToExclude
+                        @("webUI.selectItemToExclude".Translate(I18NMgr.I18N!))
                     </MudListSubheader>
                     @foreach (Item item in Items.OrderBy(x => -1 * PriceSystem.GetItemValueWithCache(x)))
                     {
@@ -110,7 +110,7 @@
                         Color choiceColor = GetWidgetColor(!disable);
                         <MudListItem Value="@item.Id">
                             <ChildContent>
-                                <MudText Color="@choiceColor">@I18NMgr.WebUILocal.Link(I18NMgr.GetItemName(item.Template), $"{PriceSystem.GetItemValueWithCache(item):F2}rub")</MudText>
+                                <MudText Color="@choiceColor">@(string.Join(I18NMgr.I18N!.LinkTag, I18NMgr.GetItemName(item.Template), $"{PriceSystem.GetItemValueWithCache(item):F2}rub"))</MudText>
                             </ChildContent>
                         </MudListItem>
                     }
@@ -128,21 +128,21 @@
     private void ToggleShowAll()
     {
         _excludeItemsShowAll = !_excludeItemsShowAll;
-        _excludeItemsShowAllText = _excludeItemsShowAll ? I18NMgr.WebUILocal.Collapse : I18NMgr.WebUILocal.Expand;
+        _excludeItemsShowAllText = _excludeItemsShowAll ? "collapse".Translate(I18NMgr.I18N!) : "expand".Translate(I18NMgr.I18N!);
     }
     protected IReadOnlyCollection<MongoId> ExcludeItems = [];
 }
 
-<MudMessageBox @ref="RefQuickBuyEquipmentMegBox" Title="Info" CancelText="@I18NMgr.WebUILocal.Cancel">
+<MudMessageBox @ref="RefQuickBuyEquipmentMegBox" Title="Info" CancelText="@("cancel".Translate(I18NMgr.I18N!))">
     <MessageContent>
         <MudText Typo="Typo.body2" Color="Color.Info">
-            @I18NMgr.DumpFormatStrLocal(I18NMgr.WebUILocal.BeforePaymentTip, new { TotalPrice = GetChoiceAllPrice() })
+            @("webUI.beforePaymentTip".Translate(I18NMgr.I18N!, new { TotalPrice = GetChoiceAllPrice() }))
         </MudText>
     </MessageContent>
 
     <YesButton>
         <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Commit"
-                   OnClick="@(() => QuickBuy())">@I18NMgr.WebUILocal.ConfirmPayment
+                   OnClick="@(() => QuickBuy())">@("confirmPayment".Translate(I18NMgr.I18N!))
         </MudButton>
     </YesButton>
 </MudMessageBox>
@@ -194,7 +194,7 @@
         TreeItemsMud = AlgorithmService.ConvertToTreeItems(TreeItems);
         NeedRebuildTree = false;
         _excludeItemsShowAll = false;
-        _excludeItemsShowAllText = I18NMgr.WebUILocal.Expand;
+        _excludeItemsShowAllText = "expand".Translate(I18NMgr.I18N!);
     }
 
     /// <summary> 物品列表(修复前/后的列表) </summary>
@@ -433,9 +433,9 @@
             return;
         }
 
-        string buySuccess = I18NMgr.DumpFormatStrLocal(I18NMgr.WebUILocal.SuccessBuyItemMsg,
+        string buySuccess = "webUI.successBuyItemMsg".Translate(I18NMgr.I18N!,
         new {
-            Name = I18NMgr.DumpFormatStrLocal(I18NMgr.WebUILocal.EquipOwn, new {
+            Name = "webUI.equipOwn".Translate(I18NMgr.I18N!, new {
                 ServerId
             }),
             StackObjectsCount = items.Length,

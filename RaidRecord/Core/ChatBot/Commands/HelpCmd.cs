@@ -19,8 +19,8 @@ public class HelpCmd: CommandBase
         _cmdUtil = cmdUtil;
         Key = "help";
         _i18NMgr = i18NMgr;
-        Desc = "serverMessage.Cmd-Help.Desc".Translate(I18N);
-        _displayMessage = "serverMessage.Cmd-Help.显示文本".Translate(I18N);
+        Desc = "z2serverMessage.Cmd-Help.Desc".Translate(I18N);
+        _displayMessage = "z2serverMessage.Cmd-Help.显示文本".Translate(I18N);
     }
 
     public override string Execute(Parametric parametric)

@@ -18,6 +18,7 @@ using SPTarkov.Server.Core.Models.Spt.Dialog;
 using SPTarkov.Server.Core.Routers;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Services;
+using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.Services;
 
@@ -55,7 +56,7 @@ public class ModMailService(
         coreConfig.Features.ChatbotFeatures.Ids[chatbot.Info!.Nickname!] = chatbot.Id;
         coreConfig.Features.ChatbotFeatures.EnabledBots[chatbot.Id] = true;
         // logger.Info($"[RaidRecord] 已经成功注册ChatBot: {chatbot.Id}");
-        modConfig.Info(i18NMgr.GetText("MainMod-Info.成功注册ChatBot", new
+        modConfig.Info("z2serverMessage.MainMod-Info.成功注册ChatBot".Translate(i18NMgr.I18N!, new
         {
             ChatBotId = chatbot.Id
         }));

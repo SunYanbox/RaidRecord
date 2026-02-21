@@ -9,22 +9,22 @@
 @inject WebDataContext WebDataContext
 
 <MudPaper Outlined="true" MaxHeight="300px" Class="overflow-y-auto">
-    <MudTooltip Text="@I18NMgr.WebUILocal.ClaimCompensationDesc">
-        <MudText Typo="Typo.h6">@I18NMgr.WebUILocal.ClaimCompensation</MudText>
+    <MudTooltip Text="@("webUI.claimCompensationDesc".Translate(I18NMgr.I18N!))">
+        <MudText Typo="Typo.h6">@("webUI.claimCompensation".Translate(I18NMgr.I18N!))</MudText>
     </MudTooltip>
     
     <MudStack Row="true" AlignItems="AlignItems.Center">
-        <MudText Typo="Typo.body2">@I18NMgr.WebUILocal.EnterAmountNeedReceive</MudText>
+        <MudText Typo="Typo.body2">@("webUI.enterAmountNeedReceive".Translate(I18NMgr.I18N!))</MudText>
         <MudNumericField @bind-Value="GetRub" Label="rub" Variant="Variant.Filled" Min="0.0" Max="@long.MaxValue"/>
     </MudStack>
 
     <MudStack Row="true" AlignItems="AlignItems.Center">
-        <MudText Typo="Typo.body2">@I18NMgr.WebUILocal.EnterAmountWishConsume</MudText>
+        <MudText Typo="Typo.body2">@("webUI.enterAmountWishConsume".Translate(I18NMgr.I18N!))</MudText>
         <MudNumericField @bind-Value="RemoveRub" Label="rub" Variant="Variant.Filled" Min="0.0" Max="@long.MaxValue"/>
     </MudStack>
 
     <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Commit"
-               OnClick="@(() => ConfirmClaimCompensation())">@I18NMgr.WebUILocal.Confirm
+               OnClick="@(() => ConfirmClaimCompensation())">@("confirm".Translate(I18NMgr.I18N!))
     </MudButton>
 </MudPaper>
 
@@ -48,14 +48,14 @@
         {
             if (delta >= 0)
             {
-                message = $"{I18NMgr.WebUILocal.ReceivedThroughClaims}: {amount}rub";
+                message = $"{"webUI.receivedThroughClaims".Translate(I18NMgr.I18N!)}: {amount}rub";
                 warnings = ModMailService.SendMoney(WebDataContext.CurrAccount, 
                     message
                     , amount);
             }
             else
             {
-                message = $"{I18NMgr.WebUILocal.ConsumedThroughClaims}: {amount}rub";
+                message = $"{"webUI.consumedThroughClaims".Translate(I18NMgr.I18N!)}: {amount}rub";
                 warnings = ModMailService.Payment(WebDataContext.CurrAccount, Convert.ToInt64(amount), pmcData);
             }
         }

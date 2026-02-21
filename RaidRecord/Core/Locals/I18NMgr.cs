@@ -16,7 +16,7 @@ namespace RaidRecord.Core.Locals;
 /// <summary>
 /// 初始化本地数据
 /// </summary>
-[Injectable(InjectionType = InjectionType.Singleton)]
+[Injectable(InjectionType = InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 10)]
 public class I18NMgr(
     ModHelper modHelper,
     ModConfig modConfig,
@@ -86,6 +86,9 @@ public class I18NMgr(
                 }
             }
         }
+
+        ReInitLang();
+        
         return Task.CompletedTask;
     }
     
@@ -141,7 +144,7 @@ public class I18NMgr(
                 if (exit.Name == null) continue;
                 if (localesMap != null && !localesMap.ContainsKey(exit.Name))
                 {
-                    warnMsg += "I18NMgr-Warn.撤离点名称不存在".Translate(I18N, new
+                    warnMsg += "z2serverMessage.I18N-Warn.撤离点名称不存在".Translate(I18N, new
                     {
                         ExitName = exit.Name
                     });
@@ -151,7 +154,7 @@ public class I18NMgr(
 
                 if (ExitNames[mapKey].ContainsKey(exit.Name))
                 {
-                    warnMsg += "I18NMgr-Warn.重复添加撤离点".Translate(I18N, new
+                    warnMsg += "z2serverMessage.I18N-Warn.重复添加撤离点".Translate(I18N, new
                     {
                         ExitName = exit.Name,
                         MapName = mapName
@@ -166,7 +169,7 @@ public class I18NMgr(
 
         if (!string.IsNullOrEmpty(warnMsg)) modConfig.Log("Warn", warnMsg);
         // modConfig.Info("已成功加载各个地图撤离点数据");
-        modConfig.Info("I18NMgr-Info.撤离点数据加载完毕".Translate(I18N, new
+        modConfig.Info("z2serverMessage.I18N-Info.撤离点数据加载完毕".Translate(I18N, new
         {
             MapCount = MapNames.Count,
             ExitCount = ExitNames.Sum(x => x.Value.Count)
@@ -194,7 +197,7 @@ public class I18NMgr(
     /// </summary>
     public string GetArmorZoneName(string key)
     {
-        return $"armorZone.{key}".Translate(I18N!);
+        return $"z0armorZone.{key}".Translate(I18N!);
     }
 
     /// <summary>
@@ -202,6 +205,6 @@ public class I18NMgr(
     /// </summary>
     public string GetRoleName(string key)
     {
-        return $"roleNames.{key}".Translate(I18N!);
+        return $"z1roleNames.{key}".Translate(I18N!);
     }
 }

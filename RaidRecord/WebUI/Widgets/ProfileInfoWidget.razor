@@ -4,7 +4,7 @@
 
 <MudCard>
     <MudCardContent Class="curt-profile-card-context">
-        <MudText>@I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Curr, I18NMgr.WebUILocal.Profile, I18NMgr.WebUILocal.Info)</MudText>
+        <MudText>@("webUI.curr::profile::info".Translate(I18NMgr.I18N!))</MudText>
         @if (SptProfile is null)
         {
             <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
@@ -12,7 +12,7 @@
         else
         {
             <MudText Typo="Typo.body2">Aid: @SptProfile.ProfileInfo?.Aid</MudText>
-            <MudText Typo="Typo.body2">@I18NMgr.WebUILocal.Name: @SptProfile.ProfileInfo?.Username</MudText>
+            <MudText Typo="Typo.body2">@("name".Translate(I18NMgr.I18N!)): @SptProfile.ProfileInfo?.Username</MudText>
             <MudText Typo="Typo.body2">PMC Id: @SptProfile.ProfileInfo?.ProfileId</MudText>
             <MudText Typo="Typo.body2">Scav Id: @SptProfile.ProfileInfo?.ScavengerId</MudText>
 

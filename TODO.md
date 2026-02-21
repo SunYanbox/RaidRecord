@@ -2,13 +2,13 @@
 
 重构本地化:
 - [x] ChatBot
-- [ ] Services
-- [ ] Systems
-- [ ] Utils
-- [ ] Layouts
-- [ ] Pages
-- [ ] Cards
-- [ ] Widgets
+- [x] Services
+- [x] Systems
+- [x] Utils
+- [x] Layouts
+- [x] Pages
+- [x] Cards
+- [x] Widgets
 
 ### 0.6.9
 

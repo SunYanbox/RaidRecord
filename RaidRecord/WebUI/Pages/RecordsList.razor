@@ -16,8 +16,8 @@
           @bind-SelectedItem="SelectedArchiveIndexed" SortLabel="Sort By">
     <ToolBarContent>
         <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Success"/>
-        <MudText Typo="Typo.h6" Style="text-indent: 2ch;">@I18NMgr.WebUILocal.ListTitle</MudText>
-        <MudSwitch Label="@I18NMgr.WebUILocal.WillClickOpenJump" @bind-Value="_jump2DetailPage" Color="Color.Success"/>
+        <MudText Typo="Typo.h6" Style="text-indent: 2ch;">@("webUI.ListTitle".Translate(I18NMgr.I18N!))</MudText>
+        <MudSwitch Label="@("webUI.willClickOpenJump".Translate(I18NMgr.I18N!))" @bind-Value="_jump2DetailPage" Color="Color.Success"/>
     </ToolBarContent>
     <ColGroup>
         <col style="min-width: 8ch"/>
@@ -40,51 +40,51 @@
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            @I18NMgr.WebUILocal.Side
+            @("side".Translate(I18NMgr.I18N!))
         </MudTh>
         <MudTh>
-            @I18NMgr.WebUILocal.Map
+            @("map".Translate(I18NMgr.I18N!))
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.CreateTime)">
-                @I18NMgr.WebUILocal.CreateTime
+                @("createTime".Translate(I18NMgr.I18N!))
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.PreRaidValue)">
-                @(I18NMgr.WebUILocal.PreRaidValue)(rub)
+                @("webUI.preRaidValue".Translate(I18NMgr.I18N!))(rub)
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.EquipmentValue)">
-                @(I18NMgr.WebUILocal.EquipmentValue)(rub)
+                @("webUI.equipmentValue".Translate(I18NMgr.I18N!))(rub)
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.GrossProfit)">
-                @(I18NMgr.WebUILocal.GrossProfit)(rub)
+                @("grossProfit".Translate(I18NMgr.I18N!))(rub)
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => x.Archive.CombatLosses)">
-                @(I18NMgr.WebUILocal.CombatLoss)(rub)
+                @("combatLoss".Translate(I18NMgr.I18N!))(rub)
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => DataFormat.GetNetProfit(x.Archive))">
-                @(I18NMgr.WebUILocal.NetProfit)(rub)
+                @("netProfit".Translate(I18NMgr.I18N!))(rub)
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
             <MudTableSortLabel SortBy="new Func<ArchiveIndexed, object>(x => DataFormat.GetKillCount(x.Archive))">
-                @I18NMgr.WebUILocal.KillCount
+                @("killCount".Translate(I18NMgr.I18N!))
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            @I18NMgr.WebUILocal.Result
+            @("result".Translate(I18NMgr.I18N!))
         </MudTh>
         <MudTh>
-            @I18NMgr.WebUILocal.ToolBar
+            @("webUI.toolBar".Translate(I18NMgr.I18N!))
         </MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -100,15 +100,15 @@
         <MudTd>@DataFormat.GetKillCount(context!.Archive)</MudTd>
         <MudTd>@DataFormat.GetResultStr(context!.Archive)</MudTd>
         <MudTd Style="display: flex; align-content: center">
-            <MudMenu Label="@I18NMgr.WebUILocal.ToolMenu" Modal="false">
-                <MudMenuItem Label="@I18NMgr.WebUILocal.Info" OnClick="@(() => LookDetails(context!))"/>
-                <MudMenuItem Label="@I18NMgr.WebUILocal.QuickEquip" OnClick="@(() => LookQuickEquip(context!))"/>
-                <MudMenuItem Label="@I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Delete, I18NMgr.WebUILocal.Profile)" Style="color: red" OnClick="@(() => DeleteArchive(context!))"/>
+            <MudMenu Label="@("webUI.toolMenu".Translate(I18NMgr.I18N!))" Modal="false">
+                <MudMenuItem Label="@("info".Translate(I18NMgr.I18N!))" OnClick="@(() => LookDetails(context!))"/>
+                <MudMenuItem Label="@("quickEquip".Translate(I18NMgr.I18N!))" OnClick="@(() => LookQuickEquip(context!))"/>
+                <MudMenuItem Label="@("delete::profile".Translate(I18NMgr.I18N!))" Style="color: red" OnClick="@(() => DeleteArchive(context!))"/>
             </MudMenu>
         </MudTd>
     </RowTemplate>
     <PagerContent>
-        <MudTablePager RowsPerPageString="@I18NMgr.WebUILocal.TablePagerRowsPerPageString" InfoFormat="@I18NMgr.WebUILocal.TablePagerInfoFormat"
+        <MudTablePager RowsPerPageString="@("webUI.tablePagerRowsPerPageString".Translate(I18NMgr.I18N!))" InfoFormat="@("webUI.tablePagerInfoFormat".Translate(I18NMgr.I18N!))"
                        PageSizeOptions="new[] { 10, 1, 5, 20, 50, 100 }"/>
     </PagerContent>
 </MudTable>
@@ -118,11 +118,11 @@
     {
         case OverlayState.QuickEquip:
             <MudContainer @onclick:stopPropagation="true">
-                <MudText Typo="Typo.h5">@I18NMgr.WebUILocal.QuickEquip</MudText>
-                <MudText Typo="Typo.inherit">@I18NMgr.WebUILocal.ClickOtherZoneToClose</MudText>
+                <MudText Typo="Typo.h5">@("quickEquip".Translate(I18NMgr.I18N!))</MudText>
+                <MudText Typo="Typo.inherit">@("webUI.clickOtherZoneToClose".Translate(I18NMgr.I18N!))</MudText>
                 @if (ArchiveContext is null)
                 {
-                    <MudText>@I18NMgr.WebUILocal.ChoiceArchiveNotExist</MudText>
+                    <MudText>@("webUI.choiceArchiveNotExist".Translate(I18NMgr.I18N!))</MudText>
                 }
                 else
                 {
@@ -132,18 +132,18 @@
             break;
         case OverlayState.DeleteArchive:
             <MudContainer @onclick:stopPropagation="true" Class="overflow-y: auto">
-                <MudText Typo="Typo.h5">@($"{I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Delete, I18NMgr.WebUILocal.Profile)}: {ArchiveContext?.ServerId}?")</MudText>
-                <MudText Typo="Typo.inherit">@I18NMgr.WebUILocal.ClickOtherZoneToClose</MudText>
+                <MudText Typo="Typo.h5">@($"{"delete::profile".Translate(I18NMgr.I18N!)}: {ArchiveContext?.ServerId}?")</MudText>
+                <MudText Typo="Typo.inherit">@("webUI.clickOtherZoneToClose".Translate(I18NMgr.I18N!))</MudText>
                 @if (ArchiveContext is null)
                 {
-                    <MudText>@I18NMgr.WebUILocal.ChoiceArchiveNotExist</MudText>
+                    <MudText>@("webUI.choiceArchiveNotExist".Translate(I18NMgr.I18N!))</MudText>
                 }
                 else
                 {
                     <ArchiveInfoPaperWidget Archive="ArchiveContext" ShowToolZone="@false"/>
                     <MudStack Row="true" AlignItems="AlignItems.Center">
-                        <MudButton Color="Color.Error" OnClick="@(async () => await EnsureDelete())">@($"{I18NMgr.WebUILocal.Link(I18NMgr.WebUILocal.Confirm, I18NMgr.WebUILocal.Delete)}?")</MudButton>
-                        <MudButton OnClick="@(() => CancelDelete())">@I18NMgr.WebUILocal.Cancel</MudButton>
+                        <MudButton Color="Color.Error" OnClick="@(async () => await EnsureDelete())">@($"{"confirm::delete".Translate(I18NMgr.I18N!)}?")</MudButton>
+                        <MudButton OnClick="@(() => CancelDelete())">@("cancel".Translate(I18NMgr.I18N!))</MudButton>
                     </MudStack>
                 }
             </MudContainer>
@@ -247,12 +247,12 @@
         {
             if (WebData.LookingServerIds.Add(archiveIndexed))
             {
-                Snackbar.Add(I18NMgr.DumpFormatStrLocal(I18NMgr.WebUILocal.AddInfoTabSuccess, new { archiveIndexed.Index, archiveIndexed.Archive.ServerId }));
+                Snackbar.Add("webUI.addInfoTabSuccess".Translate(I18NMgr.I18N!, new { archiveIndexed.Index, archiveIndexed.Archive.ServerId }));
                 if (_jump2DetailPage) Navigation.NavigateTo("/RaidRecord/Info", true);
             }
             else
             {
-                Snackbar.Add(I18NMgr.DumpFormatStrLocal(I18NMgr.WebUILocal.AddInfoTabFail, new { archiveIndexed.Index, archiveIndexed.Archive.ServerId }));
+                Snackbar.Add("webUI.addInfoTabFail".Translate(I18NMgr.I18N!, new { archiveIndexed.Index, archiveIndexed.Archive.ServerId }));
             }
         }
         catch (Exception e)

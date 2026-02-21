@@ -23,7 +23,7 @@ public class ClsCmd: CommandBase
         _cmdUtil = cmdUtil;
         Key = "cls";
         _i18NMgr = i18NMgr;
-        Desc = "serverMessage.Cmd-Cls.Desc".Translate(I18N);
+        Desc = "z2serverMessage.Cmd-Cls.Desc".Translate(I18N);
         _dataGetter = dataGetter;
     }
 
@@ -37,11 +37,11 @@ public class ClsCmd: CommandBase
         Dictionary<MongoId, Dialogue> dialogs = _dataGetter.GetDialogsForProfile(parametric.SessionId);
         Dialogue dialog = dialogs[managerProfile.Id];
         // if (dialog.Messages == null) return "找不到你的聊天记录";
-        if (dialog.Messages == null) return "serverMessage.Cmd-Cls.找不到聊天记录".Translate(I18N);
+        if (dialog.Messages == null) return "z2serverMessage.Cmd-Cls.找不到聊天记录".Translate(I18N);
         int count = dialog.Messages.Count;
         dialog.Messages = [];
         // $"已清除{count}条聊天记录, 重启游戏客户端后生效"
         // return $"已清除{count}条聊天记录, 重启游戏客户端后生效";
-        return "serverMessage.Cmd-Cls.已清除聊天记录".Translate(I18N, new { Count = count });
+        return "z2serverMessage.Cmd-Cls.已清除聊天记录".Translate(I18N, new { Count = count });
     }
 }
