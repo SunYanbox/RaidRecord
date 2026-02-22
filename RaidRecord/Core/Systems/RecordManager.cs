@@ -14,6 +14,7 @@ using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Utils;
 using SPTarkov.Server.Core.Utils.Cloners;
+using SuntionCore.Services.FileUtils;
 using SuntionCore.Services.I18NUtil;
 using Path = System.IO.Path;
 
@@ -240,10 +241,10 @@ public sealed class RecordManager(
     {
         if (_eftCombatRecords.TryGetValue(playerId, out EFTCombatRecord? eftRecord))
         {
-            return dataUtil.GetFileSize(eftRecord.FilePath);
+            return eftRecord.FilePath.ToFileSize();
         }
 
-        return dataUtil.GetFileSize(string.Empty);
+        return "".ToFileSize();
     }
 
     /// <summary> 通过Account, Pmc, Session或Scav Id获取PmcData实例 </summary>

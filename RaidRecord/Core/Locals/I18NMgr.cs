@@ -167,7 +167,7 @@ public class I18NMgr(
             }
         }
 
-        if (!string.IsNullOrEmpty(warnMsg)) modConfig.Log("Warn", warnMsg);
+        if (!string.IsNullOrEmpty(warnMsg)) modConfig.Warn(warnMsg);
         // modConfig.Info("已成功加载各个地图撤离点数据");
         modConfig.Info("z2serverMessage.I18N-Info.撤离点数据加载完毕".Translate(I18N, new
         {
