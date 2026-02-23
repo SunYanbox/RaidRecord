@@ -133,14 +133,14 @@ public class DataFormatService(I18NMgr i18NMgr)
     /// <param name="seconds">时间戳</param>
     public string FromDateTimeSeconds(long seconds)
     {
-        DateTime time = DateTimeOffset.FromUnixTimeSeconds(seconds).DateTime;
+        DateTime time = DateTimeOffset.FromUnixTimeSeconds(seconds).LocalDateTime;
         return time.ToShortDateString() + " " + time.ToShortTimeString();
     }
 
     /// <summary> 获取Unix时间戳的 时间 格式化值 </summary>
     public string FromTimeSeconds(long seconds)
     {
-        return DateTimeOffset.FromUnixTimeSeconds(seconds).DateTime.ToLongTimeString();
+        return DateTimeOffset.FromUnixTimeSeconds(seconds).LocalDateTime.ToLongTimeString();
     }
     #endregion
 }
