@@ -10,6 +10,7 @@ using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.Match;
 using SPTarkov.Server.Core.Utils.Cloners;
+using SuntionCore.SPTExtensions.Services;
 
 namespace RaidRecord.Core.Utils;
 
@@ -22,7 +23,7 @@ public class RaidUtil(
     PriceSystem priceSystem,
     ProfileHelper profileHelper,
     DataGetterService dataGetter,
-    RecordManager recordManager)
+    ProfileAndAccountService profileAndAccountService)
 {
     /// <summary>
     /// 根据开局请求初始化数据
@@ -90,7 +91,7 @@ public class RaidUtil(
         // PmcData postRaidProfile = request.Results.Profile; // 战局后角色数据(Pmc和战局进入时的物品相同)
 
         // 正确获取Scav或Pmc数据
-        PmcData pmcProfile = recordManager.GetPmcDataByPlayerId(raidInfo.PlayerId);
+        PmcData pmcProfile = profileAndAccountService.GetPmcDataByPlayerId(raidInfo.PlayerId);
 
         if (isPmc)
         {

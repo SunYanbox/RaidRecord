@@ -16,6 +16,7 @@ using SPTarkov.Server.Core.Utils;
 using SPTarkov.Server.Core.Utils.Cloners;
 using SuntionCore.Services.FileUtils;
 using SuntionCore.Services.I18NUtil;
+using SuntionCore.SPTExtensions.Services;
 using Path = System.IO.Path;
 
 namespace RaidRecord.Core.Systems;
@@ -31,55 +32,17 @@ namespace RaidRecord.Core.Systems;
 public sealed class RecordManager(
     I18NMgr i18NMgr,
     ICloner cloner,
-    DataUtil dataUtil,
     JsonUtil jsonUtil,
     ModConfig modConfig,
     ModHelper modHelper,
     ItemHelper itemHelper,
-    SaveServer saveServer,
-    ProfileHelper profileHelper
+    ProfileAndAccountService profileAndAccountService
 ): IOnLoad
 {
     private string? _recordDbPath;
 
     /// <summary> 账户id -> 账户历史战绩 </summary>
     private readonly Dictionary<MongoId, EFTCombatRecord> _eftCombatRecords = new();
-
-    /// <summary> Pmc/Scav id 到账户id的映射 </summary>
-    private readonly Dictionary<MongoId, MongoId> _playerId2Account = new();
-
-    /// <summary> 所有已存在的账号id的集合 </summary>
-    private HashSet<MongoId> _accountIds = [];
-
-    /// <summary> 所有已存在的账号id的只读视图集合 </summary>
-    public ReadOnlySet<MongoId> AccountIds => new(_accountIds);
-
-    /// <summary> 维护常用Id映射 </summary>
-    public void UpdateAccountData()
-    {
-        Dictionary<MongoId, SptProfile> profiles = saveServer.GetProfiles();
-        HashSet<MongoId> accounts = profiles.Keys.ToHashSet();
-        _accountIds = accounts;
-        // 更新Pmc/Scav id 到账户id的映射
-        string msg = "z2serverMessage.RecordManager-Debug.从SPT加载账户数据.标题".Translate(i18NMgr.I18N!);
-        // string msg = "从SPT加载账户数据: ";
-        foreach (MongoId accountId in accounts)
-        {
-            SptProfile sptProfile = profiles[accountId];
-            MongoId? pmcId = sptProfile.CharacterData?.PmcData?.Id;
-            MongoId? scavId = sptProfile.CharacterData?.ScavData?.Id;
-            if (pmcId is not null) _playerId2Account[pmcId.Value] = accountId;
-            if (scavId is not null) _playerId2Account[scavId.Value] = accountId;
-            // msg += $"\n\tAccount: {accountId}, PmcId: {pmcId}, ScavId: {scavId}";
-            msg += "z2serverMessage.RecordManager-Debug.从SPT加载账户数据.内容".Translate(i18NMgr.I18N!, new
-            {
-                Account = accountId,
-                PmcId = pmcId,
-                ScavId = scavId
-            });
-        }
-        modConfig.Debug(msg);
-    }
 
     /// <summary>
     /// 根据已有的账号Id, 初始化全部账号的EFTCombatRecord数据
@@ -89,7 +52,7 @@ public sealed class RecordManager(
     private void InitAllEFTCombatRecord()
     {
         // Dictionary<MongoId, SptProfile> profiles = saveServer.GetProfiles();
-        foreach (MongoId accountId in _accountIds)
+        foreach (MongoId accountId in profileAndAccountService.AccountIds)
         {
             if (_eftCombatRecords.ContainsKey(accountId)) continue;
             _eftCombatRecords.Add(accountId, new EFTCombatRecord(accountId));
@@ -98,7 +61,7 @@ public sealed class RecordManager(
 
     public async Task OnLoad()
     {
-        UpdateAccountData();
+        profileAndAccountService.UpdateAccountData();
         await LoadAllRecords();
         InitAllEFTCombatRecord();
     }
@@ -158,7 +121,13 @@ public sealed class RecordManager(
                         new { FilePath = file }
                     ));
                 }
-                MongoId account = _playerId2Account[fileBaseName];
+
+                if (!MongoId.IsValidMongoId(fileBaseName))
+                {
+                    throw new InvalidDataException($"存档文件应该是 账户MongoId.json 格式, 但加载的文件{file}的文件名不是合法MongoId");
+                }
+                MongoId account = profileAndAccountService.GetAccount(fileBaseName)
+                    ?? throw new KeyNotFoundException($"文件名称没有匹配的账户: {fileBaseName}");
                 EFTCombatRecord newArchive = new(account, records)
                 {
                     FilePath = file
@@ -231,12 +200,6 @@ public sealed class RecordManager(
         await Task.WhenAll(tasks);
     }
 
-    /// <summary> 通过Pmc或Scav Id获取账号Id </summary>
-    public MongoId? GetAccount(MongoId playerId)
-    {
-        return _playerId2Account.GetValueOrDefault(playerId);
-    }
-
     public string GetRecordFileSize(MongoId playerId)
     {
         if (_eftCombatRecords.TryGetValue(playerId, out EFTCombatRecord? eftRecord))
@@ -245,25 +208,6 @@ public sealed class RecordManager(
         }
 
         return "".ToFileSize();
-    }
-
-    /// <summary> 通过Account, Pmc, Session或Scav Id获取PmcData实例 </summary>
-    public PmcData GetPmcDataByPlayerId(MongoId playerId)
-    {
-        if (_playerId2Account.TryGetValue(playerId, out MongoId account))
-        {
-            SptProfile sptProfile = profileHelper.GetFullProfile(account);
-            /*
-             * SessionId, AccountId和PmcId相同, ScavId为PmcId+1
-             */
-            return (playerId == account
-                ? sptProfile.CharacterData!.PmcData
-                : sptProfile.CharacterData!.ScavData)!;
-        }
-        // throw new Exception($"未找到{playerId}对应的PmcData实例");
-        throw new Exception("z2serverMessage.RecordManager-Error.未找到PmcData实例".Translate(i18NMgr.I18N!,
-            new { PlayerId = playerId }
-        ));
     }
 
     /// <summary> 保存指定账户和的历史战绩 </summary>
@@ -308,7 +252,7 @@ public sealed class RecordManager(
     /// <summary> 通过账号获取历史记录 </summary>
     public async Task<EFTCombatRecord> GetRecord(MongoId account)
     {
-        if (_accountIds.Contains(account)) return _eftCombatRecords[account];
+        if (profileAndAccountService.AccountIds.Contains(account)) return _eftCombatRecords[account];
         // 重新加载数据库
         await LoadAllRecords();
 
@@ -336,7 +280,7 @@ public sealed class RecordManager(
     {
         try
         {
-            MongoId? account = GetAccount(playerId);
+            MongoId? account = profileAndAccountService.GetAccount(playerId);
             if (account == null!)
             {
                 throw new Exception("z2serverMessage.RecordManager-Error.指定的玩家账号不存在".Translate(i18NMgr.I18N!, new

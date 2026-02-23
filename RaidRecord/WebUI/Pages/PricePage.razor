@@ -3,7 +3,9 @@
 @using SPTarkov.Server.Core.Models.Eft.Common
 @using SPTarkov.Server.Core.Models.Eft.Common.Tables
 @using SPTarkov.Server.Core.Models.Eft.ItemEvent
+@using SPTarkov.Server.Core.Models.Enums
 @using SPTarkov.Server.Core.Servers
+@using SuntionCore.SPTExtensions.Services
 @using Color = MudBlazor.Color
 
 @inject I18NMgr I18NMgr
@@ -114,7 +116,7 @@
                 ModConfig.Warn("购买物品失败: 玩家数据获取失败");
                 return;
             }
-            List<Warning>? warnings = ModMailService.Payment(WebData.CurrAccount, Convert.ToInt64(TotalPrice), pmcData);
+            List<Warning>? warnings = ModMailService.Payment(WebData.CurrAccount, Money.ROUBLES, Convert.ToInt64(TotalPrice), pmcData);
 
             if (warnings?.Count > 0)
             {
@@ -153,7 +155,7 @@
             if (warnings2?.Count > 0)
             {
                 ModConfig.Warn($"发送物品失败: {string.Join("\n", warnings2.Select(x => x.ErrorMessage))}; 将回退扣费");
-                List<Warning>? warnings3 = ModMailService.SendMoney(WebData.CurrAccount, "回退资金", TotalPrice);
+                List<Warning>? warnings3 = ModMailService.SendMoney(WebData.CurrAccount, Money.ROUBLES, "回退资金", TotalPrice);
 
                 if (warnings3?.Count > 0)
                 {
