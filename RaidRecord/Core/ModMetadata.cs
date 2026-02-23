@@ -20,7 +20,7 @@ public record ModMetadata: AbstractModMetadata, IModWebMetadata {
     public override List<string>? Incompatibilities { get; init; }
     public override Dictionary<string, Range>? ModDependencies { get; init; } = new()
     {
-        { "com.suntion.suntioncore", new Range(">=0.1.0") }
+        { "com.suntion.suntioncore", new Range(">=1.0.0") }
     };
     public override string? Url { get; init; } = "https://forge.sp-tarkov.com/mod/2341/raidrecord";
     public override bool? IsBundleMod { get; init; } = false;
