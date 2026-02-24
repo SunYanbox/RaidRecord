@@ -7,14 +7,14 @@
 @inject StatisticsService StatisticsService
 
 <MudPaper Class="doc-section-component-container">
-    <MudText>阵营游玩情况</MudText>
+    <MudText>@("webUI.sidePlayState".Translate(I18NMgr.I18N!))</MudText>
     <MudChart ChartType="ChartType.StackedBar"
               XAxisLabels="@(_sides?.ToArray() ?? throw new DataException("显示统计页面柱状图时未正确获取到阵营名称数据"))"
               ChartSeries="@_groupByExitsSeries"
               LegendPosition="@LegendPosition"
               AxisChartOptions="@AxisChartOptions"
               @bind-SelectedIndex="_index"
-              Width="550px" Height="400px"/>
+              Width="850px" Height="400px"/>
 </MudPaper>
 
 @code {

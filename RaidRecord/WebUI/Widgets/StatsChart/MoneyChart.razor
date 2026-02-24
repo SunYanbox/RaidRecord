@@ -10,9 +10,11 @@
                   Width="850px" Height="400px"/>
     </MudStack>
     <MudStack Row="true" AlignItems="AlignItems.Center">
-        <MudButton OnClick="@(() => PageReduce())">@("<-")</MudButton>
+        <MudSpacer />
+        <MudButton Disabled="@DisabledReduce" OnClick="@(() => PageReduce())">@("<-")</MudButton>
         <MudText>@Page</MudText>
-        <MudButton OnClick="@(() => PageAdd())">@("->")</MudButton>
+        <MudButton Disabled="@DisabledAdd" OnClick="@(() => PageAdd())">@("->")</MudButton>
+        <MudSpacer />
     </MudStack>
 </MudPaper>
 
@@ -25,6 +27,9 @@
     private int Page { get; set; }
     private int TotalPage { get; set; }
     private const int PerPage = 10;
+
+    private bool DisabledReduce => Page <= 1;
+    private bool DisabledAdd => Page >= TotalPage;
 
     private void PageReduce()
     {
@@ -131,8 +136,7 @@
     protected override async Task OnInitializedAsync()
     {
         _records = (await RecordManager.GetRecord(WebDataContext.CurrAccount)).Records;
-        Page = 1;
-        TotalPage = (int)Math.Ceiling((double)_records.Count / PerPage);
+        Page = TotalPage = (int)Math.Ceiling((double)_records.Count / PerPage);
 
         RebuildChart();
         
