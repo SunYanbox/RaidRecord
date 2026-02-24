@@ -1,0 +1,142 @@
+@inject I18NMgr I18NMgr
+@inject WebDataContext WebDataContext
+@inject RecordManager RecordManager
+
+<MudPaper Class="doc-section-component-container">
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudChart ChartType="ChartType.Line" ChartSeries="@_seriesBase" XAxisLabels="@_labels.ToArray()"
+                  Width="850px" Height="400px"/>
+        <MudChart ChartType="ChartType.Line" ChartSeries="@_series" XAxisLabels="@_labels.ToArray()"
+                  Width="850px" Height="400px"/>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudButton OnClick="@(() => PageReduce())">@("<-")</MudButton>
+        <MudText>@Page</MudText>
+        <MudButton OnClick="@(() => PageAdd())">@("->")</MudButton>
+    </MudStack>
+</MudPaper>
+
+@code {
+    private List<RaidDataWrapper>? _records;
+    private readonly List<ChartSeries> _seriesBase = [];
+    private readonly List<ChartSeries> _series = [];
+    private readonly List<string> _labels = [];
+
+    private int Page { get; set; }
+    private int TotalPage { get; set; }
+    private const int PerPage = 10;
+
+    private void PageReduce()
+    {
+        Page--;
+        if (Page < 1)
+        {
+            Page = Math.Max(1, Page);
+            return;
+        }
+        RebuildChart();
+    }
+
+    private void PageAdd()
+    {
+        Page++;
+        if (Page > TotalPage)
+        {
+            Page = Math.Max(1, TotalPage);
+            return;
+        }
+        RebuildChart();
+    }
+    
+    readonly List<double> _preRaidValues = [];
+    readonly List<double> _equipmentValues = [];
+    readonly List<double> _securedValues = [];
+    readonly List<double> _grossProfit = [];
+    readonly List<double> _combatLosses = [];
+    readonly List<double> _netProfit = [];
+
+    private void RebuildChart()
+    {
+        I18N i18N = I18NMgr.I18N!;
+        _preRaidValues.Clear();
+        _equipmentValues.Clear();
+        _securedValues.Clear();
+        _grossProfit.Clear();
+        _combatLosses.Clear();
+        _netProfit.Clear();
+        _seriesBase.Clear();
+        _series.Clear();
+        _labels.Clear();
+        for (int i = PerPage * (Page - 1); i < Math.Min((_records?.Count ?? 0), PerPage * Page); i++)
+        {
+            _labels.Add(i.ToString());
+            RaidArchive? record = _records![i].Archive;
+            if (record is null)
+            {
+                _preRaidValues.Add(0);
+                _equipmentValues.Add(0);
+                _securedValues.Add(0);
+                _grossProfit.Add(0);
+                _combatLosses.Add(0);
+                _netProfit.Add(0);
+                continue;
+            }
+            _preRaidValues.Add(record.PreRaidValue);
+            _equipmentValues.Add(record.EquipmentValue);
+            _securedValues.Add(record.SecuredValue);
+            _grossProfit.Add(record.GrossProfit);
+            _combatLosses.Add(record.CombatLosses);
+            _netProfit.Add(record.GrossProfit - record.CombatLosses);
+        }
+        
+        _seriesBase.Add(new ChartSeries
+        {
+            Name = "webUI.preRaidValue".Translate(i18N),
+            Data = _preRaidValues.ToArray()
+        });
+        
+        _seriesBase.Add(new ChartSeries
+        {
+            Name = "webUI.equipmentValue".Translate(i18N),
+            Data = _equipmentValues.ToArray()
+        });
+        
+        _seriesBase.Add(new ChartSeries
+        {
+            Name = "webUI.securedValue".Translate(i18N),
+            Data = _securedValues.ToArray()
+        });
+        
+        _series.Add(new ChartSeries
+        {
+            Name = "grossProfit".Translate(i18N),
+            Data = _grossProfit.ToArray()
+        });
+        
+        _series.Add(new ChartSeries
+        {
+            Name = "combatLoss".Translate(i18N),
+            Data = _combatLosses.ToArray()
+        });
+        
+        _series.Add(new ChartSeries
+        {
+            Name = "netProfit".Translate(i18N),
+            Data = _netProfit.ToArray()
+        });
+        
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _records = (await RecordManager.GetRecord(WebDataContext.CurrAccount)).Records;
+        Page = 1;
+        TotalPage = (int)Math.Ceiling((double)_records.Count / PerPage);
+
+        RebuildChart();
+        
+        await base.OnInitializedAsync();
+    }
+
+}

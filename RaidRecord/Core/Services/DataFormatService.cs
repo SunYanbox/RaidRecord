@@ -17,7 +17,7 @@ public class DataFormatService(I18NMgr i18NMgr)
 
     #region Archive
     /// <summary> 从ServerId解析地图ID </summary>
-    private string GetMapId(RaidArchive archive)
+    public string GetMapId(RaidArchive archive)
     {
         return archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower();
     }

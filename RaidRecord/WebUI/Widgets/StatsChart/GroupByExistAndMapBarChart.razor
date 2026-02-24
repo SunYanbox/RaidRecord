@@ -1,0 +1,75 @@
+@using SPTarkov.Server.Core.Models.Enums
+@using System.Data
+@using SuntionCore.Services.LogUtils
+
+@inject I18NMgr I18NMgr
+@inject WebDataContext WebDataContext
+@inject StatisticsService StatisticsService
+
+<MudPaper Class="doc-section-component-container">
+    <MudChart ChartType="ChartType.StackedBar"
+      XAxisLabels="@(_maps?.ToArray() ?? throw new DataException("显示统计页面柱状图时未正确获取到地图名称数据"))"
+      ChartSeries="@_groupByExitsSeries"
+      LegendPosition="@LegendPosition"
+      AxisChartOptions="@AxisChartOptions" 
+      @bind-SelectedIndex="_index"
+      Width="550px" Height="400px"/>/>
+</MudPaper>
+
+@code {
+    private int _index = -1; //default value cannot be 0 -> first selectedindex is 0.
+
+    private const Position LegendPosition = Position.Bottom;
+
+    private static AxisChartOptions AxisChartOptions => new()
+    {
+        MatchBoundsToSize = false,
+        XAxisLabelRotation = 0,
+        StackedBarWidthRatio = 0
+    };
+    
+    private readonly List<ChartSeries> _groupByExitsSeries =
+    [
+        new() { Name = "United States", Data = [40, 20, 25, 27, 46, 60, 48, 80, 15] }
+    ];
+
+    List<string>? _maps;
+    Dictionary<string, List<RaidDataWrapper>>? _groupByMap;
+    Dictionary<ExitStatus, List<RaidDataWrapper>>? _groupByExitStatus;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var logger = ModLogger.GetOrCreateLogger("RaidRecord");
+        _groupByMap = await StatisticsService.GroupByPlayerMap(WebDataContext.CurrAccount);
+        _groupByExitStatus = await StatisticsService.GroupByExitStatus(WebDataContext.CurrAccount);
+        
+        if (_groupByMap is null)
+        {
+            logger.Error("没有获取到按游玩地图分类的数据");
+        }
+
+        if (_groupByExitStatus is null)
+        {
+            logger.Error("没有获取到按撤离情况分类的数据");
+        }
+        
+        Dictionary<string, List<RaidDataWrapper>>.KeyCollection keyCollection = _groupByMap!.Keys;
+        _maps = keyCollection.Select(I18NMgr.GetMapName).ToList();
+        
+        _groupByExitsSeries.Clear();
+
+        foreach ((ExitStatus key, List<RaidDataWrapper> _) in _groupByExitStatus!)
+        {
+            string name = key.ToString().Translate(I18NMgr.I18N!);
+            _groupByExitsSeries.Add(new ChartSeries
+            {
+                Name = name,
+                Data = keyCollection.Select(map 
+                    => (double)_groupByMap[map].Count(x 
+                        => x.Archive?.Results is { Result: not null } && x.Archive.Results.Result == key)).ToArray()
+            });
+        }
+        
+        await base.OnInitializedAsync();
+    }
+}
