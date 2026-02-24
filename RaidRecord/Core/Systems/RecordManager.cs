@@ -16,6 +16,7 @@ using SPTarkov.Server.Core.Utils;
 using SPTarkov.Server.Core.Utils.Cloners;
 using SuntionCore.Services.FileUtils;
 using SuntionCore.Services.I18NUtil;
+using SuntionCore.Services.LogUtils;
 using SuntionCore.SPTExtensions.Services;
 using Path = System.IO.Path;
 
@@ -99,11 +100,15 @@ public sealed class RecordManager(
                 }
 
                 data.FilePath = file;
-                _eftCombatRecords.Add(data.AccountId, data);
+                if (!_eftCombatRecords.TryAdd(data.AccountId, data))
+                {
+                    ModLogger.GetOrCreateLogger("RaidRecord")
+                        .Warn($"在加载存档文件{file}时, 对应的账户已存在: {data.AccountId}, 将忽略此次加载", new Exception("加载账户的逻辑不对"));
+                }
             }
             catch (Exception e)
             {
-                modConfig.Error("z2serverMessage.RecordManager-Error.加载记录数据时发生错误".Translate(i18NMgr.I18N!,
+                modConfig.Error(I18N.DumpFormatStrLocal("当前版本: {{CurrVersion}} 加载记录数据时发生错误: {{ErrorMessage}}\n - 文件: {{FilePath}}",
                     new
                     {
                         CurrVersion = modConfig.Metadata.Version.ToString(),
@@ -132,7 +137,11 @@ public sealed class RecordManager(
                 {
                     FilePath = file
                 };
-                _eftCombatRecords.Add(account, newArchive);
+                if (!_eftCombatRecords.TryAdd(account, newArchive))
+                {
+                    ModLogger.GetOrCreateLogger("RaidRecord")
+                        .Warn($"在迁移旧版账户{account}的存档文件时, 对应的账户存档已存在, 添加更新的存档失败");
+                }
                 // 重命名文件, 避免重复迁移
                 string newFile = file.Replace(fileBaseName, account.ToString());
                 modConfig.Info($"正在将旧数据库文件{file}迁移为新版本格式: {newFile}");
@@ -270,7 +279,11 @@ public sealed class RecordManager(
         }
         else
         {
-            _eftCombatRecords.Add(account, new EFTCombatRecord(account));
+            if (!_eftCombatRecords.TryAdd(account, new EFTCombatRecord(account)))
+            {
+                ModLogger.GetOrCreateLogger("RaidRecord")
+                    .Warn($"在初始化账户{account}的存档文件时, 对应的账户已存在: {account}, 将忽略此次加载");
+            }
         }
         return _eftCombatRecords[account];
     }
