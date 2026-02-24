@@ -1,0 +1,1 @@
+git remote set-head main -d
