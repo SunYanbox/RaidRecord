@@ -7,14 +7,14 @@
 @inject StatisticsService StatisticsService
 
 <MudPaper Class="doc-section-component-container">
-    <MudText>各地图游玩情况</MudText>
+    <MudText>阵营游玩情况</MudText>
     <MudChart ChartType="ChartType.StackedBar"
-      XAxisLabels="@(_maps?.ToArray() ?? throw new DataException("显示统计页面柱状图时未正确获取到地图名称数据"))"
-      ChartSeries="@_groupByExitsSeries"
-      LegendPosition="@LegendPosition"
-      AxisChartOptions="@AxisChartOptions" 
-      @bind-SelectedIndex="_index"
-      Width="550px" Height="400px"/>
+              XAxisLabels="@(_sides?.ToArray() ?? throw new DataException("显示统计页面柱状图时未正确获取到阵营名称数据"))"
+              ChartSeries="@_groupByExitsSeries"
+              LegendPosition="@LegendPosition"
+              AxisChartOptions="@AxisChartOptions"
+              @bind-SelectedIndex="_index"
+              Width="550px" Height="400px"/>
 </MudPaper>
 
 @code {
@@ -29,24 +29,21 @@
         StackedBarWidthRatio = 0
     };
     
-    private readonly List<ChartSeries> _groupByExitsSeries =
-    [
-        new() { Name = "United States", Data = [40, 20, 25, 27, 46, 60, 48, 80, 15] }
-    ];
+    private readonly List<ChartSeries> _groupByExitsSeries = [];
 
-    List<string>? _maps;
-    Dictionary<string, List<RaidDataWrapper>>? _groupByMap;
+    List<string>? _sides;
+    Dictionary<string, List<RaidDataWrapper>>? _groupBySides;
     Dictionary<ExitStatus, List<RaidDataWrapper>>? _groupByExitStatus;
 
     protected override async Task OnInitializedAsync()
     {
         var logger = ModLogger.GetOrCreateLogger("RaidRecord");
-        _groupByMap = await StatisticsService.GroupByPlayerMap(WebDataContext.CurrAccount);
+        _groupBySides = await StatisticsService.GroupBySide(WebDataContext.CurrAccount);
         _groupByExitStatus = await StatisticsService.GroupByExitStatus(WebDataContext.CurrAccount);
         
-        if (_groupByMap is null)
+        if (_groupBySides is null)
         {
-            logger.Error("没有获取到按游玩地图分类的数据");
+            logger.Error("没有获取到按阵营分类的数据");
         }
 
         if (_groupByExitStatus is null)
@@ -54,8 +51,8 @@
             logger.Error("没有获取到按撤离情况分类的数据");
         }
         
-        Dictionary<string, List<RaidDataWrapper>>.KeyCollection keyCollection = _groupByMap!.Keys;
-        _maps = keyCollection.Select(I18NMgr.GetMapName).ToList();
+        Dictionary<string, List<RaidDataWrapper>>.KeyCollection keyCollection = _groupBySides!.Keys;
+        _sides = keyCollection.ToList();
         
         _groupByExitsSeries.Clear();
 
@@ -65,9 +62,8 @@
             _groupByExitsSeries.Add(new ChartSeries
             {
                 Name = name,
-                Data = keyCollection.Select(map 
-                    => (double)_groupByMap[map].Count(x 
-                        => x.Archive?.Results is { Result: not null } && x.Archive.Results.Result == key)).ToArray()
+                Data = keyCollection.Select(side 
+                    => (double)_groupBySides[side].Count).ToArray()
             });
         }
         

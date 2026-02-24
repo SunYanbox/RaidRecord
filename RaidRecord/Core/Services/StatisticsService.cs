@@ -16,6 +16,34 @@ public sealed class StatisticsService(
 {
     public readonly ModLogger Logger = ModLogger.GetOrCreateLogger("RaidRecord");
     
+    public async Task<Dictionary<string, List<RaidDataWrapper>>?> GroupBySide(MongoId account)
+    {
+        try
+        {
+            EFTCombatRecord combatRecord = await recordManager.GetRecord(account);
+            HashSet<string> maps = combatRecord.Records
+                .Where(x => x.Archive is not null)
+                .Select(x => x.Archive!.Side).ToHashSet();
+            Dictionary<string, List<RaidDataWrapper>> result = maps.ToDictionary<string, string, List<RaidDataWrapper>>(
+                map => map, _ => []);
+            foreach (RaidDataWrapper wrapper in combatRecord.Records)
+            {
+                if (wrapper.Archive is null)
+                {
+                    Logger.Warn($"按游玩阵营分组统计数据时, {wrapper}未存档");
+                    continue;
+                }
+                result[wrapper.Archive.Side].Add(wrapper);
+            }
+            return result;
+        }
+        catch (Exception e)
+        {
+            Logger.Error($"获取账号{account}的存档时出现错误", e);
+        }
+        return null;
+    }
+    
     public async Task<Dictionary<string, List<RaidDataWrapper>>?> GroupByPlayerMap(MongoId account)
     {
         try
@@ -64,7 +92,7 @@ public sealed class StatisticsService(
 
                 if (wrapper.Archive?.Results?.Result is null)
                 {
-                    Logger.Warn($"按撤离情况分组统计数据时, {wrapper}的结果为空");
+                    Logger.Warn($"按撤离情况分组统计数据时, 存档({wrapper.Archive?.ServerId})的对局结束结果(Results?.Result)为空");
                     continue;
                 }
                 result[wrapper.Archive.Results.Result.Value].Add(wrapper);
