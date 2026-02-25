@@ -7,7 +7,7 @@
 <MudPaper Class="doc-section-component-container">
     <MudStack Row="true" AlignItems="AlignItems.Center">
         <MudSpacer />
-        <MudText>赚损比和每分钟净收益率</MudText>
+        <MudText>@("profitToLossRatio::and::netProfitPerMinute".Translate(I18NMgr.I18N!))</MudText>
         <MudSpacer />
     </MudStack>
     <MudStack Row="true" AlignItems="AlignItems.Center">
@@ -18,10 +18,10 @@
     </MudStack>
     <MudStack Row="true" AlignItems="AlignItems.Center">
         <MudSpacer />
-        <KeyValueCenterWidget Key="平均赚损比" Value="@_totalProfitToLossRatio.ToString("F3")" />
-        <KeyValueCenterWidget Key="平均每分钟净收益率" Value="@AddUnitToRub(_totalNetProfitPerMinute)" />
-        <KeyValueCenterWidget Key="最近十局平均赚损比" Value="@_recentProfitToLossRatio.ToString("F3")" />
-        <KeyValueCenterWidget Key="最近十局平均每分钟净收益率" Value="@AddUnitToRub(_recentNetProfitPerMinute)" />
+        <KeyValueCenterWidget Key="@("average::profitToLossRatio".Translate(I18NMgr.I18N!))" Value="@_totalProfitToLossRatio.ToString("F3")" />
+        <KeyValueCenterWidget Key="@("average::netProfitPerMinute".Translate(I18NMgr.I18N!))" Value="@StatisticsService.AddUnitToRub(_totalNetProfitPerMinute)" />
+        <KeyValueCenterWidget Key="@("recentTenPlay::average::profitToLossRatio".Translate(I18NMgr.I18N!))" Value="@_recentProfitToLossRatio.ToString("F3")" />
+        <KeyValueCenterWidget Key="@("recentTenPlay::average::netProfitPerMinute".Translate(I18NMgr.I18N!))" Value="@StatisticsService.AddUnitToRub(_recentNetProfitPerMinute)" />
         <MudSpacer />
     </MudStack>
     <MudStack Row="true" AlignItems="AlignItems.Center">
@@ -34,19 +34,10 @@
 </MudPaper>
 
 @code {
-    public readonly string[] RubUnits = [" rub", "K rub", "M rub", "B rub"];
     private List<RaidDataWrapper>? _records;
     private readonly List<ChartSeries> _series1 = [];
     private readonly List<ChartSeries> _series2 = [];
     private readonly List<string> _labels = [];
-
-    private string AddUnitToRub(double value)
-    {
-        bool moreThanZero = value >= 0;
-        string withUnit = MagnitudeFormatter.Format(Math.Abs(value), RubUnits, addSpace: false, decimalPlaces: 3);
-        if (!moreThanZero) withUnit = $" - {withUnit}";
-        return withUnit;
-    }
 
     private int Page { get; set; }
     private int TotalPage { get; set; }

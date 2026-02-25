@@ -5,6 +5,7 @@ using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Enums;
 using SuntionCore.Services.LogUtils;
+using SuntionCore.Services.MagnitudeUtils;
 
 namespace RaidRecord.Core.Services;
 
@@ -15,7 +16,16 @@ public sealed class StatisticsService(
     DataFormatService dataFormatService)
 {
     public readonly ModLogger Logger = ModLogger.GetOrCreateLogger("RaidRecord");
+    public static readonly string[] RubUnits = [" rub", "K rub", "M rub", "B rub"];
 
+    public static string AddUnitToRub(double value)
+    {
+        bool moreThanZero = value >= 0;
+        string withUnit = MagnitudeFormatter.Format(Math.Abs(value), RubUnits, addSpace: false, decimalPlaces: 3);
+        if (!moreThanZero) withUnit = $" - {withUnit}";
+        return withUnit;
+    }
+    
     /// <summary>
     /// 赚损比 (Profit-to-Loss Ratio)
     /// </summary>
