@@ -15,6 +15,22 @@ public sealed class StatisticsService(
     DataFormatService dataFormatService)
 {
     public readonly ModLogger Logger = ModLogger.GetOrCreateLogger("RaidRecord");
+
+    /// <summary>
+    /// 赚损比 (Profit-to-Loss Ratio)
+    /// </summary>
+    public static double ProfitToLossRatio(double profit, double loss)
+    {
+        return loss > 1e-3 ? profit / loss : profit;
+    }
+
+    /// <summary>
+    /// 每分钟净收益率 (Net Profit Per Minute)
+    /// </summary>
+    public static double NetProfitPerMinute(double netProfit, long durationSeconds)
+    {
+        return netProfit / Math.Max(durationSeconds, 1) * 60;
+    }
     
     public async Task<Dictionary<string, List<RaidDataWrapper>>?> GroupBySide(MongoId account)
     {

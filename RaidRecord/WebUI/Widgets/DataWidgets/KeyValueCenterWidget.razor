@@ -1,0 +1,11 @@
+<MudStack Row="true" AlignItems="AlignItems.Center">
+    <MudSpacer />
+    <MudText>@Key</MudText>
+    <MudText>@Value</MudText>
+    <MudSpacer />
+</MudStack>
+
+@code {
+    [Parameter] public required string Key { get; set; }
+    [Parameter] public required string Value { get; set; }
+}

@@ -15,28 +15,38 @@
 
 <MudPaper Class="autoflow-y">
     
-    <MudStack Row="true" AlignItems="AlignItems.Center">
+    <MudStack AlignItems="AlignItems.Center">
+        <RaidEfficiencyChart/>
+        
         <MoneyChart/>
-
     </MudStack>
 
     <MudStack Row="true" AlignItems="AlignItems.Center">
         <GroupByExistAndMapBarChart/>
-        
+
         <GroupBySideChart/>
     </MudStack>
 
 </MudPaper>
 
 @code {
+    Dictionary<string, List<RaidDataWrapper>>? _groupByMap;
+    Dictionary<string, List<RaidDataWrapper>>? _groupBySides;
+    Dictionary<ExitStatus, List<RaidDataWrapper>>? _groupByExitStatus;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
         if (string.IsNullOrEmpty(WebData.CurrAccount))
         {
             Navigation.NavigateTo("/RaidRecord", true);
         }
+        
+        _groupByMap = await StatisticsService.GroupByPlayerMap(WebDataContext.CurrAccount);
+        _groupBySides = await StatisticsService.GroupBySide(WebDataContext.CurrAccount);
+        _groupByExitStatus = await StatisticsService.GroupByExitStatus(WebDataContext.CurrAccount);
+        
+        
     }
 
 }

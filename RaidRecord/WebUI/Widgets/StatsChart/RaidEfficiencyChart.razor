@@ -1,0 +1,175 @@
+@using RaidRecord.WebUI.Widgets.DataWidgets
+@using SuntionCore.Services.MagnitudeUtils
+@inject I18NMgr I18NMgr
+@inject WebDataContext WebDataContext
+@inject RecordManager RecordManager
+
+<MudPaper Class="doc-section-component-container">
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudSpacer />
+        <MudText>赚损比和每分钟净收益率</MudText>
+        <MudSpacer />
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudChart ChartType="ChartType.Line" ChartSeries="@_series1" XAxisLabels="@_labels.ToArray()"
+                  Width="750px" Height="400px"/>
+        <MudChart ChartType="ChartType.Line" ChartSeries="@_series2" XAxisLabels="@_labels.ToArray()"
+                  Width="750px" Height="400px"/>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudSpacer />
+        <KeyValueCenterWidget Key="平均赚损比" Value="@_totalProfitToLossRatio.ToString("F3")" />
+        <KeyValueCenterWidget Key="平均每分钟净收益率" Value="@AddUnitToRub(_totalNetProfitPerMinute)" />
+        <KeyValueCenterWidget Key="最近十局平均赚损比" Value="@_recentProfitToLossRatio.ToString("F3")" />
+        <KeyValueCenterWidget Key="最近十局平均每分钟净收益率" Value="@AddUnitToRub(_recentNetProfitPerMinute)" />
+        <MudSpacer />
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudSpacer />
+        <MudButton Disabled="@DisabledReduce" OnClick="@(() => PageReduce())">@("<-")</MudButton>
+        <MudText>@Page</MudText>
+        <MudButton Disabled="@DisabledAdd" OnClick="@(() => PageAdd())">@("->")</MudButton>
+        <MudSpacer />
+    </MudStack>
+</MudPaper>
+
+@code {
+    public readonly string[] RubUnits = [" rub", "K rub", "M rub", "B rub"];
+    private List<RaidDataWrapper>? _records;
+    private readonly List<ChartSeries> _series1 = [];
+    private readonly List<ChartSeries> _series2 = [];
+    private readonly List<string> _labels = [];
+
+    private string AddUnitToRub(double value)
+    {
+        bool moreThanZero = value >= 0;
+        string withUnit = MagnitudeFormatter.Format(Math.Abs(value), RubUnits, addSpace: false, decimalPlaces: 3);
+        if (!moreThanZero) withUnit = $" - {withUnit}";
+        return withUnit;
+    }
+
+    private int Page { get; set; }
+    private int TotalPage { get; set; }
+    private const int PerPage = 10;
+
+    private bool DisabledReduce => Page <= 1;
+    private bool DisabledAdd => Page >= TotalPage;
+
+    private readonly List<double> _profitToLossRatio = [];
+    private readonly List<double> _netProfitPerMinute = [];
+    private double _totalProfitToLossRatio;
+    private double _totalNetProfitPerMinute;
+    private double _recentProfitToLossRatio;
+    private double _recentNetProfitPerMinute;
+
+    private void InitOtherStats()
+    {
+        int totalRecordCount = _records?.Count ?? 0;
+        int recentCount = 0;
+
+        _totalProfitToLossRatio = _totalNetProfitPerMinute = _recentProfitToLossRatio = _recentNetProfitPerMinute = 0;
+        
+        for (int i = totalRecordCount - 1; i > 0; i--)
+        {
+            RaidArchive? record = _records![i].Archive;
+            if (record?.Results is not { PlayTime: > 0 })
+            {
+                totalRecordCount--;
+                continue;
+            }
+
+            double profitToLossRatio = StatisticsService.ProfitToLossRatio(record.GrossProfit, record.CombatLosses);
+            double netProfitPerMinute = StatisticsService.NetProfitPerMinute(record.GrossProfit - record.CombatLosses, record.Results.PlayTime);
+            
+            _totalProfitToLossRatio += profitToLossRatio;
+            _totalNetProfitPerMinute += netProfitPerMinute;
+
+            if (recentCount > 10) continue;
+            
+            _recentProfitToLossRatio += profitToLossRatio;
+            _recentNetProfitPerMinute += netProfitPerMinute;
+            recentCount++;
+        }
+
+        _totalProfitToLossRatio /= totalRecordCount;
+        _totalNetProfitPerMinute /= totalRecordCount;
+        _recentProfitToLossRatio /= recentCount;
+        _recentNetProfitPerMinute /= recentCount;
+    }
+    
+    private void RebuildChart()
+    {
+        _series1.Clear();
+        _series2.Clear();
+        _labels.Clear();
+        _profitToLossRatio.Clear();
+        _netProfitPerMinute.Clear();
+        int totalRecordCount = _records?.Count ?? 0;
+        for (int i = PerPage * (Page - 1); i < Math.Min(totalRecordCount, PerPage * Page); i++)
+        {
+            _labels.Add(i.ToString());
+            RaidArchive? record = _records![i].Archive;
+            if (record?.Results is not { PlayTime: > 0 })
+            {
+                _profitToLossRatio.Add(0);
+                _netProfitPerMinute.Add(0);
+                continue;
+            }
+
+            double profitToLossRatio = StatisticsService.ProfitToLossRatio(record.GrossProfit, record.CombatLosses);
+            double netProfitPerMinute = StatisticsService.NetProfitPerMinute(record.GrossProfit - record.CombatLosses, record.Results.PlayTime);
+            
+            _profitToLossRatio.Add(profitToLossRatio);
+            _netProfitPerMinute.Add(netProfitPerMinute);
+        }
+        
+        _series1.Add(new ChartSeries
+        {
+            Name = "赚损比",
+            Data = _profitToLossRatio.ToArray()
+        });
+        
+        _series2.Add(new ChartSeries
+        {
+            Name = "每小时净收益率",
+            Data = _netProfitPerMinute.ToArray()
+        });
+
+        StateHasChanged();
+    }
+
+    private void PageReduce()
+    {
+        Page--;
+        if (Page < 1)
+        {
+            Page = Math.Max(1, Page);
+            return;
+        }
+        RebuildChart();
+    }
+
+    private void PageAdd()
+    {
+        Page++;
+        if (Page > TotalPage)
+        {
+            Page = Math.Max(1, TotalPage);
+            return;
+        }
+        RebuildChart();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _records = (await RecordManager.GetRecord(WebDataContext.CurrAccount)).Records;
+        Page = TotalPage = (int)Math.Ceiling((double)_records.Count / PerPage);
+        
+        InitOtherStats();
+        
+        RebuildChart();
+        
+        await base.OnInitializedAsync();
+    }
+
+}
