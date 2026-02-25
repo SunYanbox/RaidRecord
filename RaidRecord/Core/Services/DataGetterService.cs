@@ -11,6 +11,7 @@ using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Enums;
 using SuntionCore.Services.I18NUtil;
+using SuntionCore.SPTExtensions.Services;
 
 namespace RaidRecord.Core.Services;
 
@@ -19,6 +20,7 @@ namespace RaidRecord.Core.Services;
 /// </summary>
 [Injectable(InjectionType = InjectionType.Singleton)]
 public class DataGetterService(
+    ProfileAndAccountService profileAndAccountService,
     DialogueHelper dialogueHelper,
     RecordManager recordManager,
     ProfileHelper profileHelper,
@@ -78,7 +80,7 @@ public class DataGetterService(
     /// <returns></returns>
     public MongoId? GetAccountBySession(string sessionId)
     {
-        return recordManager.GetAccount(profileHelper.GetPmcProfile(sessionId)?.Id ?? new MongoId());
+        return profileAndAccountService.GetAccount(profileHelper.GetPmcProfile(sessionId)?.Id ?? new MongoId());
     }
 
     /// <summary>
@@ -199,10 +201,7 @@ public class DataGetterService(
     }
 
     /// <summary> 获取已存在的所有账户ID </summary>
-    public ReadOnlySet<MongoId> GetAllAccounts()
-    {
-        return recordManager.AccountIds;
-    }
+    public ReadOnlySet<MongoId> GetAllAccounts() => profileAndAccountService.AccountIds;
 
     public readonly RangeTuple<int> PageSizeRange = new(1, 50);
 

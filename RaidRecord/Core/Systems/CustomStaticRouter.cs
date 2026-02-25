@@ -11,6 +11,7 @@ using SPTarkov.Server.Core.Models.Eft.Match;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Utils;
 using SuntionCore.Services.I18NUtil;
+using SuntionCore.SPTExtensions.Services;
 
 // ReSharper disable UnusedType.Global
 
@@ -22,13 +23,15 @@ public class CustomStaticRouter: StaticRouter
     private static RaidUtil? _raidUtil;
     private static IServiceProvider? _serviceProvider;
     private static InjectableClasses? _injectableClasses;
+    private static ProfileAndAccountService? _profileAndAccountService;
 
     public CustomStaticRouter(
         JsonUtil jsonUtil,
         RaidUtil raidUtil,
         IServiceProvider serviceProvider,
         InjectableClasses injectableClasses,
-        ISptLogger<CustomStaticRouter> sptLogger
+        ISptLogger<CustomStaticRouter> sptLogger,
+        ProfileAndAccountService profileAndAccountService
     ): base(
         jsonUtil,
         GetCustomRoutes()
@@ -37,6 +40,7 @@ public class CustomStaticRouter: StaticRouter
         _raidUtil = raidUtil;
         _serviceProvider = serviceProvider;
         _injectableClasses = injectableClasses;
+        _profileAndAccountService = profileAndAccountService;
         if (!_injectableClasses.IsValid())
         {
             sptLogger.Error("[RaidRecord] CustomStaticRouter的参数InjectableClasses未正确注入");
@@ -88,7 +92,7 @@ public class CustomStaticRouter: StaticRouter
             MongoId? notSurePlayerId = pmcData.Id;
             if (notSurePlayerId == null) throw new NullReferenceException("pmcData.Id");
             MongoId playerId = notSurePlayerId.Value;
-            MongoId? account = _injectableClasses.RecordManager!.GetAccount(sessionId);
+            MongoId? account = _profileAndAccountService!.GetAccount(sessionId);
             ModConfig? logger = _injectableClasses.ModConfig;
             I18NMgr i18NMgr = _injectableClasses.I18NMgr!;
 
@@ -190,7 +194,7 @@ public class CustomStaticRouter: StaticRouter
 
             JsonUtil? jsonUtil = _injectableClasses.JsonUtil;
             I18NMgr i18NMgr = _injectableClasses.I18NMgr!;
-            MongoId? accountId = _injectableClasses.RecordManager!.GetAccount(playerId);
+            MongoId? accountId = _profileAndAccountService!.GetAccount(playerId);
 
             if (accountId == null)
                 throw new Exception("z2serverMessage.RecordManager-Error.指定的玩家账号不存在".Translate(i18NMgr.I18N!, new { PlayerId = playerId }));
