@@ -3,6 +3,7 @@ using RaidRecord.Core.Models;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SuntionCore.Services.I18NUtil;
+using SuntionCore.Services.LogUtils;
 
 namespace RaidRecord.Core.Services;
 
@@ -137,10 +138,22 @@ public class DataFormatService(I18NMgr i18NMgr)
         return time.ToShortDateString() + " " + time.ToShortTimeString();
     }
 
-    /// <summary> 获取Unix时间戳的 时间 格式化值 </summary>
+    /// <summary> 获取 对局时间 的格式化值 </summary>
     public string FromTimeSeconds(long seconds)
     {
-        return DateTimeOffset.FromUnixTimeSeconds(seconds).LocalDateTime.ToLongTimeString();
+        // 这里需要的是时分秒(用于对局进行时长的显示)
+        if (seconds < 0)
+        {
+            ModLogger.GetOrCreateLogger("RaidRecord")
+                .Warn($"使用DataFormatService.FromTimeSeconds时, 传入的秒数小于0: {seconds}", 
+                    new ArgumentOutOfRangeException(nameof(seconds), seconds, "秒数不能小于0"));
+            return "00:00:00";
+        }
+
+        TimeSpan time = TimeSpan.FromSeconds(seconds);
+    
+        // 总小时数 (可能大于 24) : 分钟 : 秒
+        return $"{(int)time.TotalHours:D2}:{time.Minutes:D2}:{time.Seconds:D2}";
     }
     #endregion
 }
