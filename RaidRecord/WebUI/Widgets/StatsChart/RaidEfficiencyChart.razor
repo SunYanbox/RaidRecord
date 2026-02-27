@@ -1,5 +1,4 @@
 @using RaidRecord.WebUI.Widgets.DataWidgets
-@using SuntionCore.Services.MagnitudeUtils
 @inject I18NMgr I18NMgr
 @inject WebDataContext WebDataContext
 @inject RecordManager RecordManager
@@ -11,9 +10,9 @@
         <MudSpacer />
     </MudStack>
     <MudStack Row="true" AlignItems="AlignItems.Center">
-        <MudChart ChartType="ChartType.Line" ChartSeries="@_series1" XAxisLabels="@_labels.ToArray()"
+        <MudChart ChartType="ChartType" ChartSeries="@_series1" XAxisLabels="@_labels.ToArray()"
                   Width="750px" Height="400px"/>
-        <MudChart ChartType="ChartType.Line" ChartSeries="@_series2" XAxisLabels="@_labels.ToArray()"
+        <MudChart ChartType="ChartType" ChartSeries="@_series2" XAxisLabels="@_labels.ToArray()"
                   Width="750px" Height="400px"/>
     </MudStack>
     <MudStack Row="true" AlignItems="AlignItems.Center">
@@ -26,6 +25,7 @@
     </MudStack>
     <MudStack Row="true" AlignItems="AlignItems.Center">
         <MudSpacer />
+        <MudCheckBox @bind-Value="_showBar" Color="Color.Primary" Label="@("webUI.displayAsBarGraph".Translate(I18NMgr.I18N!))"></MudCheckBox>
         <MudButton Disabled="@DisabledReduce" OnClick="@(() => PageReduce())">@("<-")</MudButton>
         <MudText>@Page</MudText>
         <MudButton Disabled="@DisabledAdd" OnClick="@(() => PageAdd())">@("->")</MudButton>
@@ -34,6 +34,10 @@
 </MudPaper>
 
 @code {
+    private bool _showBar;
+
+    private ChartType ChartType => _showBar ? ChartType.Bar : ChartType.Line;
+
     private List<RaidDataWrapper>? _records;
     private readonly List<ChartSeries> _series1 = [];
     private readonly List<ChartSeries> _series2 = [];

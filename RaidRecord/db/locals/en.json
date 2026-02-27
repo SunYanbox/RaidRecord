@@ -86,6 +86,7 @@
   "webUI.clickOtherZoneToClose": "Click other areas to close",
   "webUI.consumedThroughClaims": "You have consumed through claims",
   "webUI.curr": "Current",
+  "webUI.displayAsBarGraph": "Display as a bar graph",
   "webUI.enterAmountNeedReceive": "Enter the amount of rubles you need to receive",
   "webUI.enterAmountWishConsume": "Enter the amount of rubles you wish to consume",
   "webUI.enterArchive": "Enter Raid",

@@ -86,6 +86,7 @@
   "webUI.clickOtherZoneToClose": "点击其他区域关闭",
   "webUI.consumedThroughClaims": "您已通过理赔消费",
   "webUI.curr": "当前",
+  "webUI.displayAsBarGraph": "显示为柱状图",
   "webUI.enterAmountNeedReceive": "输入你需要获得的卢布数值",
   "webUI.enterAmountWishConsume": "输入你希望消费的卢布数值",
   "webUI.enterArchive": "进入战局",

@@ -1,16 +1,18 @@
+@using ChartType = MudBlazor.ChartType
 @inject I18NMgr I18NMgr
 @inject WebDataContext WebDataContext
 @inject RecordManager RecordManager
 
 <MudPaper Class="doc-section-component-container">
     <MudStack Row="true" AlignItems="AlignItems.Center">
-        <MudChart ChartType="ChartType.Line" ChartSeries="@_seriesBase" XAxisLabels="@_labels.ToArray()"
-                  Width="850px" Height="400px"/>
-        <MudChart ChartType="ChartType.Line" ChartSeries="@_series" XAxisLabels="@_labels.ToArray()"
+        <MudChart ChartType="ChartType" ChartSeries="@_seriesBase" XAxisLabels="@_labels.ToArray()"
+                  Width="850px" Height="400px" />
+        <MudChart ChartType="ChartType" ChartSeries="@_series" XAxisLabels="@_labels.ToArray()"
                   Width="850px" Height="400px"/>
     </MudStack>
     <MudStack Row="true" AlignItems="AlignItems.Center">
         <MudSpacer />
+        <MudCheckBox @bind-Value="_showBar" Color="Color.Primary" Label="@("webUI.displayAsBarGraph".Translate(I18NMgr.I18N!))"></MudCheckBox>
         <MudButton Disabled="@DisabledReduce" OnClick="@(() => PageReduce())">@("<-")</MudButton>
         <MudText>@Page</MudText>
         <MudButton Disabled="@DisabledAdd" OnClick="@(() => PageAdd())">@("->")</MudButton>
@@ -19,6 +21,10 @@
 </MudPaper>
 
 @code {
+    private bool _showBar;
+
+    private ChartType ChartType => _showBar ? ChartType.Bar : ChartType.Line;
+    
     private List<RaidDataWrapper>? _records;
     private readonly List<ChartSeries> _seriesBase = [];
     private readonly List<ChartSeries> _series = [];

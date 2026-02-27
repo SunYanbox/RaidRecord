@@ -86,6 +86,7 @@
   "webUI.clickOtherZoneToClose": "다른 영역을 클릭하면 닫힙니다",
   "webUI.consumedThroughClaims": "보상으로 소모함",
   "webUI.curr": "현재",
+  "webUI.displayAsBarGraph": "막대그래프로 표시",
   "webUI.enterAmountNeedReceive": "받을 루블 금액을 입력하세요",
   "webUI.enterAmountWishConsume": "소모할 루블 금액을 입력하세요",
   "webUI.enterArchive": "레이드 입장",
