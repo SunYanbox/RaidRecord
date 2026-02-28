@@ -1,11 +1,12 @@
 @using SPTarkov.Server.Core.Models.Eft.Common
 @using SPTarkov.Server.Core.Models.Eft.Common.Tables
 @using SPTarkov.Server.Core.Models.Enums
+@using SuntionCore.SPTExtensions.Services
 @using Color = MudBlazor.Color
 
 @inject I18NMgr I18NMgr
 @inject DataFormatService DataFormat;
-@inject RecordManager RecordManager;
+@inject ProfileAndAccountService ProfileAndAccountService;
 
 
 <MudPaper Class="pa-4">
@@ -24,10 +25,18 @@
     <MudCard>
         <MudCardContent>
             <MudText>@("mapName::and::webUI.surviveTime".Translate(I18NMgr.I18N!))</MudText>
-            <MudText Typo="Typo.body2">
-                @("mapName".Translate(I18NMgr.I18N!)): @DataFormat.GetMapNameLocal(Archive)
-                @("webUI.surviveTime".Translate(I18NMgr.I18N!)): @DataFormat.FromTimeSeconds(Archive.Results?.PlayTime ?? 0)
-            </MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.body2">@("mapName".Translate(I18NMgr.I18N!)): @DataFormat.GetMapNameLocal(Archive)</MudText>
+                <MudText Typo="Typo.body2">@("webUI.surviveTime".Translate(I18NMgr.I18N!)): @DataFormat.FromTimeSeconds(Archive.Results?.PlayTime ?? 0)</MudText>
+                <MudText Typo="Typo.body2">@("profitToLossRatio".Translate(I18NMgr.I18N!)): @StatisticsService.ProfitToLossRatio(Archive.GrossProfit, Archive.CombatLosses).ToString("F3")</MudText>
+                <MudText Typo="Typo.body2"></MudText>
+                @if (Archive.Results?.PlayTime > 0)
+                {
+                    <MudText Typo="Typo.body2">
+                        @("netProfitPerMinute".Translate(I18NMgr.I18N!)): @(StatisticsService.AddUnitToRub(StatisticsService.NetProfitPerMinute(Archive.GrossProfit - Archive.CombatLosses, Archive.Results.PlayTime)))
+                    </MudText>
+                }
+            </MudStack>
         </MudCardContent>
     </MudCard>
     <MudCard>
@@ -135,7 +144,7 @@
 
     @code
     {
-        PmcData PlayerData => RecordManager.GetPmcDataByPlayerId(Archive.PlayerId);
+        PmcData PlayerData => ProfileAndAccountService.GetPmcDataByPlayerId(Archive.PlayerId);
 
         bool _showKillAll;
 

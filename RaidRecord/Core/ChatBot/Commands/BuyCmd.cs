@@ -9,7 +9,9 @@ using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.ItemEvent;
+using SPTarkov.Server.Core.Models.Enums;
 using SuntionCore.Services.I18NUtil;
+using SuntionCore.SPTExtensions.Services;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
@@ -95,7 +97,7 @@ public class BuyCmd: CommandBase
             return msg;
         }
 
-        List<Warning>? warnings = _modMailService.Payment(parametric.SessionId, totalPrice, pmcData);
+        List<Warning>? warnings = _modMailService.Payment(parametric.SessionId, Money.ROUBLES, totalPrice, pmcData);
 
         if (warnings?.Count > 0)
         {

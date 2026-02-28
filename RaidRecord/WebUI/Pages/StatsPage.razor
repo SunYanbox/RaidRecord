@@ -1,0 +1,52 @@
+@page "/RaidRecord/Stats"
+@using System.Data
+@using MudBlazor.Charts
+@using RaidRecord.WebUI.Widgets.StatsChart
+@using SPTarkov.Server.Core.Models.Enums
+@using SuntionCore.Services.LogUtils
+
+@inject I18NMgr I18NMgr
+@inject WebDataContext WebDataContext
+@inject StatisticsService StatisticsService
+@inject WebDataContext WebData;
+@inject NavigationManager Navigation;
+
+<MainLayout />
+
+<MudPaper Class="autoflow-y">
+    
+    <MudStack AlignItems="AlignItems.Center">
+        <RaidEfficiencyChart/>
+        
+        <MoneyChart/>
+    </MudStack>
+
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <GroupByExistAndMapBarChart/>
+
+        <GroupBySideChart/>
+    </MudStack>
+
+</MudPaper>
+
+@code {
+    Dictionary<string, List<RaidDataWrapper>>? _groupByMap;
+    Dictionary<string, List<RaidDataWrapper>>? _groupBySides;
+    Dictionary<ExitStatus, List<RaidDataWrapper>>? _groupByExitStatus;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (string.IsNullOrEmpty(WebData.CurrAccount))
+        {
+            Navigation.NavigateTo("/RaidRecord", true);
+        }
+        
+        _groupByMap = await StatisticsService.GroupByPlayerMap(WebDataContext.CurrAccount);
+        _groupBySides = await StatisticsService.GroupBySide(WebDataContext.CurrAccount);
+        _groupByExitStatus = await StatisticsService.GroupByExitStatus(WebDataContext.CurrAccount);
+        
+        
+    }
+
+}

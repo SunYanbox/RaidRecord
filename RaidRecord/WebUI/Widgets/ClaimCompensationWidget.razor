@@ -1,5 +1,7 @@
 @using SPTarkov.Server.Core.Models.Eft.Common
 @using SPTarkov.Server.Core.Models.Eft.ItemEvent
+@using SPTarkov.Server.Core.Models.Enums
+@using SuntionCore.SPTExtensions.Services
 @using Color = MudBlazor.Color
 @inject I18NMgr I18NMgr
 @inject ISnackbar Snackbar
@@ -49,14 +51,14 @@
             if (delta >= 0)
             {
                 message = $"{"webUI.receivedThroughClaims".Translate(I18NMgr.I18N!)}: {amount}rub";
-                warnings = ModMailService.SendMoney(WebDataContext.CurrAccount, 
+                warnings = ModMailService.SendMoney(WebDataContext.CurrAccount, Money.ROUBLES,
                     message
                     , amount);
             }
             else
             {
                 message = $"{"webUI.consumedThroughClaims".Translate(I18NMgr.I18N!)}: {amount}rub";
-                warnings = ModMailService.Payment(WebDataContext.CurrAccount, Convert.ToInt64(amount), pmcData);
+                warnings = ModMailService.Payment(WebDataContext.CurrAccount, Money.ROUBLES, Convert.ToInt64(amount), pmcData);
             }
         }
         

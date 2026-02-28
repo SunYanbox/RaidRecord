@@ -9,6 +9,7 @@ using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Enums;
 using SuntionCore.Services.I18NUtil;
+using SuntionCore.SPTExtensions.Services;
 
 namespace RaidRecord.Core.Utils;
 
@@ -18,7 +19,8 @@ public class CmdUtil(
     ModConfig modConfig,
     ProfileHelper profileHelper,
     RecordManager recordCacheManager,
-    DataFormatService dataFormatService
+    DataFormatService dataFormatService,
+    ProfileAndAccountService profileAndAccountService
 )
 {
     #region 提供依赖给工具调用 | 只放大部分命令需要的依赖
@@ -46,7 +48,7 @@ public class CmdUtil(
         string msg = "";
         string serverId = archive.ServerId;
         string playerId = archive.PlayerId;
-        PmcData playerData = RecordManager!.GetPmcDataByPlayerId(playerId);
+        PmcData playerData = profileAndAccountService.GetPmcDataByPlayerId(playerId);
 
         // "z3translations.Record-元数据.Id与玩家信息": "{{TimeFormat}} 对局ID: {{ServerId}} 玩家信息: {{Nickname}}(Level={{Level}}, id={{PlayerId}})"
         msg += "z3translations.Record-元数据.Id与玩家信息".Translate(i18NMgr.I18N!,

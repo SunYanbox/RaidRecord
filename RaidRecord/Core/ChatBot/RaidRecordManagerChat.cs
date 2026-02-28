@@ -6,9 +6,12 @@ using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Helpers.Dialogue;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Dialog;
+using SPTarkov.Server.Core.Models.Eft.Profile;
 using SuntionCore.Services.I18NUtil;
+using SuntionCore.SPTExtensions.Services;
 
 namespace RaidRecord.Core.ChatBot;
 
@@ -16,7 +19,9 @@ namespace RaidRecord.Core.ChatBot;
 public class RaidRecordManagerChat(
     I18NMgr i18NMgr,
     ModConfig modConfig,
-    IServiceProvider serviceProvider): IOnLoad
+    DataGetterService dataGetter,
+    ModMailService modMailService,
+    IServiceProvider serviceProvider): IOnLoad, IDialogueChatBot
 {
     public readonly Dictionary<string, CommandBase> Commands = new();
     private I18N I18N => i18NMgr.I18N!;
@@ -27,11 +32,17 @@ public class RaidRecordManagerChat(
         return Task.CompletedTask;
     }
 
-    public ValueTask<string> HandleMessage(ModMailService modMailService, MongoId sessionId, SendMessageRequest request)
+    public UserDialogInfo GetChatBot()
     {
+        return dataGetter.GetChatBotInfo();
+    }
+
+    public ValueTask<string> HandleMessage(MongoId sessionId, SendMessageRequest request)
+    {
+        UserDialogInfo chatBot = GetChatBot();
         try
         {
-            modMailService.SendAllMessage(sessionId, HandleCommand(request.Text, sessionId)).Wait();
+            modMailService.SendAllMessageAsync(sessionId, HandleCommand(request.Text, sessionId), chatBot).Wait();
         }
         catch (Exception e)
         {
@@ -48,7 +59,7 @@ public class RaidRecordManagerChat(
                     SendText = request.Text,
                     ErrorMessage = e.Message
                 }
-            ));
+            ), chatBot);
             // SendMessage(sessionId, $"指令处理失败: {request.Text}\n请检查你输入的指令: '{e.Message}'");
         }
         return ValueTask.FromResult(request.DialogId);
