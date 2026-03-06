@@ -175,6 +175,7 @@
                     await RecordManager.DeleteRecord(WebData.CurrAccount, serverId).ConfigureAwait(false);
                     WebData.LookingServerIds.RemoveWhere(x => x.Archive.ServerId == serverId);
                     Snackbar.Add($"历史战绩{serverId}已删除");
+                    RaidRecordMod.Logger.Info($"[WebUI.List] 历史战绩{serverId}已删除");
                 }, cts.Token);
 
                 await task.WaitAsync(cts.Token); // 等待任务完成，如果超时这里会抛 OperationCanceledException

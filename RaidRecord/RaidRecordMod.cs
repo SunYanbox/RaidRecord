@@ -3,6 +3,7 @@ using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Servers;
 using MudBlazor.Services;
+using SuntionCore.Services.LogUtils;
 
 // ReSharper disable UnusedType.Global
 
@@ -23,4 +24,6 @@ internal class RaidRecordMod(
         modConfig.Info($"WeiUI run at {httpServer.ListeningUrl()}/RaidRecord");
         return Task.CompletedTask;
     }
+    
+    public static ModLogger Logger = ModLogger.GetOrCreateLogger("RaidRecord");
 }

@@ -4,12 +4,14 @@
 @using SPTarkov.Server.Core.Models.Eft.Common.Tables
 @using SPTarkov.Server.Core.Models.Eft.ItemEvent
 @using SPTarkov.Server.Core.Models.Enums
+@using SPTarkov.Server.Core.Utils
 @using SPTarkov.Server.Core.Utils.Cloners
 @using SuntionCore.SPTExtensions.Services
 @using Color=MudBlazor.Color
 
 @inject I18NMgr I18NMgr
 @inject ICloner Cloner
+@inject JsonUtil JsonUtil
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig
 @inject ItemHelper ItemHelper
@@ -447,6 +449,15 @@
         List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(WebDataContext.CurrAccount,
         buySuccess,
         items.ToList());
+
+        try
+        {
+            RaidRecordMod.Logger.Debug($"[WebUI.QuickBuy] 尝试购买总共{items.Length}个物资: \n```json\n{JsonUtil.Serialize(items)}\n```");
+        }
+        catch (Exception e)
+        {
+            RaidRecordMod.Logger.Error("[WebUI.QuickBuy] 记录调试信息时出现错误", e);
+        }
 
         if (warnings2?.Count > 0)
         {

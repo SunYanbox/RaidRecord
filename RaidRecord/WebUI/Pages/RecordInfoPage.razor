@@ -81,7 +81,8 @@
     {
         try
         {
-            WebData.LookingServerIds.Add(new ArchiveIndexed(DataGetter.GetArchiveWithIndex(index, WebData.CurrAccount), index));
+            bool result = WebData.LookingServerIds.Add(new ArchiveIndexed(DataGetter.GetArchiveWithIndex(index, WebData.CurrAccount), index));
+            RaidRecordMod.Logger.Debug($"[WebUI.InfoPage] 添加索引{index}的详细信息标签页: {(result ? "成功" : "失败")}");
         }
         catch (Exception e)
         {

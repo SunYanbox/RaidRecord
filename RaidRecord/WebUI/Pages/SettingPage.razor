@@ -154,7 +154,9 @@
             result += $"{wrapper.Archive.ServerId} {"grossProfit".Translate(I18NMgr.I18N!)}: {grossProfitDelta:+0.00;-0.00;0.00}  {"combatLoss".Translate(I18NMgr.I18N!)}: {combatLossesDelta:+0.00;-0.00;0.00}\n";
         }
         await RecordManager.SaveEFTRecord(account);
-        Snackbar.Add(string.Join(I18NMgr.I18N!.LinkTag, "webUI.fixAllArchiveCompleted".Translate(I18NMgr.I18N!), ": ", result));
+        string resultEnd = string.Join(I18NMgr.I18N!.LinkTag, "webUI.fixAllArchiveCompleted".Translate(I18NMgr.I18N!), ": ", result);
+        Snackbar.Add(resultEnd);
+        RaidRecordMod.Logger.Debug(resultEnd);
     }
 
     protected void CheckUpdate()

@@ -29,10 +29,7 @@
         StackedBarWidthRatio = 0
     };
     
-    private readonly List<ChartSeries> _groupByExitsSeries =
-    [
-        new() { Name = "United States", Data = [40, 20, 25, 27, 46, 60, 48, 80, 15] }
-    ];
+    private readonly List<ChartSeries> _groupByExitsSeries = [];
 
     List<string>? _maps;
     Dictionary<string, List<RaidDataWrapper>>? _groupByMap;
@@ -46,18 +43,16 @@
         
         if (_groupByMap is null)
         {
-            logger.Error("没有获取到按游玩地图分类的数据");
+            logger.Error("没有获取到按游玩地图分类的数据", new ArgumentNullException(nameof(_groupByMap)));
         }
 
         if (_groupByExitStatus is null)
         {
-            logger.Error("没有获取到按撤离情况分类的数据");
+            logger.Error("没有获取到按撤离情况分类的数据", new ArgumentNullException(nameof(_groupByExitStatus)));
         }
         
         Dictionary<string, List<RaidDataWrapper>>.KeyCollection keyCollection = _groupByMap!.Keys;
         _maps = keyCollection.Select(I18NMgr.GetMapName).ToList();
-        
-        _groupByExitsSeries.Clear();
 
         foreach ((ExitStatus key, List<RaidDataWrapper> _) in _groupByExitStatus!)
         {

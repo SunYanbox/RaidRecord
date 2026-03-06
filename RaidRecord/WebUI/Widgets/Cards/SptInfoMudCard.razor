@@ -59,5 +59,9 @@
         _collapse = "collapse".Translate(I18NMgr.I18N!);
         _expand = "expand".Translate(I18NMgr.I18N!);
         _modInfoShowAllText = _expand;
+        if (SptProfile is null)
+        {
+            RaidRecordMod.Logger.Warn("[WebUI.SptInfoMudCard] 没有设置非空存档信息", new ArgumentNullException(nameof(SptProfile)));
+        }
     }
 }
