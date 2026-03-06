@@ -117,6 +117,7 @@
   "webUI.navLinkPrice": "Price Page",
   "webUI.navLinkRaidRecord": "Home",
   "webUI.navLinkRaidSettings": "Settings",
+  "webUI.navStatsPage": "Statistics Page",
   "webUI.noArchiveWarn": "No match details are selected for display. Please select one from the battle record list, or click the plus sign in the upper right corner.",
   "webUI.noEquipInfoInThisArchive": "There is no stored equipment information in the current profile.",
   "webUI.perPrice": "Unit Price",

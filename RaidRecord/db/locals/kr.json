@@ -117,6 +117,7 @@
   "webUI.navLinkPrice": "가격 페이지",
   "webUI.navLinkRaidRecord": "홈",
   "webUI.navLinkRaidSettings": "설정",
+  "webUI.navStatsPage": "통계 페이지",
   "webUI.noArchiveWarn": "표시할 전투 기록이 선택되지 않았습니다. 전투 기록 목록에서 선택하거나, 우측 상단의 더하기 버튼을 클릭하세요.",
   "webUI.noEquipInfoInThisArchive": "현재 프로필에 저장된 장비 정보가 없습니다.",
   "webUI.perPrice": "단가",

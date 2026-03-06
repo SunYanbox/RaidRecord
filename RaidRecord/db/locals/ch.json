@@ -117,6 +117,7 @@
   "webUI.navLinkPrice": "价格页面",
   "webUI.navLinkRaidRecord": "主页",
   "webUI.navLinkRaidSettings": "设置",
+  "webUI.navStatsPage": "统计页面",
   "webUI.noArchiveWarn": "没有选择显示任何对局详情, 请在战绩列表中选择, 或者点击右上角的加号",
   "webUI.noEquipInfoInThisArchive": "当前存档没有储存的装备信息",
   "webUI.perPrice": "单价",
