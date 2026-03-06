@@ -32,4 +32,14 @@
 @code {
     [Parameter]
     public SptProfile? SptProfile { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (SptProfile is null)
+        {
+            RaidRecordMod.Logger.Warn("[WebUI.ProfileInfoWidget] 没有设置非空存档信息", new ArgumentNullException(nameof(SptProfile)));
+        }
+    }
+
 }

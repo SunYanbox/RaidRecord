@@ -1,4 +1,5 @@
 using RaidRecord.Core.ChatBot.Models;
+using RaidRecord.Core.Configs;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Services;
@@ -21,6 +22,7 @@ public class BuyCmd: CommandBase
     private readonly I18NMgr _i18NMgr;
     private readonly CmdUtil _cmdUtil;
     private readonly ItemUtil _itemUtil;
+    private readonly ModConfig _modConfig;
     private readonly ItemHelper _itemHelper;
     private readonly PriceSystem _priceSystem;
     private readonly ProfileHelper _profileHelper;
@@ -31,6 +33,7 @@ public class BuyCmd: CommandBase
     public BuyCmd(CmdUtil cmdUtil,
         I18NMgr i18NMgr,
         ItemUtil itemUtil,
+        ModConfig modConfig,
         ItemHelper itemHelper,
         PriceSystem priceSystem,
         ProfileHelper profileHelper,
@@ -39,6 +42,7 @@ public class BuyCmd: CommandBase
     {
         _cmdUtil = cmdUtil;
         _i18NMgr = i18NMgr;
+        _modConfig = modConfig;
         Key = "buy";
         Desc = "z3translations.Record-元数据.Desc".Translate(I18N);
         ParaInfo = cmdUtil.ParaInfoBuilder
@@ -115,7 +119,8 @@ public class BuyCmd: CommandBase
         List<Warning>? warnings2 = _modMailService.SendItemsToPlayer(
             parametric.SessionId,
             successMsg,
-            equipments.ToList());
+            equipments.ToList(),
+            _modConfig.Configs.ModGiveIsFIR);
 
         return warnings2?.Count > 0 ? string.Join("\n", warnings2.Select(x => x.ErrorMessage)) : successMsg;
 

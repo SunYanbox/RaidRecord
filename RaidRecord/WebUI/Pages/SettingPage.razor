@@ -47,11 +47,13 @@
     
     @* 修复面板 *@
     <MudPaper Outlined="true">
-        <MudText>修复面板</MudText>
-        @* 修复当前存档所有对局战损与收益计算 *@
-        <MudButton OnClick="@(async () => await FixAllArchive())">
-            @("webUI.fixAllArchiveCompleted".Translate(I18NMgr.I18N!))
-        </MudButton>
+        <MudTooltip Text="@("webUI.fixArchiveDesc".Translate(I18NMgr.I18N!))">
+            <MudText>@("webUI.fixArchive".Translate(I18NMgr.I18N!))</MudText>
+            @* 修复当前存档所有对局战损与收益计算 *@
+            <MudButton OnClick="@(async () => await FixAllArchive())">
+                @("webUI.fixAllArchiveCompleted".Translate(I18NMgr.I18N!))
+            </MudButton>
+        </MudTooltip>
     </MudPaper>
     
     @* 理赔 *@
@@ -146,6 +148,8 @@
         MongoId account = WebData.CurrAccount;
         EFTCombatRecord profile = await RecordManager.GetRecord(account);
         var result = string.Empty;
+        RaidRecordMod.Logger.Debug($"[SettingPage.FixAllArchive] 尝试修复账户{account}的共{profile.Records.Count}条历史战绩");
+        ModConfig.SptLogger.Warning($"正在尝试修复账户{account}的历史战绩, 这将会使用当前的物品价格重新计算全部的数据, 不推荐一直使用该功能");
         foreach (RaidDataWrapper wrapper in profile.Records)
         {
             if (wrapper.Archive is null) continue;
@@ -154,7 +158,9 @@
             result += $"{wrapper.Archive.ServerId} {"grossProfit".Translate(I18NMgr.I18N!)}: {grossProfitDelta:+0.00;-0.00;0.00}  {"combatLoss".Translate(I18NMgr.I18N!)}: {combatLossesDelta:+0.00;-0.00;0.00}\n";
         }
         await RecordManager.SaveEFTRecord(account);
-        Snackbar.Add(string.Join(I18NMgr.I18N!.LinkTag, "webUI.fixAllArchiveCompleted".Translate(I18NMgr.I18N!), ": ", result));
+        string resultEnd = string.Join(I18NMgr.I18N!.LinkTag, "webUI.fixAllArchiveCompleted".Translate(I18NMgr.I18N!), ": ", result);
+        Snackbar.Add(resultEnd);
+        RaidRecordMod.Logger.Debug(resultEnd);
     }
 
     protected void CheckUpdate()

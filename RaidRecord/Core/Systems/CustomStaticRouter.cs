@@ -174,9 +174,16 @@ public class CustomStaticRouter: StaticRouter
         }
         catch (Exception e)
         {
-            string msg = $"在HandleRaidStart函数出现错误: {e.Message}\nstack: {e.StackTrace}";
+            var msg = $"在HandleRaidStart函数出现错误: {e.Message}\nstack: {e.StackTrace}";
             Console.WriteLine($"[RaidRecord] Error in HandleRaidStart: {msg}");
-            _injectableClasses?.ModConfig?.LogError(e, "CustomStaticRouter.HandleRaidStart", msg);
+            if (_injectableClasses?.ModConfig is not null)
+            {
+                _injectableClasses.ModConfig.LogError(e, "CustomStaticRouter.HandleRaidStart", msg);
+            }
+            else
+            {
+                RaidRecordMod.Logger.Error(msg, e);
+            }
         }
     }
 
@@ -237,9 +244,16 @@ public class CustomStaticRouter: StaticRouter
         }
         catch (Exception e)
         {
-            string msg = $"在HandleRaidEnd函数出现错误: {e.Message}\nstack: {e.StackTrace}";
+            var msg = $"在HandleRaidEnd函数出现错误: {e.Message}\nstack: {e.StackTrace}";
             Console.WriteLine($"[RaidRecord] Error in HandleRaidEnd: {msg}");
-            _injectableClasses?.ModConfig?.LogError(e, "CustomStaticRouter.HandleRaidEnd", msg);
+            if (_injectableClasses?.ModConfig is not null)
+            {
+                _injectableClasses.ModConfig.LogError(e, "CustomStaticRouter.HandleRaidEnd", msg);
+            }
+            else
+            {
+                RaidRecordMod.Logger.Error(msg, e);
+            }
         }
     }
 }

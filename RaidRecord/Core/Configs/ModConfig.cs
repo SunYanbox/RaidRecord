@@ -20,6 +20,8 @@ public class ModConfig(ModHelper modHelper,
 {
     public required ModConfigData Configs;
     private string? _configPath;
+    
+    public ISptLogger<ModConfig> SptLogger => sptLogger;
 
     /// <summary>
     /// 本模组元数据

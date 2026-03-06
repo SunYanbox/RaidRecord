@@ -5,10 +5,12 @@
 @using SPTarkov.Server.Core.Models.Eft.ItemEvent
 @using SPTarkov.Server.Core.Models.Enums
 @using SPTarkov.Server.Core.Servers
+@using SPTarkov.Server.Core.Utils
 @using SuntionCore.SPTExtensions.Services
 @using Color = MudBlazor.Color
 
 @inject I18NMgr I18NMgr
+@inject JsonUtil JsonUtil
 @inject ISnackbar Snackbar
 @inject ModConfig ModConfig
 @inject ItemHelper ItemHelper
@@ -141,16 +143,26 @@
                 TotalPrice
             });
             Upd upd = ItemHelper.GenerateUpdForItem(DbServer.GetTables().Templates.Items[WillBuy?.TplId!]);
+            Item newItem = new()
+            {
+                Id = new MongoId(),
+                Template = WillBuy?.TplId ?? "",
+                Upd = upd
+            };
+            try
+            {
+                RaidRecordMod.Logger.Debug($"[WebUI.Price] 购买的物资(Template={WillBuy?.TplId})信息: \n```json\n{JsonUtil.Serialize(newItem)}\n```");
+            }
+            catch (Exception e)
+            {
+                RaidRecordMod.Logger.Error("[WebUI.Price] 记录调试信息时出现错误", e);
+            }
             upd.StackObjectsCount = _num;
             List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
                 WebData.CurrAccount,
                 buySuccess,
-                ItemHelper.SplitStackIntoSeparateItems(new Item
-                {
-                    Id = new MongoId(),
-                    Template = WillBuy?.TplId ?? "",
-                    Upd = upd
-                }).SelectMany(x => x).ToList());
+                ItemHelper.SplitStackIntoSeparateItems(newItem).SelectMany(x => x).ToList(),
+                ModConfig.Configs.ModGiveIsFIR);
 
             if (warnings2?.Count > 0)
             {

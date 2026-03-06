@@ -38,7 +38,11 @@
 
     private SptProfile? GetCurrSptProfile()
     {
-        if (!MongoId.IsValidMongoId(WebData.CurrAccount)) return null;
+        if (!MongoId.IsValidMongoId(WebData.CurrAccount))
+        {
+            RaidRecordMod.Logger.Warn($"无法获取到{WebData.CurrAccount}的存档信息: 因为不是有效的MongoId");
+            return null;
+        }
         try
         {
             return SaveServer.GetProfile(WebData.CurrAccount);
@@ -57,7 +61,7 @@
     {
         if (!string.IsNullOrEmpty(WebData.CurrAccount)) return;
         MongoId? choice = null;
-        int recordsCount = 0;
+        var recordsCount = 0;
         foreach (MongoId mongoId in AccountAllExist)
         {
             int count = (await DataGetter.GetArchivesBySession(mongoId)).Count;
@@ -68,6 +72,11 @@
         if (!string.IsNullOrEmpty(choice?.ToString()))
         {
             WebData.CurrAccount = choice.ToString()!;
+            RaidRecordMod.Logger.Debug($"[WebUI.Home] 已初始化默认账号为: {choice}");
+        }
+        else
+        {
+            RaidRecordMod.Logger.Warn("[WebUI.Home] 无法初始化默认账号; 请确认你是否创建过游戏存档");
         }
     }
 }
