@@ -97,6 +97,8 @@
   "webUI.excludeItemDesc": "여기서 선택한 아이템은 구매 시 제외됩니다",
   "webUI.exitArchive": "레이드 종료",
   "webUI.fixAllArchiveCompleted": "모든 전투 기록 수정 완료",
+  "webUI.fixArchive": "아카이브 수정",
+  "webUI.fixArchiveDesc": "현재 아이템 가격을 사용하여 모든 데이터를 다시 계산합니다. 0.6.8 및 이전 버전에서 업데이트한 후 이전의 잘못된 계산 결과를 수정하는 데만 사용해야 합니다. 잦은 사용은 데이터 왜곡을 초래할 수 있습니다.",
   "webUI.gameVersion": "게임 버전",
   "webUI.handbookPrice": "핸드북 가격",
   "webUI.historyLoadModInfo": "과거 로드된 모드 정보",

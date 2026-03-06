@@ -97,6 +97,8 @@
   "webUI.excludeItemDesc": "Items selected here will be excluded when purchasing",
   "webUI.exitArchive": "Exit Raid",
   "webUI.fixAllArchiveCompleted": "All archive fixes completed",
+  "webUI.fixArchive": "Fix Archive",
+  "webUI.fixArchiveDesc": "Recalculate all data using current item prices. This function is only applicable after updating from version 0.6.8 or earlier to correct previous calculation errors; frequent use may lead to data distortion.",
   "webUI.gameVersion": "Game Version",
   "webUI.handbookPrice": "Handbook Price",
   "webUI.historyLoadModInfo": "Historically Loaded Mod Information",

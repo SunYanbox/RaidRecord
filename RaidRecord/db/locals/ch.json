@@ -97,6 +97,8 @@
   "webUI.excludeItemDesc": "在此处选中的物品将被在购买时排除",
   "webUI.exitArchive": "离开战局",
   "webUI.fixAllArchiveCompleted": "修复全部存档结束",
+  "webUI.fixArchive": "修复存档",
+  "webUI.fixArchiveDesc": "使用当前的物品价格重新计算全部的数据, 仅适用于0.6.8及其之前的版本更新后需要使用该功能修复过去错误的计算结果; 频繁使用会导致数值失真",
   "webUI.gameVersion": "游戏版本",
   "webUI.handbookPrice": "手册价格",
   "webUI.historyLoadModInfo": "历史加载的模组信息",

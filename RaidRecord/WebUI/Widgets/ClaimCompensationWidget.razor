@@ -54,11 +54,14 @@
                 warnings = ModMailService.SendMoney(WebDataContext.CurrAccount, Money.ROUBLES,
                     message
                     , amount);
+                RaidRecordMod.Logger.Info($"[WebUI.理赔] 为账户{WebDataContext.CurrAccount}理赔卢布 {amount:F3}(此处为Double类型) 个: {(warnings?.Count > 0 ? "失败" : "成功")}");
             }
             else
             {
                 message = $"{"webUI.consumedThroughClaims".Translate(I18NMgr.I18N!)}: {amount}rub";
-                warnings = ModMailService.Payment(WebDataContext.CurrAccount, Money.ROUBLES, Convert.ToInt64(amount), pmcData);
+                var amountLong = Convert.ToInt64(amount);
+                RaidRecordMod.Logger.Info($"[WebUI.理赔] 为账户{WebDataContext.CurrAccount}消耗卢布 {amountLong}(此处为Int64类型) 个: {(warnings?.Count > 0 ? "失败" : "成功")}");
+                warnings = ModMailService.Payment(WebDataContext.CurrAccount, Money.ROUBLES, amountLong, pmcData);
             }
         }
         
