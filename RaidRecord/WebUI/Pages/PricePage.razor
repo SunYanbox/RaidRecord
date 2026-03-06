@@ -161,7 +161,8 @@
             List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(
                 WebData.CurrAccount,
                 buySuccess,
-                ItemHelper.SplitStackIntoSeparateItems(newItem).SelectMany(x => x).ToList());
+                ItemHelper.SplitStackIntoSeparateItems(newItem).SelectMany(x => x).ToList(),
+                ModConfig.Configs.ModGiveIsFIR);
 
             if (warnings2?.Count > 0)
             {

@@ -448,7 +448,8 @@
 
         List<Warning>? warnings2 = ModMailService.SendItemsToPlayer(WebDataContext.CurrAccount,
         buySuccess,
-        items.ToList());
+        items.ToList(),
+        ModConfig.Configs.ModGiveIsFIR);
 
         try
         {
