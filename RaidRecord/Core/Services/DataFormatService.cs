@@ -20,7 +20,11 @@ public class DataFormatService(I18NMgr i18NMgr)
     /// <summary> 从ServerId解析地图ID </summary>
     public string GetMapId(RaidArchive archive)
     {
-        return archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower();
+        if (string.IsNullOrEmpty(archive.MapId))
+        {
+            archive.MapId = archive.ServerId[..archive.ServerId.IndexOf('.')].ToLower();
+        }
+        return archive.MapId;
     }
 
     /// <summary> 获取Archive的创建时间格式化值 </summary>

@@ -12,6 +12,9 @@ public record RaidArchive
     [JsonPropertyName("serverId")] public string ServerId { get; set; } = string.Empty;
     // 玩家ID
     [JsonPropertyName("playerId")] public string PlayerId { get; set; } = string.Empty;
+    /// <summary> 地图ID </summary>
+    [JsonPropertyName("mapId")]
+    public string MapId { get; set; } = string.Empty;
     // 对局创建时间
     [JsonPropertyName("createTime")] public long CreateTime { get; set; }
     // 存档状态
