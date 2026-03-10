@@ -103,8 +103,8 @@ public class PriceSystem(
     public double GetItemValueWithCache(Item item)
     {
         // TODO: 更完善的无效物品判断
-        // 刀, 安全箱(安全箱不能用parentId, 因为那个是所有容器的基类), 口袋可能很贵, 会影响入场价值
-        if (item.SlotId is "SecuredContainer" or "Scabbard" or "Dogtag") return 0;
+        // 安全箱(安全箱不能用parentId, 因为那个是所有容器的基类), 口袋可能很贵, 会影响入场价值
+        if (item.SlotId is "SecuredContainer" or "Dogtag") return 0;
         // 父类是口袋的所有口袋
         HashSet<string> parentIds =
         [

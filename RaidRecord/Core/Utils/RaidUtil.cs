@@ -57,7 +57,8 @@ public class RaidUtil(
         Item[] itemsInSecured = itemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn);
         equipments = equipments.Except(itemsInSecured).ToArray(); // 安全箱内的装备不支持也不应该是战备
 
-        raidInfo.EquipmentValue = itemUtil.GetItemsValueAll(equipments);
+        raidInfo.EquipmentValue = itemUtil.GetItemsValueAll(equipments.Where(
+            x => !itemHelper.IsOfBaseclass(x.Template, BaseClasses.KNIFE)).ToArray());
         raidInfo.EquipmentItems = cloner.Clone(equipments);
 
         Item[] secured = itemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn);
