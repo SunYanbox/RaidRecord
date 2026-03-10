@@ -31,7 +31,6 @@ public class RaidUtil(
     public void HandleRaidStart(RaidInfo raidInfo, string serverId, MongoId sessionId)
     {
         raidInfo.ServerId = serverId;
-        raidInfo.State = "未归档";
         bool isPmc = raidInfo.ServerId.Contains("Pmc");
         raidInfo.Side = isPmc ? "Pmc" : "Savage";
         PmcData? pmcProfile = profileHelper.GetPmcProfile(sessionId);
@@ -58,7 +57,8 @@ public class RaidUtil(
         Item[] itemsInSecured = itemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn);
         equipments = equipments.Except(itemsInSecured).ToArray(); // 安全箱内的装备不支持也不应该是战备
 
-        raidInfo.EquipmentValue = itemUtil.GetItemsValueAll(equipments);
+        raidInfo.EquipmentValue = itemUtil.GetItemsValueAll(equipments.Where(
+            x => !itemHelper.IsOfBaseclass(x.Template, BaseClasses.KNIFE)).ToArray());
         raidInfo.EquipmentItems = cloner.Clone(equipments);
 
         Item[] secured = itemUtil.GetAllItemsInContainer("SecuredContainer", itemsTakeIn);
@@ -180,7 +180,6 @@ public class RaidUtil(
             modConfig.Error($"尝试获取对局结束数据时, 获取到的数据({nameof(pmcData.Stats)}和{nameof(pmcData.Stats.Eft)})全部为null");
             return;
         }
-        raidInfo.State = raidInfo.State == "推测对局" ? "推测对局" : "已归档";
         // 处理对局结果
         // var resultStats = Utils.Copy(pmcData.Stats.Eft);
         raidInfo.EftStats = pmcData.Stats.Eft with

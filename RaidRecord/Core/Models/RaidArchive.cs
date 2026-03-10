@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 // ReSharper disable MemberCanBePrivate.Global
@@ -12,10 +13,11 @@ public record RaidArchive
     [JsonPropertyName("serverId")] public string ServerId { get; set; } = string.Empty;
     // 玩家ID
     [JsonPropertyName("playerId")] public string PlayerId { get; set; } = string.Empty;
+    /// <summary> 地图ID </summary>
+    [JsonPropertyName("mapId")]
+    public string MapId { get; set; } = string.Empty;
     // 对局创建时间
     [JsonPropertyName("createTime")] public long CreateTime { get; set; }
-    // 存档状态
-    [JsonPropertyName("state")] public string State { get; set; } = string.Empty;
     // 玩家阵营(PMC, SCAV)
     [JsonPropertyName("side")] public string Side { get; set; } = string.Empty;
     // 带入物品
@@ -47,4 +49,14 @@ public record RaidArchive
     [JsonPropertyName("eftStats")] public EftStats? EftStats { get; set; }
     /// <summary> 突袭实际结果 </summary>
     [JsonPropertyName("results")] public RaidResultData? Results { get; set; }
+
+    #region 移除的属性
+    
+    // 存档状态
+    [JsonPropertyName("state")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    [UsedImplicitly]
+    public string State { get; set; } = string.Empty;
+
+    #endregion
 }

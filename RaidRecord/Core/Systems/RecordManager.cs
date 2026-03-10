@@ -67,6 +67,27 @@ public sealed class RecordManager(
         InitAllEFTCombatRecord();
     }
 
+    public async Task ToggleFavorite(MongoId accountId, params string[] favorites)
+    {
+        EFTCombatRecord? eftCombatRecord = GetEFTCombatRecord(accountId);
+        if (eftCombatRecord is null) return;
+        foreach (string favorite in favorites)
+        {
+            if (!eftCombatRecord.Favorites.Add(favorite))
+            {
+                eftCombatRecord.Favorites.Remove(favorite);
+            }
+        }
+
+        await SaveEFTRecord(accountId);
+    }
+    /// <summary>
+    /// 获取指定账号的历史战绩存档
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <returns></returns>
+    public EFTCombatRecord? GetEFTCombatRecord(MongoId accountId) => _eftCombatRecords.GetValueOrDefault(accountId);
+
     /// <summary>
     /// 加载指定数据文件加载
     /// </summary>
@@ -330,8 +351,10 @@ public sealed class RecordManager(
     public async Task DeleteRecord(MongoId account, string serverId)
     {
         if (!_eftCombatRecords.TryGetValue(account, out EFTCombatRecord? combatRecord)) return;
-        combatRecord.Remove(serverId);
-        await SaveEFTRecord(account);
+        if (combatRecord.Remove(serverId))
+        {
+            await SaveEFTRecord(account);
+        }
     }
     
     /// <summary>
@@ -388,7 +411,6 @@ public sealed class RecordManager(
             ServerId = raidData.Info!.ServerId,
             PlayerId = raidData.Info!.PlayerId,
             CreateTime = raidData.Info!.CreateTime,
-            State = raidData.Info.State,
             Side = raidData.Info.Side,
             ItemsTakeIn = new Dictionary<MongoId, double>(),
             ItemsTakeOut = new Dictionary<MongoId, double>(),
@@ -401,11 +423,6 @@ public sealed class RecordManager(
             EftStats = cloner.Clone(raidData.Info.EftStats),
             Results = cloner.Clone(raidData.Info.Results)
         };
-
-        if (raidData.Info.EftStats == null)
-        {
-            raidData.Archive.State = "中途退出";
-        }
 
         AccumulateItems(raidData.Info.ItemsTakeIn.Values, raidData.Archive.ItemsTakeIn);
         AccumulateItems(raidData.Info.ItemsTakeOut.Values, raidData.Archive.ItemsTakeOut);
