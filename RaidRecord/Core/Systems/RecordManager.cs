@@ -388,7 +388,6 @@ public sealed class RecordManager(
             ServerId = raidData.Info!.ServerId,
             PlayerId = raidData.Info!.PlayerId,
             CreateTime = raidData.Info!.CreateTime,
-            State = raidData.Info.State,
             Side = raidData.Info.Side,
             ItemsTakeIn = new Dictionary<MongoId, double>(),
             ItemsTakeOut = new Dictionary<MongoId, double>(),
@@ -401,11 +400,6 @@ public sealed class RecordManager(
             EftStats = cloner.Clone(raidData.Info.EftStats),
             Results = cloner.Clone(raidData.Info.Results)
         };
-
-        if (raidData.Info.EftStats == null)
-        {
-            raidData.Archive.State = "中途退出";
-        }
 
         AccumulateItems(raidData.Info.ItemsTakeIn.Values, raidData.Archive.ItemsTakeIn);
         AccumulateItems(raidData.Info.ItemsTakeOut.Values, raidData.Archive.ItemsTakeOut);
