@@ -67,6 +67,27 @@ public sealed class RecordManager(
         InitAllEFTCombatRecord();
     }
 
+    public async Task ToggleFavorite(MongoId accountId, params string[] favorites)
+    {
+        EFTCombatRecord? eftCombatRecord = GetEFTCombatRecord(accountId);
+        if (eftCombatRecord is null) return;
+        foreach (string favorite in favorites)
+        {
+            if (!eftCombatRecord.Favorites.Add(favorite))
+            {
+                eftCombatRecord.Favorites.Remove(favorite);
+            }
+        }
+
+        await SaveEFTRecord(accountId);
+    }
+    /// <summary>
+    /// 获取指定账号的历史战绩存档
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <returns></returns>
+    public EFTCombatRecord? GetEFTCombatRecord(MongoId accountId) => _eftCombatRecords.GetValueOrDefault(accountId);
+
     /// <summary>
     /// 加载指定数据文件加载
     /// </summary>
@@ -330,8 +351,10 @@ public sealed class RecordManager(
     public async Task DeleteRecord(MongoId account, string serverId)
     {
         if (!_eftCombatRecords.TryGetValue(account, out EFTCombatRecord? combatRecord)) return;
-        combatRecord.Remove(serverId);
-        await SaveEFTRecord(account);
+        if (combatRecord.Remove(serverId))
+        {
+            await SaveEFTRecord(account);
+        }
     }
     
     /// <summary>

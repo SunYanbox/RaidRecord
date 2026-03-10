@@ -17,6 +17,7 @@
     <ToolBarContent>
         <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Success"/>
         <MudText Typo="Typo.h6" Style="text-indent: 2ch;">@("webUI.ListTitle".Translate(I18NMgr.I18N!))</MudText>
+        <MudSwitch Label="@("webUI.onlyShow::favorites".Translate(I18NMgr.I18N!))" @bind-Value="_onlyShowFavorites" Color="Color.Success"/>
         <MudSwitch Label="@("webUI.willClickOpenJump".Translate(I18NMgr.I18N!))" @bind-Value="_jump2DetailPage" Color="Color.Success"/>
     </ToolBarContent>
     <ColGroup>
@@ -88,25 +89,36 @@
         </MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd>@context!.Index</MudTd>
-        <MudTd>@context!.Archive.Side</MudTd>
-        <MudTd>@DataFormat.GetMapNameLocal(context!.Archive)</MudTd>
-        <MudTd>@DataFormat.FromDateTimeSeconds(context!.Archive.CreateTime)</MudTd>
-        <MudTd>@context!.Archive.PreRaidValue</MudTd>
-        <MudTd>@context!.Archive.EquipmentValue</MudTd>
-        <MudTd>@context!.Archive.GrossProfit</MudTd>
-        <MudTd>@context!.Archive.CombatLosses</MudTd>
-        <MudTd>@DataFormat.GetNetProfit(context!.Archive)</MudTd>
-        <MudTd>@DataFormat.GetKillCount(context!.Archive)</MudTd>
-        <MudTd>@DataFormat.GetResultStr(context!.Archive)</MudTd>
+        <MudTd Style="@IndexColor(context.Archive.ServerId)">@context.Index</MudTd>
+        <MudTd>@context.Archive.Side</MudTd>
+        <MudTd>@DataFormat.GetMapNameLocal(context.Archive)</MudTd>
+        <MudTd>@DataFormat.FromDateTimeSeconds(context.Archive.CreateTime)</MudTd>
+        <MudTd>@context.Archive.PreRaidValue</MudTd>
+        <MudTd>@context.Archive.EquipmentValue</MudTd>
+        <MudTd>@context.Archive.GrossProfit</MudTd>
+        <MudTd>@context.Archive.CombatLosses</MudTd>
+        <MudTd>@DataFormat.GetNetProfit(context.Archive)</MudTd>
+        <MudTd>@DataFormat.GetKillCount(context.Archive)</MudTd>
+        <MudTd>@DataFormat.GetResultStr(context.Archive)</MudTd>
         <MudTd Style="display: flex; align-content: center">
             <MudMenu Label="@("webUI.toolMenu".Translate(I18NMgr.I18N!))" Modal="false">
-                <MudMenuItem Label="@("info".Translate(I18NMgr.I18N!))" OnClick="@(() => LookDetails(context!))"/>
-                <MudMenuItem Label="@("quickEquip".Translate(I18NMgr.I18N!))" OnClick="@(() => LookQuickEquip(context!))"/>
-                <MudMenuItem Label="@("delete::profile".Translate(I18NMgr.I18N!))" Style="color: red" OnClick="@(() => DeleteArchive(context!))"/>
+                <MudMenuItem Label="@FavoriteMenuItemText(context.Archive.ServerId)" 
+                             OnClick="@(() => RecordManager.ToggleFavorite(WebData.CurrAccount, context.Archive.ServerId))" />
+                <MudMenuItem Label="@("info".Translate(I18NMgr.I18N!))" OnClick="@(() => LookDetails(context))"/>
+                <MudMenuItem Label="@("quickEquip".Translate(I18NMgr.I18N!))" OnClick="@(() => LookQuickEquip(context))"/>
+                <MudMenuItem Disabled="@(!IsNotFavoriteArchive(context.Archive.ServerId))"
+                             Label="@("delete::profile".Translate(I18NMgr.I18N!))" Style="color: red"
+                             OnClick="@(() => DeleteArchive(context))"/>
             </MudMenu>
         </MudTd>
-    </RowTemplate>
+        @code
+        {
+            private string IndexColor(string serverId)
+            {
+                return IsNotFavoriteArchive(serverId) ? "" : "color: green";
+            }
+        }
+</RowTemplate>
     <PagerContent>
         <MudTablePager RowsPerPageString="@("webUI.tablePagerRowsPerPageString".Translate(I18NMgr.I18N!))" InfoFormat="@("webUI.tablePagerInfoFormat".Translate(I18NMgr.I18N!))"
                        PageSizeOptions="new[] { 10, 1, 5, 20, 50, 100 }"/>
@@ -202,8 +214,28 @@
 @code {
     private bool _visible;
     private bool _jump2DetailPage;
+    private bool _onlyShowFavorites;
     private OverlayState _overlayState = OverlayState.QuickEquip;
 
+    EFTCombatRecord? _eftCombatRecord;
+
+    EFTCombatRecord? EftCombatRecord
+    {
+        get
+        {
+            _eftCombatRecord ??= RecordManager.GetEFTCombatRecord(WebData.CurrAccount);
+
+            return _eftCombatRecord;
+        }
+    }
+
+    /// <summary> 是否不是收藏的存档: true -> 可删除 </summary>
+    private bool IsNotFavoriteArchive(string serverId) => !(EftCombatRecord?.Favorites.Contains(serverId) ?? false);
+
+    private string FavoriteMenuItemText(string serverId) => IsNotFavoriteArchive(serverId) 
+        ? "favorites".Translate(I18NMgr.I18N!) 
+        : "cancel::favorites".Translate(I18NMgr.I18N!);
+    
     /// <summary>
     /// 弹出窗口的状态
     /// </summary>
@@ -230,6 +262,10 @@
         {
             List<ArchiveIndexed> archivesIndexed = DataGetter.GetArchivesIndexed(WebData.CurrAccount);
             archivesIndexed.Reverse();
+            if (_onlyShowFavorites)
+            {
+                archivesIndexed.RemoveAll(x => IsNotFavoriteArchive(x.Archive.ServerId));
+            }
             return archivesIndexed;
         }
         catch (Exception e)

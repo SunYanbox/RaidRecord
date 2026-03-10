@@ -12,20 +12,26 @@ public class EFTCombatRecord
     /// <summary> 战绩 </summary>
     [JsonPropertyName("records")]
     public List<RaidDataWrapper> Records { get; set; }
+    /// <summary> 收藏 </summary>
+    [JsonPropertyName("favorites")]
+    public HashSet<string> Favorites { get; set; } = [];
     /// <summary> 未归档的战绩缓存(开始游戏到结束游戏期间使用) </summary>
     [JsonPropertyName("infoRecordCache")]
     public RaidDataWrapper? InfoRecordCache { get; set; }
 
     #region 工具函数
-
+    
     /// <summary>
     /// 清除所有指定serverId的战绩
     /// </summary>
+    /// <returns>返回false表示该Id是收藏的战绩, 无法删除</returns>
     /// <param name="serverId"></param>
-    public void Remove(string serverId)
+    public bool Remove(string serverId)
     {
         lock (_lockObj)
         {
+            if (Favorites.Contains(serverId)) return false;
+            
             if (InfoRecordCache?.Info?.ServerId == serverId || InfoRecordCache?.Archive?.ServerId == serverId)
             {
                 InfoRecordCache = null;
@@ -33,6 +39,7 @@ public class EFTCombatRecord
 
             Records.RemoveAll(x => x.Info?.ServerId == serverId || x.Archive?.ServerId == serverId);
         }
+        return true;
     }
 
     #endregion
@@ -56,8 +63,5 @@ public class EFTCombatRecord
     /// <summary> 历史记录文件的路径 </summary>
     [JsonIgnore]
     public string FilePath { get; set; } = string.Empty;
-    /// <summary> 归档了的战绩 </summary>
-    [JsonIgnore]
-    public List<RaidDataWrapper> ArchivedRecords => Records.Where(x => x.IsArchive).ToList();
     #endregion
 }
