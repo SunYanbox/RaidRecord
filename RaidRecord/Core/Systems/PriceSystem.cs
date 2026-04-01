@@ -45,8 +45,8 @@ public class PriceSystem(
         double? basePrice = modConfig.Configs.PriceMode switch
         {
             "Handbook" => handbookPrice,
-            "AvgRagfair" => ragfairPrice,
-            _ => GetMinValue(handbookPrice, ragfairPrice)  // 默认模式：取最小值
+            "Auto" => GetMinValue(handbookPrice, ragfairPrice),
+            _ => ragfairPrice // 默认模式：平均市场价格
         };
         
         return (basePrice ?? 0) * 1.0;

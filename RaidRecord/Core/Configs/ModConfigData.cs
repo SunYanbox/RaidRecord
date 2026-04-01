@@ -49,14 +49,14 @@ public record ModConfigData
     /// </summary>
     [JsonPropertyName("priceMode")]
     [UsedImplicitly]
-    public string? PriceMode { get => _priceMode ?? PriceModeEnum.Auto;
+    public string? PriceMode { get => _priceMode ?? PriceModeEnum.AvgRagfair;
         set
         {
             _priceMode = value switch
             {
                 PriceModeEnum.Handbook => PriceModeEnum.Handbook,
-                PriceModeEnum.AvgRagfair => PriceModeEnum.AvgRagfair,
-                _ => PriceModeEnum.Auto
+                PriceModeEnum.Auto => PriceModeEnum.Auto,
+                _ => PriceModeEnum.AvgRagfair
             };
         } }
     
