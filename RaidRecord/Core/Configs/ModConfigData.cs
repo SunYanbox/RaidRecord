@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace RaidRecord.Core.Configs;
 
@@ -40,4 +41,25 @@ public record ModConfigData
     /// </summary>
     [JsonPropertyName("isRepairDurability")]
     public bool IsRepairDurability { get; set; } = true;
+    /// <summary>
+    /// 基础价格计算方式: <br />
+    /// - Handbook: 仅手册价格 <br />
+    /// - AvgRagfair: 平均跳蚤价格 <br />
+    /// - Auto: Min(手册价格, 平均跳蚤价格)
+    /// </summary>
+    [JsonPropertyName("priceMode")]
+    [UsedImplicitly]
+    public string? PriceMode { get => _priceMode ?? PriceModeEnum.AvgRagfair;
+        set
+        {
+            _priceMode = value switch
+            {
+                PriceModeEnum.Handbook => PriceModeEnum.Handbook,
+                PriceModeEnum.Auto => PriceModeEnum.Auto,
+                _ => PriceModeEnum.AvgRagfair
+            };
+        } }
+    
+    
+    [JsonIgnore] private string? _priceMode;
 }

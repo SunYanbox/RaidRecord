@@ -1,6 +1,6 @@
 using RaidRecord.Core.Configs;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Extensions;
+using SPTarkov.Server.Core.Controllers;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
@@ -16,10 +16,7 @@ namespace RaidRecord.Core.Systems;
 public class PriceSystem(
     ModConfig modConfig,
     ItemHelper itemHelper,
-    PaymentHelper paymentHelper,
-    HandbookHelper handbookHelper,
-    DatabaseService databaseService,
-    RagfairOfferService ragfairOfferService)
+    RagfairController ragfairController)
 {
     private readonly Lock _lock = new();
     private readonly Dictionary<MongoId, PriceCache> _priceCache = new();
@@ -35,38 +32,35 @@ public class PriceSystem(
     }
 
     /// <summary>
-    /// 使用类似 RagfairController.GetItemMinAvgMaxFleaPriceValues 的方式获取价格均值
+    /// 根据配置选择手册、平均市场价等方法计算价格
     /// </summary>
     public double GetNewestPrice(MongoId itemId)
     {
-        // Get all items of tpl
-        IEnumerable<RagfairOffer>? offers = ragfairOfferService.GetOffersOfType(itemId);
-
-        // Offers exist for item, get averages of what's listed
-        if (offers != null)
+        double? handbookPrice = itemHelper.GetItemPrice(itemId);
+        double? ragfairPrice = ragfairController.GetItemMinAvgMaxFleaPriceValues(new GetMarketPriceRequestData
         {
-            RagfairOffer[] ragfairOffers = offers as RagfairOffer[] ?? offers.ToArray();
-            if (ragfairOffers.Length != 0)
+            TemplateId = itemId
+        }).Avg;
+        
+        double? basePrice = modConfig.Configs.PriceMode switch
+        {
+            "Handbook" => handbookPrice,
+            "Auto" => GetMinValue(handbookPrice, ragfairPrice),
+            _ => ragfairPrice // 默认模式：平均市场价格
+        };
+        
+        return (basePrice ?? 0) * 1.0;
+        
+        // 获取两个可空值中的最小值，如果其中一个为 null 则返回另一个，都为 null 则返回 null
+        double? GetMinValue(double? a, double? b)
+        {
+            return a switch
             {
-                // These get calculated while iterating through the list below
-                var minMax = new MinMax<double>(int.MaxValue, 0);
-
-                // Get the average offer price, excluding barter offers
-                double average = GetAveragePriceFromOffers(ragfairOffers, minMax, true);
-
-                return Math.Round(average);
-            }
+                null when b == null => null,
+                null => b,
+                _ => b == null ? a : Math.Min(a.Value, b.Value)
+            };
         }
-
-        // No offers listed, get price from live ragfair price list prices.json
-        // No flea price, get handbook price
-        Dictionary<MongoId, double> fleaPrices = databaseService.GetPrices();
-        if (!fleaPrices.TryGetValue(itemId, out double tplPrice))
-        {
-            tplPrice = handbookHelper.GetTemplatePrice(itemId);
-        }
-
-        return tplPrice;
     }
 
     public double GetItemValueWithCache(MongoId itemId)
@@ -116,56 +110,5 @@ public class PriceSystem(
 
         // 修复了错误计算护甲值为0的物品的价值的问题
         return Convert.ToInt64(Math.Max(0.0, itemHelper.GetItemQualityModifier(item) * price));
-    }
-
-    /// <summary>
-    /// 复制 RagfairController.GetAveragePriceFromOffers
-    /// </summary>
-    /// <param name="offers"></param>
-    /// <param name="minMax"></param>
-    /// <param name="ignoreTraderOffers"></param>
-    /// <returns></returns>
-    protected double GetAveragePriceFromOffers(IEnumerable<RagfairOffer> offers, MinMax<double> minMax, bool ignoreTraderOffers)
-    {
-        double sum = 0d;
-        int totalOfferCount = 0;
-
-        foreach (RagfairOffer offer in offers)
-        {
-            // Exclude barter items, they tend to have outrageous equivalent prices
-            if (offer.Requirements!.Any(req => !paymentHelper.IsMoneyTpl(req.TemplateId)))
-            {
-                continue;
-            }
-
-            if (ignoreTraderOffers && offer.IsTraderOffer())
-            {
-                continue;
-            }
-
-            // Figure out how many items the requirementsCost is applying to, and what the per-item price is
-            double offerItemCount = offer.SellInOnePiece.GetValueOrDefault(false) ? offer.Items?.First().Upd?.StackObjectsCount ?? 1 : 1;
-            double? perItemPrice = offer.RequirementsCost / offerItemCount;
-
-            // Handle min/max calculations based on the per-item price
-            if (perItemPrice < minMax.Min)
-            {
-                minMax.Min = perItemPrice.Value;
-            }
-            else if (perItemPrice > minMax.Max)
-            {
-                minMax.Max = perItemPrice.Value;
-            }
-
-            sum += perItemPrice!.Value;
-            totalOfferCount++;
-        }
-
-        if (totalOfferCount == 0)
-        {
-            return -1d;
-        }
-
-        return sum / totalOfferCount;
     }
 }
