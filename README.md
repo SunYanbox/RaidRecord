@@ -1,5 +1,8 @@
 # Tabs {.tabset}
 
+![GitHub License](https://img.shields.io/github/license/SunYanbox/RaidRecord)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/SunYanbox/RaidRecord/total)
+
 ## 简介与安装
 
 ### 模组概述
