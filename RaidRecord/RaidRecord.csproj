@@ -17,17 +17,8 @@
         <PackageReference Include="SPTarkov.DI" Version="4.0.8"/>
         <PackageReference Include="SPTarkov.Server.Core" Version="4.0.8"/>
         <PackageReference Include="SPTarkov.Server.Web" Version="4.0.8"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="SuntionCore.dll">
-            <HintPath>libs\SuntionCore.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="SuntionCore.SPTExtensions.dll">
-            <HintPath>libs\SuntionCore.SPTExtensions.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
+        <PackageReference Include="SuntionCore" Version="1.2.0" />
+        <PackageReference Include="SuntionCore.SPTExtensions" Version="1.0.0" />
     </ItemGroup>
 
     <!-- 需要复制的数据库, 资源文件 -->
