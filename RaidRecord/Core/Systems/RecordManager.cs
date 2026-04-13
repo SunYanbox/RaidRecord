@@ -229,10 +229,15 @@ public sealed class RecordManager(
     /// <returns>true: 是子文件; false: 不是子文件</returns>
     public static bool IsSubFilePath(string parentDir, string subFilePath)
     {
+        if (string.IsNullOrEmpty(parentDir) || string.IsNullOrEmpty(subFilePath))
+        {
+            return false;
+        }
+
         try
         {
             // 获取规范化的完整路径（解析掉 ..\ 等相对路径）
-            string normalizedParent = Path.GetFullPath(parentDir);
+            string normalizedParent = Path.GetFullPath(parentDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) + Path.DirectorySeparatorChar;
             string normalizedSubFile = Path.GetFullPath(subFilePath);
             
             // 确保父目录路径以目录分隔符结尾
@@ -240,7 +245,7 @@ public sealed class RecordManager(
             {
                 normalizedParent += Path.DirectorySeparatorChar;
             }
-        
+
             // 检查子文件是否以父目录路径开头
             return normalizedSubFile.StartsWith(normalizedParent, StringComparison.OrdinalIgnoreCase);
         }
