@@ -105,6 +105,13 @@ public sealed class RecordManager(
         string fileName = Path.GetFileName(file);
         string fileBaseName = Path.GetFileNameWithoutExtension(fileName);
         if (!fileName.EndsWith(".json")) return;
+        
+        // 验证 file 是 _recordDbPath 的子文件
+        if (!IsSubFilePath(_recordDbPath, file))
+        {
+            modConfig.Error($"文件路径 \"{file}\" 不在允许的数据库目录 \"{_recordDbPath}\" 下");
+            return;
+        }
 
         try
         {
@@ -211,6 +218,35 @@ public sealed class RecordManager(
                 // modConfig.Error($"备份文件过程中发生错误: {copyEx.Message}", copyEx);
                 modConfig.Error("z2serverMessage.Json-Error.备份文件出错".Translate(i18NMgr.I18N!, new { ErrorMessage = copyEx.Message }));
             }
+        }
+    }
+    
+    /// <summary>
+    /// 检查子文件路径是否在父目录下
+    /// </summary>
+    /// <param name="parentDir">父目录路径</param>
+    /// <param name="subFilePath">子文件路径</param>
+    /// <returns>true: 是子文件; false: 不是子文件</returns>
+    public static bool IsSubFilePath(string parentDir, string subFilePath)
+    {
+        try
+        {
+            // 获取规范化的完整路径（解析掉 ..\ 等相对路径）
+            string normalizedParent = Path.GetFullPath(parentDir);
+            string normalizedSubFile = Path.GetFullPath(subFilePath);
+            
+            // 确保父目录路径以目录分隔符结尾
+            if (!normalizedParent.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                normalizedParent += Path.DirectorySeparatorChar;
+            }
+        
+            // 检查子文件是否以父目录路径开头
+            return normalizedSubFile.StartsWith(normalizedParent, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
         }
     }
 
