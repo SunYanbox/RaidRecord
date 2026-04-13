@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaidRecord", "RaidRecord\RaidRecord.csproj", "{D65354CA-66A0-4F2D-A3D1-A16B77E2D981}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaidRecord.Tests", "RaidRecord.Tests\RaidRecord.Tests.csproj", "{F5664C80-094A-48D8-B61F-21413F325AEC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{D65354CA-66A0-4F2D-A3D1-A16B77E2D981}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D65354CA-66A0-4F2D-A3D1-A16B77E2D981}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D65354CA-66A0-4F2D-A3D1-A16B77E2D981}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5664C80-094A-48D8-B61F-21413F325AEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5664C80-094A-48D8-B61F-21413F325AEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5664C80-094A-48D8-B61F-21413F325AEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5664C80-094A-48D8-B61F-21413F325AEC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
