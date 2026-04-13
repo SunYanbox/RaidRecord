@@ -55,7 +55,7 @@
         <None Include="$(MSBuildProjectFullPath).user" Condition="Exists('$(MSBuildProjectFullPath).user')"/>
     </ItemGroup>
 
-    <Target Name="拷贝模组到SPT" AfterTargets="AfterBuild" Condition="'$(SPTPath)' != ''">
+    <Target Name="拷贝模组到SPT" AfterTargets="AfterBuild" Condition="'$(SPTPath)' != '' and Exists('$(SPTPath)')">
         <!-- 定义变量 -->
         <PropertyGroup>
             <SPTModPath>$(SPTPath)$(ModsDirectoryPath)</SPTModPath>
