@@ -34,7 +34,7 @@ jobs:
 
       - name: Package SPT Mod
         id: package
-        uses: SunYanbox/spt-package-action@v1
+        uses: SunYanbox/spt-package-action@v0
 
       - name: Print Output
         run: |
