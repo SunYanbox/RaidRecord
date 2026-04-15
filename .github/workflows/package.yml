@@ -1,0 +1,43 @@
+name: Package SPT Mod
+
+on:
+  # push:
+  #   branches: [main]
+  pull_request:
+    branches: [ "develop" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release
+
+      - name: Package SPT Mod
+        id: package
+        uses: SunYanbox/spt-package-action@v1
+
+      - name: Print Output
+        run: |
+          echo "Project: ${{ steps.package.outputs.project-name }}"
+          echo "Version: ${{ steps.package.outputs.project-version }}"
+          echo "Artifact: ${{ steps.package.outputs.artifact-name }}"
