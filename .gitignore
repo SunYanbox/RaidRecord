@@ -1,5 +1,6 @@
 bin/
 obj/
+ReleaseZip/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
@@ -11,6 +12,7 @@ libs/
 
 # 完全忽略所有IDE配置
 .idea/*
+.vscode/
 *.user
 *.DotSettings*
 RaidRecord-ImageHosting/

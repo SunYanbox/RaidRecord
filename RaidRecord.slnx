@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="RaidRecord.Tests/RaidRecord.Tests.csproj" />
+  <Project Path="RaidRecord/RaidRecord.csproj" />
+</Solution>
