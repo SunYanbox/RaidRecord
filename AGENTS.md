@@ -9,13 +9,12 @@ From the project root (`RaidRecord/`):
 - `dotnet build` - Build the project
 - `dotnet build --configuration Release` - Build for release
 
-### Post-Build Automation
-The project includes MSBuild targets that automatically:
-1. Copy the built DLL and database files to `bin/{Configuration}SPT/user/mods/{AssemblyName}/`
-2. Create a 7z archive of the SPT folder with versioning (`{AssemblyName}-{Version}.7z`)
-3. Optionally copy to a custom SPT installation path if `SPTPath` environment variable is set
+The solution file is `RaidRecord.slnx` (XML solution format, requires .NET SDK 9.0.200 or newer); it contains `RaidRecord/RaidRecord.csproj` and `RaidRecord.Tests/RaidRecord.Tests.csproj`.
 
-To use the SPT copy feature, set the `SPTPath` environment variable to your SPT installation directory before building.
+### Post-Build Automation
+The project includes an MSBuild target that, on `Release` builds, automatically packs the build output plus the data files (`db/`, `wwwroot/`) into the structure `SPT/user/mods/{AssemblyName}/**` and zips it to `RaidRecord/ReleaseZip/{ModAuthor}-{AssemblyName}-{Version}.zip`.
+
+Unzipping the release zip into the SPT root directory yields `SPT/user/mods/RaidRecord/`.
 
 ## Code Style
 
@@ -64,13 +63,12 @@ using SuntionCore.SPTExtensions;
 
 ## Testing
 
-Currently no formal test projects exist in the repository. Testing is done manually through the SPTarkov mod system.
+Currently the repository only contains the MSTest project `RaidRecord.Tests`; functional testing is done manually through the SPTarkov mod system.
 
 ### Important Testing Guidelines for AI Assistants
 1. **DO NOT automatically test or run the project** - AI assistants should never attempt to run `dotnet run` or automatically test functionality
 2. **Wait for user feedback** - When testing is required, stop output and wait for the user to:
    - Build the mod with `dotnet build`
-   - Copy to SPT installation (via `SPTPath` environment variable)
    - Launch SPTarkov server and test functionality
    - Provide feedback on test results
 3. **Resume work only after user confirmation** - Continue development tasks only after receiving explicit user feedback on test outcomes
@@ -117,7 +115,7 @@ RaidRecord/
 1. **Modding Context**: This is a mod for SPTarkov (Single Player Tarkov) - a fan-made single-player version of Escape from Tarkov
 2. **Web UI**: Uses Blazor for the mod's web interface
 3. **Database**: Includes JSON key-value pair database files in `db/` directory (stored as JSON files)
-4. **Versioning**: Follows semantic versioning (currently v0.6.13)
+4. **Versioning**: Follows semantic versioning (e.g. vX.Y.Z)
 
 When making changes:
 - Ensure compatibility with SPTarkov v4.0.8 APIs

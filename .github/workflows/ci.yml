@@ -1,0 +1,64 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '**/*.cs'
+      - '**/*.csproj'
+      - '**/*.slnx'
+      - '**/*.sln'
+      - 'Directory.Build.props'
+      - 'Directory.Build.targets'
+      - '.editorconfig'
+      - 'global.json'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '**/*.cs'
+      - '**/*.csproj'
+      - '**/*.slnx'
+      - '**/*.sln'
+      - 'Directory.Build.props'
+      - 'Directory.Build.targets'
+      - '.editorconfig'
+      - 'global.json'
+      - '.github/workflows/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: 9.0.x
+    - name: Cache NuGet packages
+      uses: actions/cache@v6
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx', '**/*.sln') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build -c Release --no-restore
+    - name: Format
+      run: dotnet format --verify-no-changes --no-restore --verbosity diagnostic
+    - name: Test
+      run: dotnet test

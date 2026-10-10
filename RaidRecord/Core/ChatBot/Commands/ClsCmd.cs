@@ -2,15 +2,17 @@ using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Profile;
+
 using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
 [Injectable]
-public class ClsCmd: CommandBase
+public class ClsCmd : CommandBase
 {
     private readonly CmdUtil _cmdUtil;
     private readonly DataGetterService _dataGetter;

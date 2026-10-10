@@ -3,14 +3,16 @@ using RaidRecord.Core.Locals;
 using RaidRecord.Core.Services;
 using RaidRecord.Core.Systems;
 using RaidRecord.Core.Utils;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
+
 using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
 [Injectable]
-public class PriceCmd: CommandBase
+public class PriceCmd : CommandBase
 {
     private readonly CmdUtil _cmdUtil;
     private readonly I18NMgr _i18NMgr;

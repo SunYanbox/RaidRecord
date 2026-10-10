@@ -1,5 +1,6 @@
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models.Tree;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
@@ -91,20 +92,21 @@ public class AlgorithmService(I18NMgr i18NMgr)
     /// <param name="maxDepth">最大树深度</param>
     /// <typeparam name="T">树节点的数据类型</typeparam>
     /// <returns></returns>
-    public TreeNode<T>? BuildTree<T>(T item, T[] items, 
-        Func<T, MongoId> getId, 
+    public TreeNode<T>? BuildTree<T>(T item, T[] items,
+        Func<T, MongoId> getId,
         Func<(T father, T target), bool> judgeIsParent,
         Dictionary<MongoId, TreeNode<T>> nodeMap, int depth = 0, int maxDepth = 15)
     {
         if (depth >= maxDepth) return null;
         MongoId id = getId(item);
-        TreeNode<T> node = new() {
+        TreeNode<T> node = new()
+        {
             Id = id,
             ParentId = null,
             Data = item,
             Children = []
         };
-        
+
         nodeMap[id] = node;
 
         List<T> children = items.Where(x => judgeIsParent((item, x))).ToList();
@@ -120,7 +122,7 @@ public class AlgorithmService(I18NMgr i18NMgr)
     }
 
     /// <summary> 将TreeNode树转换为TreeItemData树 </summary>
-    public List<RRTreeItemData> ConvertToTreeItems(List<TreeNode<Item>> nodes) 
+    public List<RRTreeItemData> ConvertToTreeItems(List<TreeNode<Item>> nodes)
     {
         return nodes.Select(CreateTreeItem).ToList();
 
@@ -131,11 +133,11 @@ public class AlgorithmService(I18NMgr i18NMgr)
             {
                 treeItem.Children = node.Children.Select(CreateTreeItem).ToList();
             }
-            
+
             return treeItem;
         }
     }
-    
+
     /// <summary> 将Item[]构建为TreeNode树, 并获取维护的节点字典 </summary>
     public (List<TreeNode<Item>>, Dictionary<MongoId, TreeNode<Item>>) GetTreeItems(Item[] items)
     {
@@ -146,11 +148,11 @@ public class AlgorithmService(I18NMgr i18NMgr)
         List<TreeNode<Item>> treeItems = [];
         foreach (Item rootItem in rootItems)
         {
-            TreeNode<Item>? node = BuildTree(rootItem, items, 
-            i => i.Id, 
-            pair 
+            TreeNode<Item>? node = BuildTree(rootItem, items,
+            i => i.Id,
+            pair
                 => pair.target.ParentId is { Length: 24 }
-                   && pair.target.ParentId == pair.father.Id, 
+                   && pair.target.ParentId == pair.father.Id,
             nodeMap);
             if (node == null) continue;
             treeItems.Add(node);

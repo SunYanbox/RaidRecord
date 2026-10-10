@@ -1,4 +1,5 @@
 using System.Reflection;
+
 using SPTarkov.Server.Core.Helpers;
 
 namespace RaidRecord.Core;
@@ -58,7 +59,7 @@ public static class Constants
     /// <returns>db//locals 的绝对路径</returns>
     /// <exception cref="ArgumentException">参数为空或者路径不存在</exception>
     public static string DBLocalsFolderPath(string? modPath = null, ModHelper? modHelper = null) => GetDBSubFolderPath("locals", modPath, modHelper);
-    
+
     /// <summary>
     /// 获取数据库配置文件路径
     /// </summary>

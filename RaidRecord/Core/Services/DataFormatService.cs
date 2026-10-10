@@ -1,7 +1,9 @@
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+
 using SuntionCore.Services.I18NUtil;
 using SuntionCore.Services.LogUtils;
 
@@ -149,13 +151,13 @@ public class DataFormatService(I18NMgr i18NMgr)
         if (seconds < 0)
         {
             ModLogger.GetOrCreateLogger("RaidRecord")
-                .Warn($"使用DataFormatService.FromTimeSeconds时, 传入的秒数小于0: {seconds}", 
+                .Warn($"使用DataFormatService.FromTimeSeconds时, 传入的秒数小于0: {seconds}",
                     new ArgumentOutOfRangeException(nameof(seconds), seconds, "秒数不能小于0"));
             return "00:00:00";
         }
 
         TimeSpan time = TimeSpan.FromSeconds(seconds);
-    
+
         // 总小时数 (可能大于 24) : 分钟 : 秒
         return $"{(int)time.TotalHours:D2}:{time.Minutes:D2}:{time.Seconds:D2}";
     }

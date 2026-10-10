@@ -1,9 +1,11 @@
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Systems;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Enums;
+
 using SuntionCore.Services.LogUtils;
 using SuntionCore.Services.MagnitudeUtils;
 
@@ -25,7 +27,7 @@ public sealed class StatisticsService(
         if (!moreThanZero) withUnit = $" - {withUnit}";
         return withUnit;
     }
-    
+
     /// <summary>
     /// 赚损比 (Profit-to-Loss Ratio)
     /// </summary>
@@ -41,7 +43,7 @@ public sealed class StatisticsService(
     {
         return netProfit / Math.Max(durationSeconds, 1) * 60;
     }
-    
+
     public async Task<Dictionary<string, List<RaidDataWrapper>>?> GroupBySide(MongoId account)
     {
         try
@@ -69,7 +71,7 @@ public sealed class StatisticsService(
         }
         return null;
     }
-    
+
     public async Task<Dictionary<string, List<RaidDataWrapper>>?> GroupByPlayerMap(MongoId account)
     {
         try
@@ -97,7 +99,7 @@ public sealed class StatisticsService(
         }
         return null;
     }
-    
+
     public async Task<Dictionary<ExitStatus, List<RaidDataWrapper>>?> GroupByExitStatus(MongoId account)
     {
         try

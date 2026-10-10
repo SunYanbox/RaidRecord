@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
+
 using RaidRecord.Core.Configs;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Utils;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
@@ -14,10 +16,12 @@ using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Utils;
 using SPTarkov.Server.Core.Utils.Cloners;
+
 using SuntionCore.Services.FileUtils;
 using SuntionCore.Services.I18NUtil;
 using SuntionCore.Services.LogUtils;
 using SuntionCore.SPTExtensions.Services;
+
 using Path = System.IO.Path;
 
 namespace RaidRecord.Core.Systems;
@@ -38,7 +42,7 @@ public sealed class RecordManager(
     ModHelper modHelper,
     ItemHelper itemHelper,
     ProfileAndAccountService profileAndAccountService
-): IOnLoad
+) : IOnLoad
 {
     private string? _recordDbPath;
 
@@ -105,7 +109,7 @@ public sealed class RecordManager(
         string fileName = Path.GetFileName(file);
         string fileBaseName = Path.GetFileNameWithoutExtension(fileName);
         if (!fileName.EndsWith(".json")) return;
-        
+
         // 验证 file 是 _recordDbPath 的子文件
         if (!IsSubFilePath(_recordDbPath, file))
         {
@@ -220,7 +224,7 @@ public sealed class RecordManager(
             }
         }
     }
-    
+
     /// <summary>
     /// 检查子文件路径是否在父目录下
     /// </summary>
@@ -239,7 +243,7 @@ public sealed class RecordManager(
             // 获取规范化的完整路径（解析掉 ..\ 等相对路径）
             string normalizedParent = Path.GetFullPath(parentDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) + Path.DirectorySeparatorChar;
             string normalizedSubFile = Path.GetFullPath(subFilePath);
-            
+
             // 确保父目录路径以目录分隔符结尾
             if (!normalizedParent.EndsWith(Path.DirectorySeparatorChar.ToString()))
             {
@@ -397,7 +401,7 @@ public sealed class RecordManager(
             await SaveEFTRecord(account);
         }
     }
-    
+
     /// <summary>
     /// 删除一个账号下的所有历史记录数据(慎用!!!)
     /// </summary>

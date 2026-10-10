@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 using SPTarkov.Server.Core.Models.Enums;
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global

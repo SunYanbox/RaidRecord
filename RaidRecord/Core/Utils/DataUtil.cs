@@ -1,7 +1,9 @@
 using System.Text.Json;
+
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Configs;
 using RaidRecord.Core.Models;
+
 using SPTarkov.DI.Annotations;
 
 namespace RaidRecord.Core.Utils;
@@ -67,7 +69,7 @@ public class DataUtil(ModConfig config)
 
     public static RaidInfo Copy(RaidInfo raidInfo)
     {
-        RaidInfo copy = raidInfo with {};
+        RaidInfo copy = raidInfo with { };
         return copy;
     }
 

@@ -1,13 +1,15 @@
 using RaidRecord.Core.ChatBot.Models;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Utils;
+
 using SPTarkov.DI.Annotations;
+
 using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
 [Injectable]
-public class HelpCmd: CommandBase
+public class HelpCmd : CommandBase
 {
     private readonly CmdUtil _cmdUtil;
     private readonly string _displayMessage;

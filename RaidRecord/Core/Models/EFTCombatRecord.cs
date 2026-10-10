@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 using SPTarkov.Server.Core.Models.Common;
 
 namespace RaidRecord.Core.Models;
@@ -20,7 +21,7 @@ public class EFTCombatRecord
     public RaidDataWrapper? InfoRecordCache { get; set; }
 
     #region 工具函数
-    
+
     /// <summary>
     /// 清除所有指定serverId的战绩
     /// </summary>
@@ -31,7 +32,7 @@ public class EFTCombatRecord
         lock (_lockObj)
         {
             if (Favorites.Contains(serverId)) return false;
-            
+
             if (InfoRecordCache?.Info?.ServerId == serverId || InfoRecordCache?.Archive?.ServerId == serverId)
             {
                 InfoRecordCache = null;
@@ -45,7 +46,7 @@ public class EFTCombatRecord
     #endregion
 
     #region 构造函数
-    public EFTCombatRecord(MongoId accountId): this(accountId, []) {}
+    public EFTCombatRecord(MongoId accountId) : this(accountId, []) { }
 
     /// <summary> 账户历史战绩 </summary>
     [JsonConstructor]

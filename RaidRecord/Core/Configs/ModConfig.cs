@@ -1,9 +1,11 @@
 using System.Reflection;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Utils;
+
 using SuntionCore.Services.LogUtils;
 
 namespace RaidRecord.Core.Configs;
@@ -16,18 +18,18 @@ namespace RaidRecord.Core.Configs;
 public class ModConfig(ModHelper modHelper,
     ISptLogger<ModConfig> sptLogger,
     JsonUtil jsonUtil,
-    ModMetadata modMetadata): IOnLoad
+    ModMetadata modMetadata) : IOnLoad
 {
     public required ModConfigData Configs;
     private string? _configPath;
-    
+
     public ISptLogger<ModConfig> SptLogger => sptLogger;
 
     /// <summary>
     /// 本模组元数据
     /// </summary>
     public readonly ModMetadata Metadata = modMetadata;
-    
+
     public readonly ModLogger Logger = ModLogger.GetOrCreateLogger("RaidRecord");
 
     /// <summary> 保存配置 </summary>

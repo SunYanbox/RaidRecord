@@ -5,7 +5,7 @@ namespace RaidRecord.Core.Models.Services;
 public record ArchiveIndexed(RaidArchive Archive, int Index);
 
 /// <summary> 以分页形式获取存档列表的结果 </summary>
-public record ArchivePageableResult: IDataGetterResult
+public record ArchivePageableResult : IDataGetterResult
 {
     /// <summary> 获取到的存档列表 </summary>
     public List<ArchiveIndexed> Archives { get; set; } = [];
