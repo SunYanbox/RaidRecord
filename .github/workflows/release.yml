@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  release:
+    types: [published] # 只在 Release 被发布时触发（不覆盖草稿）
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Upload
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          # 依据 RaidRecord.csproj 的 TargetFramework 调整（当前为 net9.0）
+          dotnet-version: '9.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx', '**/*.sln') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
+
+      # ZipRelease target 里 Condition="'$(Configuration)' == 'Release'"，
+      # 因此必须显式传 -c Release 才会产出 ReleaseZip\*.zip。
+      - name: Build (Release)
+        run: dotnet build -c Release --no-restore
+
+      # 上传的资产名形如 Suntion-RaidRecord-2.0.0.zip，
+      # 用 glob 匹配，版本号变化时无需改 workflow。
+      - name: Upload asset to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          fail_on_unmatched_files: true
+          files: RaidRecord/ReleaseZip/*.zip

@@ -115,7 +115,7 @@ RaidRecord/
 1. **Modding Context**: This is a mod for SPTarkov (Single Player Tarkov) - a fan-made single-player version of Escape from Tarkov
 2. **Web UI**: Uses Blazor for the mod's web interface
 3. **Database**: Includes JSON key-value pair database files in `db/` directory (stored as JSON files)
-4. **Versioning**: Follows semantic versioning (currently v0.6.13)
+4. **Versioning**: Follows semantic versioning (e.g. vX.Y.Z)
 
 When making changes:
 - Ensure compatibility with SPTarkov v4.0.8 APIs
