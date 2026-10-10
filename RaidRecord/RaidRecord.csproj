@@ -9,7 +9,7 @@
 
         <!-- 与 ModMetaData 保持一致: 作者用于发布包命名, 版本号即模组版本 -->
         <ModAuthor>Suntion</ModAuthor>
-        <Version>0.7.2</Version>
+        <Version>0.7.3</Version>
 
         <!-- 输出到 bin/{Configuration}/{AssemblyName}/, 不带 TFM 子目录 -->
         <OutputPath>bin/$(Configuration)/$(AssemblyName)/</OutputPath>
