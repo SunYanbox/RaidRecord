@@ -30,7 +30,7 @@ public class PriceCmd : CommandBase
         _itemHelper = itemHelper;
         _dataGetter = dataGetter;
         Key = "price";
-        Desc = "z2serverMessage.Cmd-Price.Desc".Translate(I18N);
+        Desc = "z3translations.Cmd-Price.Desc".Translate(I18N);
         ParaInfo = cmdUtil.ParaInfoBuilder
             .AddParam("tpl", "string", "z3translations.Cmd-参数简述.tpl".Translate(I18N))
             .AddParam("name", "string", "z3translations.Cmd-参数简述.name".Translate(I18N))
@@ -51,14 +51,14 @@ public class PriceCmd : CommandBase
 
         if (string.IsNullOrEmpty(tpl) && string.IsNullOrEmpty(name))
         {
-            return "z2serverMessage.Cmd-Price.Error.缺少参数".Translate(I18N);
+            return "z3translations.Cmd-Price.Error.缺少参数".Translate(I18N);
         }
 
         if (!string.IsNullOrEmpty(tpl))
         {
             if (!_itemHelper.IsValidItem(tpl))
-                return "z2serverMessage.Cmd-Price.Error.无效的tpl".Translate(I18N, new { TplId = tpl });
-            return "z2serverMessage.Cmd-Price.tpl结果".Translate(I18N, new
+                return "z3translations.Cmd-Price.Error.无效的tpl".Translate(I18N, new { TplId = tpl });
+            return "z3translations.Cmd-Price.tpl结果".Translate(I18N, new
             {
                 TplId = tpl,
                 Name = _itemHelper.GetItemName(tpl),
@@ -66,7 +66,7 @@ public class PriceCmd : CommandBase
                 DynPrice = _itemHelper.GetDynamicItemPrice(tpl),
                 HandbookPrice = _itemHelper.GetStaticItemPrice(tpl)
             }) + "\n";
-            // "z2serverMessage.Cmd-Price.tpl结果": "物品模板ID: {{TplId}} 物品名称: {{Name}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub"
+            // "z3translations.Cmd-Price.tpl结果": "物品模板ID: {{TplId}} 物品名称: {{Name}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub"
         }
 
         PriorityQueue<(string name, double similarity), double> pq = AlgorithmService.Search(name, _dataGetter.Name2Id, top);
@@ -75,10 +75,10 @@ public class PriceCmd : CommandBase
         while (pq.Count > 0)
         {
             (string nameResult, double similarityResult) = pq.Dequeue();
-            // "z2serverMessage.Cmd-Price.name结果": "物品名称: {{Name}} 物品模板ID: {{TplId}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub 相似得分: {{Similarity}}"
+            // "z3translations.Cmd-Price.name结果": "物品名称: {{Name}} 物品模板ID: {{TplId}} 物品市场平均单价: {{AvgPrice}}rub 动态价格: {{DynPrice}}rub 手册价格: {{HandbookPrice}}rub 相似得分: {{Similarity}}"
             string tplResult = _dataGetter.Name2Id[nameResult];
 
-            returnResult += "z2serverMessage.Cmd-Price.name结果".Translate(I18N, new
+            returnResult += "z3translations.Cmd-Price.name结果".Translate(I18N, new
             {
                 Name = nameResult,
                 TplId = tplResult,

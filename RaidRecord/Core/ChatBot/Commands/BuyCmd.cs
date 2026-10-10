@@ -46,7 +46,7 @@ public class BuyCmd : CommandBase
         _i18NMgr = i18NMgr;
         _modConfig = modConfig;
         Key = "buy";
-        Desc = "z3translations.Record-元数据.Desc".Translate(I18N);
+        Desc = "z3translations.Cmd-Buy.Desc".Translate(I18N);
         ParaInfo = cmdUtil.ParaInfoBuilder
             .AddParam("index", "int", "z3translations.Cmd-参数简述.index".Translate(I18N))
             .AddParam("limit", "int", "z3translations.Cmd-参数化简述.limit".Translate(I18N))
@@ -90,8 +90,8 @@ public class BuyCmd : CommandBase
         PmcData? pmcData = _profileHelper.GetPmcProfile(parametric.SessionId);
 
         if (equipments.Length == 0 || totalPrice <= 0)
-            return "z3translations.Record-元数据.Error.没有获取到已记录的有效装备数据".Translate(I18N);
-        if (pmcData == null) return "z3translations.Record-元数据.Error.无法获取到Pmc存档信息".Translate(I18N);
+            return "z3translations.Cmd-Buy.Error.没有获取到已记录的有效装备数据".Translate(I18N);
+        if (pmcData == null) return "z3translations.Cmd-Buy.Error.无法获取到Pmc存档信息".Translate(I18N);
 
         if (parametric.Command.Contains("preview") || parametric.Command.Contains("pv"))
         {
@@ -110,7 +110,7 @@ public class BuyCmd : CommandBase
             return string.Join("\n", warnings.Select(x => x.ErrorMessage));
         }
 
-        string successMsg = "z3translations.Record-元数据.Success.您已购买装备".Translate(I18N, new
+        string successMsg = "z3translations.Cmd-Buy.Success.您已购买装备".Translate(I18N, new
         {
             Index = index,
             archive.ServerId,
@@ -155,7 +155,7 @@ public class BuyCmd : CommandBase
 
         int indexLeft = Math.Max(numberLimit * (page - 1), 0);
         int indexRight = Math.Min(numberLimit * page, totalCount);
-        if (totalCount <= 0) return "z3translations.Record-元数据.BuyList.没有任何快购列表".Translate(I18N);
+        if (totalCount <= 0) return "z3translations.Cmd-Buy.BuyList.没有任何快购列表".Translate(I18N);
         // if (totalCount <= 0) return "您没有任何快购列表, 请至少对局一次后再来查询吧";
         List<(int index, RaidArchive archive, long price)> results = [];
         for (int i = indexLeft; i < indexRight; i++)
@@ -165,7 +165,7 @@ public class BuyCmd : CommandBase
         int countBeforeCheck = results.Count;
         if (countBeforeCheck <= 0)
         {
-            return "z3translations.Record-元数据.BuyList.没有找到指定页的记录".Translate(I18N,
+            return "z3translations.Cmd-Buy.BuyList.没有找到指定页的记录".Translate(I18N,
                 new
                 {
                     StartIndex = indexLeft + 1,
@@ -177,7 +177,7 @@ public class BuyCmd : CommandBase
         results.RemoveAll(x => string.IsNullOrEmpty(x.archive.ServerId));
         int countAfterCheck = results.Count;
 
-        string msg = "z3translations.Record-元数据.BuyList.快购列表.统计表头".Translate(I18N, new
+        string msg = "z3translations.Cmd-Buy.BuyList.快购列表.统计表头".Translate(I18N, new
         {
             ResultCount = countAfterCheck,
             TotalCount = totalCount,
@@ -206,12 +206,12 @@ public class BuyCmd : CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                result = $"z3translations.{raidResultData.Result.Value.ToString()}".Translate(I18N);
+                result = raidResultData.Result.Value.ToString().Translate(I18N);
             }
             catch (Exception e)
             {
                 _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.BuyListCommand",
-                    "z3translations.Record-元数据.BuyList.获取对局结果信息时出错".Translate(I18N));
+                    "z3translations.Cmd-Buy.BuyList.获取对局结果信息时出错".Translate(I18N));
             }
 
             string[] values =
@@ -236,7 +236,7 @@ public class BuyCmd : CommandBase
             }
         }
 
-        string header = "z3translations.Record-元数据.BuyList.快购列表.表头".Translate(I18N).Replace("\n", "");
+        string header = "z3translations.Cmd-Buy.BuyList.快购列表.表头".Translate(I18N).Replace("\n", "");
         string[] coreHeader = header.Split('|');
 
         int colCount = Math.Min(colWidths.Length, coreHeader.Length);
@@ -244,7 +244,7 @@ public class BuyCmd : CommandBase
         if (colCount != colWidths.Length || colCount != coreHeader.Length)
         {
             _cmdUtil.ModConfig!.Warn(
-                "z3translations.Record-元数据.BuyList.快购列表.表头长度不一致".Translate(
+                "z3translations.Cmd-Buy.BuyList.快购列表.表头长度不一致".Translate(
                     I18N,
                     new
                     {
@@ -277,12 +277,12 @@ public class BuyCmd : CommandBase
                 {
                     throw new NullReferenceException(nameof(raidResultData.Result));
                 }
-                result = $"z3translations.{raidResultData.Result.Value.ToString()}".Translate(I18N);
+                result = raidResultData.Result.Value.ToString().Translate(I18N);
             }
             catch (Exception e)
             {
                 _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.BuyListCommand",
-                    "z3translations.Record-元数据.BuyList.获取对局结果信息时出错".Translate(I18N));
+                    "z3translations.Cmd-Buy.BuyList.获取对局结果信息时出错".Translate(I18N));
                 // _cmdUtil.ModConfig!.LogError(e, "RaidRecordManagerChat.ListCommand", "尝试从本地数据库获取对局结果信息时出错");
             }
 
@@ -309,8 +309,8 @@ public class BuyCmd : CommandBase
                 }
             }
 
-            // "z3translations.Record-元数据.BuyList.快购列表.表行": " - {{Index}} | {{PlayerGroup}} | {{MapName}} | {{GrossProfit}} | {{CombatLosses}} | {{EquipmentValue}} | {{EquipmentCount}} | {{PlayTime}} | {{KillCount}} | {{Result}} | {{QuickBuyPrice}}\n",
-            msg += "z3translations.Record-元数据.BuyList.快购列表.表行".Translate(I18N, new
+            // "z3translations.Cmd-Buy.BuyList.快购列表.表行": " - {{Index}} | {{PlayerGroup}} | {{MapName}} | {{GrossProfit}} | {{CombatLosses}} | {{EquipmentValue}} | {{EquipmentCount}} | {{PlayTime}} | {{KillCount}} | {{Result}} | {{QuickBuyPrice}}\n",
+            msg += "z3translations.Cmd-Buy.BuyList.快购列表.表行".Translate(I18N, new
             {
                 Index = values[0],
                 PlayerGroup = values[1],
@@ -331,7 +331,7 @@ public class BuyCmd : CommandBase
             //        + $"{StringUtil.TimeString(archive.Results?.PlayTime ?? 0)} {result}\n";
         }
         // if (jump > 0) msg += $"跳过{jump}条无效数据";
-        if (jump > 0) msg += "z3translations.Record-元数据.BuyList.快购列表.跳过无效数据".Translate(I18N, new { JumpCount = jump });
+        if (jump > 0) msg += "z3translations.Cmd-Buy.BuyList.快购列表.跳过无效数据".Translate(I18N, new { JumpCount = jump });
         return msg;
     }
 }

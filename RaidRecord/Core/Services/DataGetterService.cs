@@ -163,7 +163,7 @@ public class DataGetterService(
         int indexRight = Math.Min(pageSize * page, totalCount);
         if (totalCount <= 0)
         {
-            result.Errors = [$"您没有任何历史战绩, 请至少对局一次后再来查询吧"];
+            result.Errors = ["z3translations.Cmd-List.没有任何历史战绩".Translate(i18NMgr.I18N!)];
             return result;
         }
         List<ArchiveIndexed> results = [];
@@ -174,7 +174,12 @@ public class DataGetterService(
         int countBeforeCheck = results.Count;
         if (countBeforeCheck <= 0)
         {
-            result.Errors = [$"未查询到您第{indexLeft + 1}到{indexRight}条历史战绩, 支持的页码范围是[0, {totalCount})"];
+            result.Errors = ["z3translations.Cmd-List.没有找到指定页的记录".Translate(i18NMgr.I18N!, new
+            {
+                StartIndex = indexLeft + 1,
+                EndIndex = indexRight,
+                IndexRange = $"[0, {totalCount})"
+            })];
             return result;
         }
 

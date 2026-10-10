@@ -30,7 +30,7 @@ public class ItemsCmd : CommandBase
         _dataGetter = dataGetter;
         _i18NMgr = i18NMgr;
         Key = "items";
-        Desc = "z2serverMessage.Cmd-Items.Desc".Translate(_i18NMgr.I18N!);
+        Desc = "z3translations.Cmd-Items.Desc".Translate(_i18NMgr.I18N!);
         ParaInfo = cmdUtil.ParaInfoBuilder
             .AddParam("index", "int", "z3translations.Cmd-参数简述.index".Translate(_i18NMgr.I18N!))
             .AddParam("mode", "string", "z3translations.Cmd-参数化简述.Items.mode".Translate(_i18NMgr.I18N!))
@@ -81,8 +81,8 @@ public class ItemsCmd : CommandBase
             {
                 // "\n\n带入对局物品:\n   物品名称  物品单价(rub) * 物品修正 = 物品总价值(rub)  物品描述"
                 msg += "\n"
-                       + "z2serverMessage.Cmd-Items.All.带入物品标题".Translate(_i18NMgr.I18N!)
-                       + "z2serverMessage.Cmd-Items.物品表头".Translate(_i18NMgr.I18N!);
+                       + "z3translations.Cmd-Items.All.带入物品标题".Translate(_i18NMgr.I18N!)
+                       + "z3translations.Cmd-Items.物品表头".Translate(_i18NMgr.I18N!);
 
                 foreach ((MongoId tpl, double modify) in archive.ItemsTakeIn)
                 {
@@ -93,7 +93,7 @@ public class ItemsCmd : CommandBase
 
             if (archive is { ItemsTakeOut.Count: <= 0 }) return msg;
             {
-                msg += "z2serverMessage.Cmd-Items.All.带出物品标题".Translate(_i18NMgr.I18N!);
+                msg += "z3translations.Cmd-Items.All.带出物品标题".Translate(_i18NMgr.I18N!);
                 foreach ((MongoId tpl, double modify) in archive.ItemsTakeOut)
                 {
                     if (ShouldSkip(tpl, modify, ge, le)) continue;
@@ -109,9 +109,9 @@ public class ItemsCmd : CommandBase
         RaidUtil.UpdateItemsChanged(add, remove, change, archive.ItemsTakeIn, archive.ItemsTakeOut);
 
         // "\n\n物品变化:\n   物品名称  物品单价(rub) * 物品修正 = 物品总价值(rub)  物品描述"
-        msg += "\n" + "z2serverMessage.Cmd-Items.物品表头".Translate(_i18NMgr.I18N!);
+        msg += "\n" + "z3translations.Cmd-Items.物品表头".Translate(_i18NMgr.I18N!);
 
-        msg += "z2serverMessage.Cmd-Items.Change.获得的物品".Translate(_i18NMgr.I18N!);
+        msg += "z3translations.Cmd-Items.Change.获得的物品".Translate(_i18NMgr.I18N!);
 
         foreach (MongoId addTpl in add)
         {
@@ -121,7 +121,7 @@ public class ItemsCmd : CommandBase
             msg += $"\n + {GetItemDetails(addTpl, modify, sptLocal)}";
         }
 
-        msg += "z2serverMessage.Cmd-Items.Change.丢失的物品".Translate(_i18NMgr.I18N!);
+        msg += "z3translations.Cmd-Items.Change.丢失的物品".Translate(_i18NMgr.I18N!);
 
         foreach (MongoId removeTpl in remove)
         {
@@ -131,7 +131,7 @@ public class ItemsCmd : CommandBase
             msg += $"\n - {GetItemDetails(removeTpl, modify, sptLocal)}";
         }
 
-        msg += "z2serverMessage.Cmd-Items.Change.变化的物品".Translate(_i18NMgr.I18N!);
+        msg += "z3translations.Cmd-Items.Change.变化的物品".Translate(_i18NMgr.I18N!);
 
         foreach (MongoId changeTpl in change)
         {

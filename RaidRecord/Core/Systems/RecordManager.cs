@@ -140,7 +140,7 @@ public sealed class RecordManager(
             }
             catch (Exception e)
             {
-                modConfig.Error(I18N.DumpFormatStrLocal("当前版本: {{CurrVersion}} 加载记录数据时发生错误: {{ErrorMessage}}\n - 文件: {{FilePath}}",
+                modConfig.Error("z2serverMessage.RecordManager-Error.数据库文件版本过时".Translate(i18NMgr.I18N!,
                     new
                     {
                         CurrVersion = modConfig.Metadata.Version.ToString(),
@@ -388,7 +388,7 @@ public sealed class RecordManager(
         {
             Console.WriteLine($"RecordManager.CreateRecord: {e.Message}\nstack: {e.StackTrace}");
             modConfig.LogError(e, "RaidRecordManager.CreateRecord.try-catch",
-                "创建记录实例时出错".Translate(i18NMgr.I18N!));
+                "z2serverMessage.RecordManager-Error.创建记录实例时出错".Translate(i18NMgr.I18N!));
             throw;
         }
     }

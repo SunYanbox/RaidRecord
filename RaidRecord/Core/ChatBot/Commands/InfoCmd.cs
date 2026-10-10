@@ -26,7 +26,7 @@ public class InfoCmd : CommandBase
         _i18NMgr = i18NMgr;
         _cmdUtil = cmdUtil;
         Key = "info";
-        Desc = "z2serverMessage.Cmd-Info.Desc".Translate(I18N);
+        Desc = "z3translations.Cmd-Info.Desc".Translate(I18N);
         ParaInfo = cmdUtil.ParaInfoBuilder
             .AddParam("index", "int", "z3translations.Cmd-参数简述.index".Translate(I18N))
             .SetOptional(["index"])
@@ -55,11 +55,11 @@ public class InfoCmd : CommandBase
 
         if (victims.Count > 0)
         {
-            msg += "z2serverMessage.Cmd-Info.本局击杀标题".Translate(I18N);
+            msg += "z3translations.Cmd-Info.本局击杀标题".Translate(I18N);
             foreach (Victim victim in victims)
             {
-                // "z2serverMessage.Cmd-Info.本局击杀信息": "\n {{VictimTime}} 使用{{WeaponName}}命中{{BodyPart}}淘汰距离{{VictimDistance}}m远的{{VictimName}}(等级:{{VictimLevel}} 阵营:{{VictimSide}} 角色:{{VictimRole}})",
-                msg += "z2serverMessage.Cmd-Info.本局击杀信息".Translate(
+                // "z3translations.Cmd-Info.本局击杀信息": "\n {{VictimTime}} 使用{{WeaponName}}命中{{BodyPart}}淘汰距离{{VictimDistance}}m远的{{VictimName}}(等级:{{VictimLevel}} 阵营:{{VictimSide}} 角色:{{VictimRole}})",
+                msg += "z3translations.Cmd-Info.本局击杀信息".Translate(
                     I18N,
                     new
                     {
@@ -84,8 +84,8 @@ public class InfoCmd : CommandBase
             Aggressor? aggressor = archive.EftStats?.Aggressor;
             if (aggressor != null)
             {
-                // "z2serverMessage.Cmd-Info.本局击杀者": "\n击杀者: {{AggressorName}}(阵营: {{AggressorSide}})使用{{WeaponName}}命中{{ArmorZone}}淘汰了你",
-                msg += "z2serverMessage.Cmd-Info.本局击杀者".Translate(
+                // "z3translations.Cmd-Info.本局击杀者": "\n击杀者: {{AggressorName}}(阵营: {{AggressorSide}})使用{{WeaponName}}命中{{ArmorZone}}淘汰了你",
+                msg += "z3translations.Cmd-Info.本局击杀者".Translate(
                     I18N,
                     new
                     {
@@ -98,7 +98,7 @@ public class InfoCmd : CommandBase
             }
             else
             {
-                msg += "z2serverMessage.Cmd-Info.本局被击杀者信息加载失败".Translate(I18N);
+                msg += "z3translations.Cmd-Info.本局击杀者信息加载失败".Translate(I18N);
                 // msg += "\n击杀者数据加载失败";
             }
         }
