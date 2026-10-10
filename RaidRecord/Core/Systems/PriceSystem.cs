@@ -1,4 +1,5 @@
 using RaidRecord.Core.Configs;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Controllers;
 using SPTarkov.Server.Core.Helpers;
@@ -41,18 +42,18 @@ public class PriceSystem(
         {
             TemplateId = itemId
         }).Avg;
-        
+
         double? basePrice = modConfig.Configs.PriceMode switch
         {
             "Handbook" => handbookPrice,
             "Auto" => GetMinValue(handbookPrice, ragfairPrice),
             _ => ragfairPrice // 默认模式：平均市场价格
         };
-        
+
         return (basePrice ?? 0) * 1.0;
-        
+
         // 获取两个可空值中的最小值，如果其中一个为 null 则返回另一个，都为 null 则返回 null
-        double? GetMinValue(double? a, double? b)
+        static double? GetMinValue(double? a, double? b)
         {
             return a switch
             {

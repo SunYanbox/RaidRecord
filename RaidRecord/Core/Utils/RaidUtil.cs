@@ -2,6 +2,7 @@ using RaidRecord.Core.Configs;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Services;
 using RaidRecord.Core.Systems;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Helpers;
@@ -10,6 +11,7 @@ using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Eft.Match;
 using SPTarkov.Server.Core.Utils.Cloners;
+
 using SuntionCore.SPTExtensions.Services;
 
 namespace RaidRecord.Core.Utils;
@@ -231,7 +233,7 @@ public class RaidUtil(
     /// 重新计算Archive的收益, 战损等数据
     /// </summary>
     /// <returns>修复前后的 (收益变化量, 战损变化量)</returns>
-    public (long grossProfitDelta, long combatLossesDelta)  ReCalculateArchive(RaidArchive archive)
+    public (long grossProfitDelta, long combatLossesDelta) ReCalculateArchive(RaidArchive archive)
     {
         long grossProfitOld = archive.GrossProfit, combatLossesOld = archive.CombatLosses;
         if (archive.ItemsTakeIn.Count == 0 && archive.ItemsTakeOut.Count == 0)
@@ -278,7 +280,7 @@ public class RaidUtil(
         }
         return (grossProfitDelta: archive.GrossProfit - grossProfitOld, combatLossesDelta: archive.CombatLosses - combatLossesOld);
     }
-    
+
     /// <summary>
     /// 获取对局结束时物品的变动信息（基于完整 Item 对象）
     /// </summary>

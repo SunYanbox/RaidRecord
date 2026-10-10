@@ -1,15 +1,18 @@
 using System.Collections.ObjectModel;
+
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Models.BaseModels;
 using RaidRecord.Core.Models.Services;
 using RaidRecord.Core.Systems;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Enums;
+
 using SuntionCore.Services.I18NUtil;
 using SuntionCore.SPTExtensions.Services;
 
@@ -194,7 +197,7 @@ public class DataGetterService(
     /// <returns></returns>
     public List<ArchiveIndexed> GetArchivesIndexed(string session)
     {
-        
+
         return GetArchivesBySession(session).Result
             .Select((x, i) => new ArchiveIndexed(x, i))
             .ToList();
@@ -206,7 +209,7 @@ public class DataGetterService(
     public readonly RangeTuple<int> PageSizeRange = new(1, 50);
 
     /// <summary> 被视为战备的基类(枪械配件) </summary>
-    public readonly IReadOnlySet<MongoId> WeaponModClassesAll = (HashSet<MongoId>) [
+    public readonly IReadOnlySet<MongoId> WeaponModClassesAll = (HashSet<MongoId>)[
         BaseClasses.MAGAZINE, // 弹匣
         BaseClasses.MOD, // 模组
         BaseClasses.ASSAULT_SCOPE, // 突击瞄准镜
@@ -239,16 +242,16 @@ public class DataGetterService(
         BaseClasses.STOCK, // 枪托
         BaseClasses.TACTICAL_COMBO // 战术组合装置
     ];
-    
+
     /// <summary> 被视为战备的基类(装备配件) </summary>
-    public readonly IReadOnlySet<MongoId> EquipmentModClassesAll = (HashSet<MongoId>) [
+    public readonly IReadOnlySet<MongoId> EquipmentModClassesAll = (HashSet<MongoId>)[
         BaseClasses.BUILT_IN_INSERTS, // 内置插件
         BaseClasses.ARMOR_PLATE, // 装甲板
         BaseClasses.VISORS // 面罩/护目镜
     ];
 
     /// <summary> 被视为战备的基类(枪械) </summary>
-    public readonly IReadOnlySet<MongoId> WeaponClassesAlls = (HashSet<MongoId>) [
+    public readonly IReadOnlySet<MongoId> WeaponClassesAlls = (HashSet<MongoId>)[
         BaseClasses.WEAPON, // 武器
         BaseClasses.ASSAULT_CARBINE, // 突击卡宾枪
         BaseClasses.ASSAULT_RIFLE, // 突击步枪
@@ -269,24 +272,24 @@ public class DataGetterService(
     ];
 
     /// <summary> 被视为战备的基类(头部护甲) </summary>
-    public readonly IReadOnlySet<MongoId> HeadClassesAlls = (HashSet<MongoId>) [
+    public readonly IReadOnlySet<MongoId> HeadClassesAlls = (HashSet<MongoId>)[
         BaseClasses.FACE_COVER, // 面部防护
         BaseClasses.HEADPHONES, // 耳机
         BaseClasses.HEADWEAR // 头饰
     ];
 
     /// <summary> 被视为战备的基类(护甲) </summary>
-    public readonly IReadOnlySet<MongoId> ArmorClassesAlls = (HashSet<MongoId>) [
+    public readonly IReadOnlySet<MongoId> ArmorClassesAlls = (HashSet<MongoId>)[
         BaseClasses.ARMOR // 护甲
     ];
-    
+
     /// <summary> 被视为战备的基类(胸挂) </summary>
-    public readonly IReadOnlySet<MongoId> VestClassesAlls = (HashSet<MongoId>) [
+    public readonly IReadOnlySet<MongoId> VestClassesAlls = (HashSet<MongoId>)[
         BaseClasses.VEST // 胸挂/背心
     ];
-    
+
     /// <summary> 被视为战备的基类(背包) </summary>
-    public readonly IReadOnlySet<MongoId> BackpackClassesAlls = (HashSet<MongoId>) [
+    public readonly IReadOnlySet<MongoId> BackpackClassesAlls = (HashSet<MongoId>)[
         BaseClasses.BACKPACK // 背包
     ];
 

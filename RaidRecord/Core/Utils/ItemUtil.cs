@@ -1,4 +1,5 @@
 using RaidRecord.Core.Systems;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Helpers;
@@ -127,7 +128,7 @@ public class ItemUtil(ItemHelper itemHelper, PriceSystem priceSystem)
         {
             try
             {
-                result[item.Id] = item with {};
+                result[item.Id] = item with { };
                 if (item.Template != result[item.Id].Template) throw new Exception($"record类型使用with复制构造改变了Template的MongoId!!!: {item.Template} -> {result[item.Id].Template}");
             }
             catch (Exception e)

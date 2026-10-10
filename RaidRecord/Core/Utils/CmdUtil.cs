@@ -4,10 +4,12 @@ using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Services;
 using RaidRecord.Core.Systems;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Enums;
+
 using SuntionCore.Services.I18NUtil;
 using SuntionCore.SPTExtensions.Services;
 
@@ -24,9 +26,9 @@ public class CmdUtil(
 )
 {
     #region 提供依赖给工具调用 | 只放大部分命令需要的依赖
-    #pragma warning disable CS9124 // 形参被捕获到封闭类型状态，它的值也用于初始化字段、属性或事件。
+#pragma warning disable CS9124 // 形参被捕获到封闭类型状态，它的值也用于初始化字段、属性或事件。
     public readonly I18NMgr? I18NMgr = i18NMgr;
-    #pragma warning restore CS9124 // 形参被捕获到封闭类型状态，它的值也用于初始化字段、属性或事件。
+#pragma warning restore CS9124 // 形参被捕获到封闭类型状态，它的值也用于初始化字段、属性或事件。
     public readonly RecordManager? RecordManager = recordCacheManager;
     public readonly ModConfig? ModConfig = modConfig;
     public readonly ParaInfoBuilder ParaInfoBuilder = new();
@@ -52,7 +54,8 @@ public class CmdUtil(
 
         // "z3translations.Record-元数据.Id与玩家信息": "{{TimeFormat}} 对局ID: {{ServerId}} 玩家信息: {{Nickname}}(Level={{Level}}, id={{PlayerId}})"
         msg += "z3translations.Record-元数据.Id与玩家信息".Translate(i18NMgr.I18N!,
-        new {
+        new
+        {
             TimeFormat = dataFormatService.GetCreateTimeStr(archive),
             ServerId = serverId,
             playerData.Info?.Nickname,
@@ -61,7 +64,8 @@ public class CmdUtil(
         });
         //"z3translations.Record-元数据.地图与存活时间": "\n地图: {{MapName}} 生存时间: {{PlayTime}} 击杀数量: {{KillCount}} 爆头击杀率: {{HeadshotKillRate}}",
         msg += "z3translations.Record-元数据.地图与存活时间".Translate(i18NMgr.I18N!,
-        new {
+        new
+        {
             MapName = dataFormatService.GetMapNameLocal(archive),
             PlayTime = dataFormatService.FromTimeSeconds(archive.Results?.PlayTime ?? 0),
             KillCount = dataFormatService.GetKillCount(archive),
@@ -69,7 +73,8 @@ public class CmdUtil(
         });
         // "z3translations.Record-元数据.入场信息": "\n入局战备: {{EquipmentValue}}rub, 安全箱物资价值: {{SecuredValue}}rub, 总带入价值: {{PreRaidValue}}rub",
         msg += "z3translations.Record-元数据.入场信息".Translate(i18NMgr.I18N!,
-        new {
+        new
+        {
             EquipmentValue = (int)archive.EquipmentValue,
             SecuredValue = (int)archive.SecuredValue,
             PreRaidValue = (int)archive.PreRaidValue
@@ -77,7 +82,8 @@ public class CmdUtil(
 
         // "z3translations.Record-元数据.退出信息": "\n带出价值: {{GrossProfit}}rub, 战损{{CombatLosses}}rub, 净利润{{NetProfit}}rub",
         msg += "z3translations.Record-元数据.退出信息".Translate(i18NMgr.I18N!,
-        new {
+        new
+        {
             GrossProfit = (int)archive.GrossProfit,
             CombatLosses = (int)archive.CombatLosses,
             NetProfit = dataFormatService.GetNetProfit(archive)
@@ -85,7 +91,8 @@ public class CmdUtil(
 
         // "z3translations.Record-元数据.对局结果": "\n对局结果: {{Result}} 撤离点: {{ExitName}} 游戏风格: {{SurvivorClass}}",
         msg += "z3translations.Record-元数据.对局结果".Translate(i18NMgr.I18N!,
-        new {
+        new
+        {
             Result = dataFormatService.GetResultStr(archive),
             ExitName = dataFormatService.GetExitName(archive),
             SurvivorClass = dataFormatService.GetSurvivorClass(archive)

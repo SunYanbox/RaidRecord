@@ -1,9 +1,11 @@
 using RaidRecord.Core.Locals;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Eft.Profile;
 using SPTarkov.Server.Core.Models.Spt.Config;
 using SPTarkov.Server.Core.Servers;
+
 using SuntionCore.Services.I18NUtil;
 using SuntionCore.Services.LogUtils;
 
@@ -17,7 +19,7 @@ public class ChatBotRegisterService(
     I18NMgr i18NMgr,
     ConfigServer configServer,
     DataGetterService dataGetter
-): IOnLoad
+) : IOnLoad
 {
     public Task OnLoad()
     {

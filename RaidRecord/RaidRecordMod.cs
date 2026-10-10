@@ -1,8 +1,11 @@
-﻿using RaidRecord.Core.Configs;
+﻿using MudBlazor.Services;
+
+using RaidRecord.Core.Configs;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Servers;
-using MudBlazor.Services;
+
 using SuntionCore.Services.LogUtils;
 
 // ReSharper disable UnusedType.Global
@@ -13,7 +16,7 @@ namespace RaidRecord;
 internal class RaidRecordMod(
     ModConfig modConfig,
     HttpServer httpServer,
-    WebApplicationBuilder builder): IOnLoad
+    WebApplicationBuilder builder) : IOnLoad
 {
     public Task OnLoad()
     {
@@ -24,6 +27,6 @@ internal class RaidRecordMod(
         modConfig.Info($"WeiUI run at {httpServer.ListeningUrl()}/RaidRecord");
         return Task.CompletedTask;
     }
-    
+
     public static ModLogger Logger = ModLogger.GetOrCreateLogger("RaidRecord");
 }

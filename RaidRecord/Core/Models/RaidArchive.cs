@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
+
 using JetBrains.Annotations;
+
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 // ReSharper disable MemberCanBePrivate.Global
@@ -51,7 +53,7 @@ public record RaidArchive
     [JsonPropertyName("results")] public RaidResultData? Results { get; set; }
 
     #region 移除的属性
-    
+
     // 存档状态
     [JsonPropertyName("state")]
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]

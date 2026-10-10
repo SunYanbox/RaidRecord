@@ -1,5 +1,7 @@
 using System.Reflection;
+
 using RaidRecord.Core.Configs;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
@@ -7,6 +9,7 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Servers;
+
 using SuntionCore.Services.I18NUtil;
 
 // ReSharper disable ClassNeverInstantiated.Global
@@ -21,12 +24,12 @@ public class I18NMgr(
     ModHelper modHelper,
     ModConfig modConfig,
     ModMetadata modMetadata,
-    DatabaseServer databaseServer): IOnLoad
+    DatabaseServer databaseServer) : IOnLoad
 {
     public readonly Dictionary<string, string> MapNames = new();
     public readonly Dictionary<string, Dictionary<string, string>> ExitNames = new();
     public I18N? I18N { get; private set; }
-    
+
     /// <summary> 重新初始化当前语言 </summary>
     public void ReInitLang()
     {
@@ -88,10 +91,10 @@ public class I18NMgr(
         }
 
         ReInitLang();
-        
+
         return Task.CompletedTask;
     }
-    
+
     /// <summary>
     /// 基于物品TplID获取物品本地化名称
     /// </summary>
@@ -113,7 +116,7 @@ public class I18NMgr(
     {
         Dictionary<string, string>? localesMap = locales.Global[I18N!.CurrentLang].Value;
         string warnMsg = "";
-        
+
         MapNames.Clear();
         ExitNames.Clear();
 

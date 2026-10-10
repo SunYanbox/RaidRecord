@@ -1,5 +1,7 @@
 using MudBlazor;
+
 using RaidRecord.Core.Locals;
+
 using SPTarkov.Server.Core.Models.Common;
 
 namespace RaidRecord.Core.Models.Tree;
@@ -8,7 +10,7 @@ namespace RaidRecord.Core.Models.Tree;
 /// RaidRecord针对Item的TreeItemData
 /// <remarks>扩展内容: 物品ID, 物品模板ID, Text初始化</remarks>
 /// </summary>
-public sealed class RRTreeItemData: TreeItemData<MongoId>
+public sealed class RRTreeItemData : TreeItemData<MongoId>
 {
     public RRTreeItemData(MongoId itemId, MongoId tplId, I18NMgr i18NMgr)
     {

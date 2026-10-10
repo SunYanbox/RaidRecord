@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 using JetBrains.Annotations;
 
 namespace RaidRecord.Core.Configs;
@@ -49,7 +50,9 @@ public record ModConfigData
     /// </summary>
     [JsonPropertyName("priceMode")]
     [UsedImplicitly]
-    public string? PriceMode { get => _priceMode ?? PriceModeEnum.AvgRagfair;
+    public string? PriceMode
+    {
+        get => _priceMode ?? PriceModeEnum.AvgRagfair;
         set
         {
             _priceMode = value switch
@@ -58,8 +61,9 @@ public record ModConfigData
                 PriceModeEnum.Auto => PriceModeEnum.Auto,
                 _ => PriceModeEnum.AvgRagfair
             };
-        } }
-    
-    
+        }
+    }
+
+
     [JsonIgnore] private string? _priceMode;
 }

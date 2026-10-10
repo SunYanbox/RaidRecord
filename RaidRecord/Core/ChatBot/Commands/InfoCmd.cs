@@ -3,15 +3,17 @@ using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Enums;
+
 using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
 [Injectable]
-public class InfoCmd: CommandBase
+public class InfoCmd : CommandBase
 {
     private readonly CmdUtil _cmdUtil;
     private readonly I18NMgr _i18NMgr;

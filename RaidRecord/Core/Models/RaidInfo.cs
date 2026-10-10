@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
+
 using JetBrains.Annotations;
+
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 
@@ -47,9 +49,9 @@ public record RaidInfo
     [JsonPropertyName("eftStats")] public EftStats? EftStats { get; set; }
     /// <summary> 突袭实际结果 </summary>
     [JsonPropertyName("results")] public RaidResultData? Results { get; set; }
-    
+
     #region 移除的属性
-    
+
     // 存档状态
     [JsonPropertyName("state")]
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]

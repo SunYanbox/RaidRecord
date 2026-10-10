@@ -2,6 +2,7 @@ using RaidRecord.Core.Configs;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Models;
 using RaidRecord.Core.Utils;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Common;
@@ -10,6 +11,7 @@ using SPTarkov.Server.Core.Models.Eft.HttpResponse;
 using SPTarkov.Server.Core.Models.Eft.Match;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Utils;
+
 using SuntionCore.Services.I18NUtil;
 using SuntionCore.SPTExtensions.Services;
 
@@ -18,7 +20,7 @@ using SuntionCore.SPTExtensions.Services;
 namespace RaidRecord.Core.Systems;
 
 [Injectable]
-public class CustomStaticRouter: StaticRouter
+public class CustomStaticRouter : StaticRouter
 {
     private static RaidUtil? _raidUtil;
     private static IServiceProvider? _serviceProvider;
@@ -32,7 +34,7 @@ public class CustomStaticRouter: StaticRouter
         InjectableClasses injectableClasses,
         ISptLogger<CustomStaticRouter> sptLogger,
         ProfileAndAccountService profileAndAccountService
-    ): base(
+    ) : base(
         jsonUtil,
         GetCustomRoutes()
     )

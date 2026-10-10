@@ -4,13 +4,15 @@ using RaidRecord.Core.Models;
 using RaidRecord.Core.Models.Services;
 using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
+
 using SPTarkov.DI.Annotations;
+
 using SuntionCore.Services.I18NUtil;
 
 namespace RaidRecord.Core.ChatBot.Commands;
 
 [Injectable]
-public class ListCmd: CommandBase
+public class ListCmd : CommandBase
 {
     private readonly I18NMgr _i18NMgr;
     private readonly CmdUtil _cmdUtil;

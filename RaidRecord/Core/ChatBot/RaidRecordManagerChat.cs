@@ -4,12 +4,14 @@ using RaidRecord.Core.Configs;
 using RaidRecord.Core.Locals;
 using RaidRecord.Core.Services;
 using RaidRecord.Core.Utils;
+
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers.Dialogue;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Dialog;
 using SPTarkov.Server.Core.Models.Eft.Profile;
+
 using SuntionCore.Services.I18NUtil;
 using SuntionCore.SPTExtensions.Services;
 
@@ -21,7 +23,7 @@ public class RaidRecordManagerChat(
     ModConfig modConfig,
     DataGetterService dataGetter,
     ModMailService modMailService,
-    IServiceProvider serviceProvider): IOnLoad, IDialogueChatBot
+    IServiceProvider serviceProvider) : IOnLoad, IDialogueChatBot
 {
     public readonly Dictionary<string, CommandBase> Commands = new();
     private I18N I18N => i18NMgr.I18N!;
